@@ -27,8 +27,8 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
         $this->load([
             'time' => [
                 'recording_timezone' => 'Europe/Warsaw',
-                'clock' => DummyCustomClock::class
-            ]
+                'clock' => DummyCustomClock::class,
+            ],
         ]);
 
         $this->assertContainerBuilderHasServiceDefinitionWithArgument(
@@ -52,12 +52,12 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
                 'repository' => [
                     'doctrine' => [
                         'connection' => 'doctrine.default_connection',
-                        'table_schema' => DummyCustomTableSchema::class
-                    ]
+                        'table_schema' => DummyCustomTableSchema::class,
+                    ],
                 ],
                 'serializer' => DummyCustomMessageSerializer::class,
-                'decorator' => false
-            ]
+                'decorator' => false,
+            ],
         ]);
 
         $this->assertContainerBuilderHasAlias('andreo.event_sauce.doctrine.connection');
@@ -66,7 +66,7 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
 
         $this->assertContainerBuilderHasAlias(MessageSerializer::class);
         $serializerAlias = $this->container->getAlias(MessageSerializer::class);
-        $this->assertEquals( DummyCustomMessageSerializer::class, $serializerAlias->__toString());
+        $this->assertEquals(DummyCustomMessageSerializer::class, $serializerAlias->__toString());
 
         $this->assertArrayNotHasKey(AsMessageDecorator::class, $this->container->getAutoconfiguredAttributes());
     }
@@ -81,21 +81,21 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
                 'dispatcher' => [
                     'messenger' => [
                         'enabled' => true,
-                        'mode' => 'event_with_headers'
+                        'mode' => 'event_with_headers',
                     ],
                     'chain' => [
                         'foo_bus' => 'fooBus',
-                        'bar_bus' => 'barBus'
-                    ]
+                        'bar_bus' => 'barBus',
+                    ],
                 ],
-            ]
+            ],
         ]);
 
         $this->assertContainerBuilderHasServiceDefinitionWithTag(
             'andreo.event_sauce.message_dispatcher.foo_bus',
             'andreo.event_sauce.event_with_headers_dispatcher',
             [
-                'bus' => 'fooBus'
+                'bus' => 'fooBus',
             ]
         );
         $busDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.foo_bus');
@@ -106,7 +106,7 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
             'andreo.event_sauce.message_dispatcher.bar_bus',
             'andreo.event_sauce.event_with_headers_dispatcher',
             [
-                'bus' => 'barBus'
+                'bus' => 'barBus',
             ]
         );
         $busDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.bar_bus');
@@ -118,16 +118,16 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
                 'dispatcher' => [
                     'messenger' => [
                         'enabled' => true,
-                        'mode' => 'event'
+                        'mode' => 'event',
                     ],
                     'chain' => [
                         'foo_bus' => 'fooBus',
-                    ]
+                    ],
                 ],
-            ]
+            ],
         ]);
 
-        $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher.foo_bus',);
+        $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher.foo_bus', );
         $busDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.foo_bus');
         $this->assertEquals(MessengerMessageEventDispatcher::class, $busDefinition->getClass());
         $this->assertEquals($busDefinition->getArgument(0), new Reference('fooBus'));
@@ -137,16 +137,16 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
                 'dispatcher' => [
                     'messenger' => [
                         'enabled' => true,
-                        'mode' => 'message'
+                        'mode' => 'message',
                     ],
                     'chain' => [
                         'foo_bus' => 'fooBus',
-                    ]
+                    ],
                 ],
-            ]
+            ],
         ]);
 
-        $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher.foo_bus',);
+        $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher.foo_bus', );
         $busDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.foo_bus');
         $this->assertEquals(MessengerMessageDispatcher::class, $busDefinition->getClass());
         $this->assertEquals($busDefinition->getArgument(0), new Reference('fooBus'));
@@ -159,10 +159,10 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
                         'enabled' => true,
                     ],
                     'chain' => [
-                        'foo_bus' => null
-                    ]
+                        'foo_bus' => null,
+                    ],
                 ],
-            ]
+            ],
         ]);
     }
 
@@ -176,13 +176,13 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
                 'dispatcher' => [
                     'chain' => [
                         'foo_service' => 'default',
-                        'bar_service' => null
-                    ]
+                        'bar_service' => null,
+                    ],
                 ],
-            ]
+            ],
         ]);
 
-        $this->assertContainerBuilderHasAlias(  'foo_service');
+        $this->assertContainerBuilderHasAlias('foo_service');
         $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher.foo_service');
         $dispatcherDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.foo_service');
         $this->assertEquals(DelegatingSynchronousMessageDispatcher::class, $dispatcherDefinition->getClass());
@@ -191,7 +191,7 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
             new TaggedIteratorArgument('andreo.event_sauce.message_consumer.foo_service')
         );
 
-        $this->assertContainerBuilderHasAlias(  'bar_service');
+        $this->assertContainerBuilderHasAlias('bar_service');
         $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher.bar_service');
         $dispatcherDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.bar_service');
         $this->assertEquals(DelegatingSynchronousMessageDispatcher::class, $dispatcherDefinition->getClass());
@@ -200,7 +200,6 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
             new TaggedIteratorArgument('andreo.event_sauce.message_consumer.bar_service')
         );
     }
-
 
     protected function getContainerExtensions(): array
     {
