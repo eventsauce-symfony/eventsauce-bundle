@@ -1,0 +1,59 @@
+{
+    "name": "andreo/event-sauce-bundle",
+    "description": "Symfony bundle for EventSauce.",
+    "keywords": [
+        "EventSauce",
+        "Event sourcing",
+        "Symfony",
+        "Bundle"
+    ],
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Andrzej Pakula",
+            "email": "andrze.pakula@gmail.com"
+        }
+    ],
+    "suggest": {
+        "andreo/eventsauce-snapshotting": "Extended snapshot components of the EventSauce",
+        "andreo/eventsauce-aggregate": "Extended aggregate components of the EventSauce",
+        "andreo/eventsauce-generate-migration": "Command that generates doctrine migrations per aggregate of the EventSauce",
+        "andreo/eventsauce-messenger": "Integration symfony messenger with the EventSauce",
+        "andreo/eventsauce-outbox": "Extended message outbox components of the EventSauce",
+        "andreo/eventsauce-symfony-serializer": "Custom symfony payload serializer of the EventSauce",
+        "andreo/eventsauce-upcasting": "Extended upcasting components of the EventSauce"
+    },
+    "require": {
+        "php": "^8.1",
+        "eventsauce/eventsauce": "^1.2",
+        "eventsauce/message-repository-for-doctrine": "^0.2.0",
+        "symfony/http-kernel": "^6.0",
+        "symfony/config": "^6.0",
+        "symfony/dependency-injection": "^6.0"
+    },
+    "require-dev": {
+        "andreo/eventsauce-aggregate": "dev-main",
+        "andreo/eventsauce-generate-migration": "dev-main",
+        "andreo/eventsauce-messenger": "dev-main",
+        "andreo/eventsauce-outbox": "dev-main",
+        "andreo/eventsauce-snapshotting": "dev-main",
+        "andreo/eventsauce-symfony-serializer": "dev-main",
+        "andreo/eventsauce-upcasting": "dev-main",
+        "doctrine/doctrine-migrations-bundle": "^3.0",
+        "matthiasnoback/symfony-dependency-injection-test": "^4.3",
+        "phpstan/phpstan": "^1.3",
+        "phpunit/phpunit": "^9.4",
+        "roave/security-advisories": "dev-latest"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "autoload": {
+        "psr-4": {
+            "Andreo\\EventSauceBundle\\": "src/",
+            "Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "dev"
+}

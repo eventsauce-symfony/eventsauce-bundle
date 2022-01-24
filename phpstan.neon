@@ -1,0 +1,7 @@
+parameters:
+    level: max
+    paths:
+        - src
+    checkMissingIterableValueType: false
+    ignoreErrors:
+        - '#Call to an undefined method Symfony\\Component\\Config\\Definition\\Builder\\*#'

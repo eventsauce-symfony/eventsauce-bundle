@@ -1,0 +1,7 @@
+services:
+    Andreo\EventSauce\Serialization\SymfonyPayloadSerializer:
+        class: Andreo\EventSauce\Serialization\SymfonyPayloadSerializer
+        public: false
+        arguments:
+            - !service
+                factory: [!service { class: Andreo\EventSauce\Serialization\SymfonySerializerFactory }, 'create' ]

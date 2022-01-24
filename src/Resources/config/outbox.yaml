@@ -1,0 +1,51 @@
+parameters:
+    andreo.event_sauce.back_off_strategy.initial_delay_ms: 100000
+    andreo.event_sauce.back_off_strategy.max_tries: 25
+
+services:
+    EventSauce\BackOff\BackOffStrategy: '@EventSauce\BackOff\ExponentialBackOffStrategy'
+    EventSauce\MessageOutbox\RelayCommitStrategy: '@EventSauce\MessageOutbox\MarkMessagesConsumedOnCommit'
+
+    EventSauce\BackOff\ExponentialBackOffStrategy:
+        class: EventSauce\BackOff\ExponentialBackOffStrategy
+        public: false
+        lazy: true
+        arguments:
+            - '%andreo.event_sauce.back_off_strategy.initial_delay_ms%'
+            - '%andreo.event_sauce.back_off_strategy.max_tries%'
+
+    EventSauce\BackOff\FibonacciBackOffStrategy:
+        class: EventSauce\BackOff\FibonacciBackOffStrategy
+        public: false
+        lazy: true
+        arguments:
+            - '%andreo.event_sauce.back_off_strategy.initial_delay_ms%'
+            - '%andreo.event_sauce.back_off_strategy.max_tries%'
+
+    EventSauce\BackOff\LinearBackOffStrategy:
+        class: EventSauce\BackOff\LinearBackOffStrategy
+        public: false
+        lazy: true
+        arguments:
+            - '%andreo.event_sauce.back_off_strategy.initial_delay_ms%'
+            - '%andreo.event_sauce.back_off_strategy.max_tries%'
+
+    EventSauce\BackOff\NoWaitingBackOffStrategy:
+        class: EventSauce\BackOff\NoWaitingBackOffStrategy
+        public: false
+        lazy: true
+        arguments:
+            - '%andreo.event_sauce.back_off_strategy.max_tries%'
+
+    EventSauce\BackOff\ImmediatelyFailingBackOffStrategy:
+        class: EventSauce\BackOff\ImmediatelyFailingBackOffStrategy
+        public: false
+        lazy: true
+
+    EventSauce\MessageOutbox\MarkMessagesConsumedOnCommit:
+        class: EventSauce\MessageOutbox\MarkMessagesConsumedOnCommit
+        public: false
+
+    EventSauce\MessageOutbox\DeleteMessageOnCommit:
+        class: EventSauce\MessageOutbox\DeleteMessageOnCommit
+        public: false

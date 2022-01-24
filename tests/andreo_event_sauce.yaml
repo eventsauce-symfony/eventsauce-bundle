@@ -1,0 +1,79 @@
+andreo_event_sauce:
+    time:
+        recording_timezone: Europe/Warsaw
+        clock: EventSauce\Clock\Clock
+    message:
+        repository:
+            json_encode_options:
+                - !php/const JSON_PRETTY_PRINT
+                - !php/const JSON_PRESERVE_ZERO_FRACTION
+                - !php/const JSON_THROW_ON_ERROR
+            doctrine:
+                connection: doctrine.dbal.default_connection
+                table_schema: EventSauce\MessageRepository\TableSchema\TableSchema
+                table_name: event_message
+        serializer: EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer
+        dispatcher:
+            messenger:
+                enabled: true
+                mode: event_with_headers
+            chain:
+                event_bus: eventBus
+        decorator: true
+        outbox:
+            enabled: true
+            back_off:
+                strategy: EventSauce\BackOff\BackOffStrategy
+                options:
+                    initial_delay_ms: 100000
+                    max_tries: 10
+            relay_commit:
+                strategy: EventSauce\MessageOutbox\RelayCommitStrategy
+    snapshot:
+        enabled: true
+        versioned: true
+        store_strategy:
+            every_n_event:
+                number: 100
+        repository:
+            doctrine: true
+        serializer: Andreo\EventSauceBundle\Snapshotting\SnapshotStateSerializer
+    upcast:
+        enabled: true
+        context:
+            payload:
+                guess_event: true
+    payload_serializer: Andreo\EventSauceBundle\Serialization\SymfonyPayloadSerializer
+    uuid_encoder: EventSauce\UuidEncoding\UuidEncoder
+    class_name_inflector: EventSauce\EventSourcing\ClassNameInflector
+    aggregates:
+        circle:
+            class: App\Domain\Circle\Circle
+            repository_alias: circleRepository
+            message:
+                outbox: false
+                decorator: true
+                dispatchers:
+                    - event_bus
+            upcast: true
+            snapshot: false
+        polygon:
+            class: App\Domain\Polygon\Polygon
+            repository_alias: polygonRepository
+            message:
+                outbox: false
+                decorator: true
+                dispatchers:
+                    - event_bus
+            upcast: true
+            snapshot: true
+        square:
+            class: App\Domain\Square\Square
+            repository_alias: squareRepository
+            message:
+                outbox: true
+                decorator: true
+                dispatchers:
+                    - event_bus
+            upcast: true
+            snapshot: false

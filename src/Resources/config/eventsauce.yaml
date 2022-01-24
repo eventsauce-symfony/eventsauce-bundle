@@ -1,0 +1,55 @@
+services:
+    EventSauce\Clock\Clock: '@EventSauce\Clock\SystemClock'
+    EventSauce\MessageRepository\TableSchema\TableSchema: '@EventSauce\MessageRepository\TableSchema\DefaultTableSchema'
+    EventSauce\EventSourcing\Serialization\PayloadSerializer: '@EventSauce\EventSourcing\Serialization\ConstructingPayloadSerializer'
+    EventSauce\EventSourcing\Serialization\MessageSerializer: '@EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer'
+    EventSauce\UuidEncoding\UuidEncoder: '@EventSauce\UuidEncoding\BinaryUuidEncoder'
+    EventSauce\EventSourcing\ClassNameInflector: '@EventSauce\EventSourcing\DotSeparatedSnakeCaseInflector'
+    EventSauce\EventSourcing\MessageDecorator: '@EventSauce\EventSourcing\DefaultHeadersDecorator'
+
+    EventSauce\Clock\SystemClock:
+        class: EventSauce\Clock\SystemClock
+        public: false
+        arguments:
+            - '@andreo.event_sauce.recording_timezone'
+
+    EventSauce\MessageRepository\TableSchema\DefaultTableSchema:
+        class: EventSauce\MessageRepository\TableSchema\DefaultTableSchema
+        public: false
+
+    EventSauce\EventSourcing\Serialization\ConstructingPayloadSerializer:
+        class: EventSauce\EventSourcing\Serialization\ConstructingPayloadSerializer
+        public: false
+
+    EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer:
+        class: EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer
+        public: false
+        arguments:
+            - '@EventSauce\EventSourcing\ClassNameInflector'
+            - '@EventSauce\EventSourcing\Serialization\PayloadSerializer'
+
+    EventSauce\UuidEncoding\BinaryUuidEncoder:
+        class: EventSauce\UuidEncoding\BinaryUuidEncoder
+        public: false
+
+    EventSauce\UuidEncoding\StringUuidEncoder:
+        class: EventSauce\UuidEncoding\StringUuidEncoder
+        public: false
+
+    EventSauce\EventSourcing\DotSeparatedSnakeCaseInflector:
+        class: EventSauce\EventSourcing\DotSeparatedSnakeCaseInflector
+        public: false
+        lazy: true
+
+    EventSauce\EventSourcing\DefaultHeadersDecorator:
+        class: EventSauce\EventSourcing\DefaultHeadersDecorator
+        public: false
+        lazy: true
+        arguments:
+            - '@EventSauce\EventSourcing\ClassNameInflector'
+            - '@EventSauce\Clock\Clock'
+
+    Andreo\EventSauceBundle\NothingMessageDecorator:
+        class: Andreo\EventSauceBundle\NothingMessageDecorator
+        public: false
+        lazy: true

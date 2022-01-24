@@ -1,0 +1,9 @@
+services:
+    Andreo\EventSauce\Snapshotting\SnapshotStateSerializer: '@Andreo\EventSauce\Snapshotting\ConstructingSnapshotStateSerializer'
+
+    Andreo\EventSauce\Snapshotting\ConstructingSnapshotStateSerializer:
+        class: Andreo\EventSauce\Snapshotting\ConstructingSnapshotStateSerializer
+        arguments:
+            - '@EventSauce\EventSourcing\Serialization\PayloadSerializer'
+            - '@EventSauce\Clock\Clock'
+            - '@EventSauce\EventSourcing\ClassNameInflector'

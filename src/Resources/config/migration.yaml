@@ -1,0 +1,12 @@
+services:
+    Andreo\EventSauce\Doctrine\Migration\GenerateAggregateMigrationCommand:
+        arguments:
+            - '@doctrine.migrations.dependency_factory'
+            - '@Andreo\EventSauce\Doctrine\Migration\TableNameSuffix'
+            - !service
+                class: Andreo\EventSauce\Doctrine\Migration\EventMessageSchemaBuilder
+            - !service
+                class: Andreo\EventSauce\Doctrine\Migration\OutboxMessageSchemaBuilder
+            - !service
+                class: Andreo\EventSauce\Doctrine\Migration\SnapshotSchemaBuilder
+        tags: [console.command]
