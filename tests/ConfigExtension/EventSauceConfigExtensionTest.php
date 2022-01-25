@@ -10,8 +10,17 @@ use Andreo\EventSauce\Messenger\MessengerMessageEventDispatcher;
 use Andreo\EventSauceBundle\Attribute\AsMessageDecorator;
 use Andreo\EventSauceBundle\DelegatingSynchronousMessageDispatcher;
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
+use EventSauce\BackOff\BackOffStrategy;
+use EventSauce\BackOff\ExponentialBackOffStrategy;
+use EventSauce\BackOff\FibonacciBackOffStrategy;
+use EventSauce\BackOff\ImmediatelyFailingBackOffStrategy;
+use EventSauce\BackOff\LinearBackOffStrategy;
+use EventSauce\BackOff\NoWaitingBackOffStrategy;
 use EventSauce\Clock\Clock;
 use EventSauce\EventSourcing\Serialization\MessageSerializer;
+use EventSauce\MessageOutbox\DeleteMessageOnCommit;
+use EventSauce\MessageOutbox\MarkMessagesConsumedOnCommit;
+use EventSauce\MessageOutbox\RelayCommitStrategy;
 use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
@@ -199,6 +208,226 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
             $dispatcherDefinition->getArgument(0),
             new TaggedIteratorArgument('andreo.event_sauce.message_consumer.bar_service')
         );
+    }
+
+    /**
+     * @test
+     */
+    public function message_decorator_config_is_valid_loading(): void
+    {
+        $this->load([
+            'message' => [
+                'decorator' => false,
+            ],
+        ]);
+
+        $this->assertArrayNotHasKey(AsMessageDecorator::class, $this->container->getAutoconfiguredAttributes());
+    }
+
+    /**
+     * @test
+     */
+    public function outbox_back_of_config_is_valid_loading(): void
+    {
+        $this->load([
+            'message' => [
+                'outbox' => [
+                    'enabled' => true,
+                    'back_off' => [
+                        'exponential' => [
+                            'enabled' => true,
+                            'initial_delay_ms' => 200000,
+                            'max_tries' => 20,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $this->assertContainerBuilderHasAlias(BackOffStrategy::class);
+        $backOffStrategyAlias = $this->container->getAlias(BackOffStrategy::class);
+        $this->assertEquals(ExponentialBackOffStrategy::class, $backOffStrategyAlias->__toString());
+        $exponentialDefinition = $this->container->getDefinition(ExponentialBackOffStrategy::class);
+        $this->assertEquals(200000, $exponentialDefinition->getArgument(0));
+        $this->assertEquals(20, $exponentialDefinition->getArgument(1));
+
+        $this->load([
+            'message' => [
+                'outbox' => [
+                    'enabled' => true,
+                    'back_off' => [
+                        'fibonacci' => [
+                            'enabled' => true,
+                            'max_tries' => 30,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $this->assertContainerBuilderHasAlias(BackOffStrategy::class);
+        $backOffStrategyAlias = $this->container->getAlias(BackOffStrategy::class);
+        $this->assertEquals(FibonacciBackOffStrategy::class, $backOffStrategyAlias->__toString());
+        $fibonacciDefinition = $this->container->getDefinition(FibonacciBackOffStrategy::class);
+        $this->assertEquals(
+            '%andreo.event_sauce.outbox.back_off.initial_delay_ms%',
+            $fibonacciDefinition->getArgument(0)
+        );
+        $this->assertEquals(30, $fibonacciDefinition->getArgument(1));
+
+        $this->load([
+            'message' => [
+                'outbox' => [
+                    'enabled' => true,
+                    'back_off' => [
+                        'linear_back' => [
+                            'enabled' => true,
+                            'initial_delay_ms' => 300000,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $this->assertContainerBuilderHasAlias(BackOffStrategy::class);
+        $backOffStrategyAlias = $this->container->getAlias(BackOffStrategy::class);
+        $this->assertEquals(LinearBackOffStrategy::class, $backOffStrategyAlias->__toString());
+        $linearDefinition = $this->container->getDefinition(LinearBackOffStrategy::class);
+        $this->assertEquals(300000, $linearDefinition->getArgument(0));
+        $this->assertEquals('%andreo.event_sauce.outbox.back_off.max_tries%', $linearDefinition->getArgument(1));
+
+        $this->load([
+            'message' => [
+                'outbox' => [
+                    'enabled' => true,
+                    'back_off' => [
+                        'no_waiting' => [
+                            'enabled' => true,
+                            'max_tries' => 20,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $this->assertContainerBuilderHasAlias(BackOffStrategy::class);
+        $backOffStrategyAlias = $this->container->getAlias(BackOffStrategy::class);
+        $this->assertEquals(NoWaitingBackOffStrategy::class, $backOffStrategyAlias->__toString());
+        $noWaitingDefinition = $this->container->getDefinition(NoWaitingBackOffStrategy::class);
+        $this->assertEquals(20, $noWaitingDefinition->getArgument(0));
+
+        $this->load([
+            'message' => [
+                'outbox' => [
+                    'enabled' => true,
+                    'back_off' => [
+                        'immediately_failing' => [
+                            'enabled' => true,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $this->assertContainerBuilderHasAlias(BackOffStrategy::class);
+        $backOffStrategyAlias = $this->container->getAlias(BackOffStrategy::class);
+        $this->assertEquals(ImmediatelyFailingBackOffStrategy::class, $backOffStrategyAlias->__toString());
+
+        $this->load([
+            'message' => [
+                'outbox' => [
+                    'enabled' => true,
+                    'back_off' => [
+                        'custom' => [
+                            'id' => DummyBackOfStrategy::class,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $this->assertContainerBuilderHasAlias(BackOffStrategy::class);
+        $backOffStrategyAlias = $this->container->getAlias(BackOffStrategy::class);
+        $this->assertEquals(DummyBackOfStrategy::class, $backOffStrategyAlias->__toString());
+
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->load([
+            'message' => [
+                'outbox' => [
+                    'enabled' => true,
+                    'back_off' => [
+                        'exponential' => [
+                            'enabled' => true,
+                            'initial_delay_ms' => 200000,
+                            'max_tries' => 20,
+                        ],
+                        'no_waiting' => [
+                            'enabled' => true,
+                            'max_tries' => 20,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * @test
+     */
+    public function outbox_relay_commit_config_is_valid_loading(): void
+    {
+        $this->load([
+            'message' => [
+                'outbox' => [
+                    'enabled' => true,
+                    'relay_commit' => [
+                        'delete' => [
+                            'enabled' => true,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $this->assertContainerBuilderHasAlias(RelayCommitStrategy::class);
+        $relayCommitStrategyAlias = $this->container->getAlias(RelayCommitStrategy::class);
+        $this->assertEquals(DeleteMessageOnCommit::class, $relayCommitStrategyAlias->__toString());
+
+        $this->load([
+            'message' => [
+                'outbox' => [
+                    'enabled' => true,
+                    'relay_commit' => [
+                        'mark_consumed' => [
+                            'enabled' => true,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $this->assertContainerBuilderHasAlias(RelayCommitStrategy::class);
+        $relayCommitStrategyAlias = $this->container->getAlias(RelayCommitStrategy::class);
+        $this->assertEquals(MarkMessagesConsumedOnCommit::class, $relayCommitStrategyAlias->__toString());
+
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->load([
+            'message' => [
+                'outbox' => [
+                    'enabled' => true,
+                    'relay_commit' => [
+                        'delete' => [
+                            'enabled' => true,
+                        ],
+                        'mark_consumed' => [
+                            'enabled' => true,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
     }
 
     protected function getContainerExtensions(): array

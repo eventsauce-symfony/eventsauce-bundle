@@ -1,6 +1,6 @@
 parameters:
-    andreo.event_sauce.back_off_strategy.initial_delay_ms: 100000
-    andreo.event_sauce.back_off_strategy.max_tries: 25
+    andreo.event_sauce.outbox.back_off.initial_delay_ms: 100000
+    andreo.event_sauce.outbox.back_off.max_tries: 25
 
 services:
     EventSauce\BackOff\BackOffStrategy: '@EventSauce\BackOff\ExponentialBackOffStrategy'
@@ -11,31 +11,31 @@ services:
         public: false
         lazy: true
         arguments:
-            - '%andreo.event_sauce.back_off_strategy.initial_delay_ms%'
-            - '%andreo.event_sauce.back_off_strategy.max_tries%'
+            - '%andreo.event_sauce.outbox.back_off.initial_delay_ms%'
+            - '%andreo.event_sauce.outbox.back_off.max_tries%'
 
     EventSauce\BackOff\FibonacciBackOffStrategy:
         class: EventSauce\BackOff\FibonacciBackOffStrategy
         public: false
         lazy: true
         arguments:
-            - '%andreo.event_sauce.back_off_strategy.initial_delay_ms%'
-            - '%andreo.event_sauce.back_off_strategy.max_tries%'
+            - '%andreo.event_sauce.outbox.back_off.initial_delay_ms%'
+            - '%andreo.event_sauce.outbox.back_off.max_tries%'
 
     EventSauce\BackOff\LinearBackOffStrategy:
         class: EventSauce\BackOff\LinearBackOffStrategy
         public: false
         lazy: true
         arguments:
-            - '%andreo.event_sauce.back_off_strategy.initial_delay_ms%'
-            - '%andreo.event_sauce.back_off_strategy.max_tries%'
+            - '%andreo.event_sauce.outbox.back_off.initial_delay_ms%'
+            - '%andreo.event_sauce.outbox.back_off.max_tries%'
 
     EventSauce\BackOff\NoWaitingBackOffStrategy:
         class: EventSauce\BackOff\NoWaitingBackOffStrategy
         public: false
         lazy: true
         arguments:
-            - '%andreo.event_sauce.back_off_strategy.max_tries%'
+            - '%andreo.event_sauce.outbox.back_off.max_tries%'
 
     EventSauce\BackOff\ImmediatelyFailingBackOffStrategy:
         class: EventSauce\BackOff\ImmediatelyFailingBackOffStrategy
@@ -45,7 +45,9 @@ services:
     EventSauce\MessageOutbox\MarkMessagesConsumedOnCommit:
         class: EventSauce\MessageOutbox\MarkMessagesConsumedOnCommit
         public: false
+        lazy: true
 
     EventSauce\MessageOutbox\DeleteMessageOnCommit:
         class: EventSauce\MessageOutbox\DeleteMessageOnCommit
         public: false
+        lazy: true

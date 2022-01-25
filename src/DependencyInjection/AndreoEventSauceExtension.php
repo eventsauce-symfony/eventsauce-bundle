@@ -33,6 +33,10 @@ use Andreo\EventSauceBundle\NothingMessageDecorator;
 use DateTimeZone;
 use EventSauce\BackOff\BackOffStrategy;
 use EventSauce\BackOff\ExponentialBackOffStrategy;
+use EventSauce\BackOff\FibonacciBackOffStrategy;
+use EventSauce\BackOff\ImmediatelyFailingBackOffStrategy;
+use EventSauce\BackOff\LinearBackOffStrategy;
+use EventSauce\BackOff\NoWaitingBackOffStrategy;
 use EventSauce\Clock\Clock;
 use EventSauce\Clock\SystemClock;
 use EventSauce\EventSourcing\AggregateRootRepository;
@@ -50,10 +54,10 @@ use EventSauce\EventSourcing\Snapshotting\ConstructingAggregateRootRepositoryWit
 use EventSauce\EventSourcing\Snapshotting\InMemorySnapshotRepository;
 use EventSauce\EventSourcing\Upcasting\UpcasterChain;
 use EventSauce\EventSourcing\Upcasting\UpcastingMessageSerializer;
+use EventSauce\MessageOutbox\DeleteMessageOnCommit;
 use EventSauce\MessageOutbox\DoctrineOutbox\DoctrineOutboxRepository;
 use EventSauce\MessageOutbox\DoctrineOutbox\DoctrineTransactionalMessageRepository;
 use EventSauce\MessageOutbox\InMemoryOutboxRepository;
-use EventSauce\MessageOutbox\MarkMessagesConsumedOnCommit;
 use EventSauce\MessageOutbox\OutboxRelay;
 use EventSauce\MessageOutbox\RelayCommitStrategy;
 use EventSauce\MessageRepository\DoctrineMessageRepository\DoctrineUuidV4MessageRepository;
@@ -181,6 +185,7 @@ final class AndreoEventSauceExtension extends Extension
                         ->register("andreo.event_sauce.message_dispatcher.$dispatcherName", MessengerMessageDispatcher::class)
                         ->addArgument(new Reference($dispatcherServiceId))
                         ->setPublic(false)
+                        ->setPublic(false)
                     ;
                 } else {
                     $container
@@ -213,36 +218,65 @@ final class AndreoEventSauceExtension extends Extension
         if (!$this->isConfigEnabled($container, $messageOutboxConfig)) {
             return;
         }
-
-        $loader->load('outbox.yaml');
-
         if (!class_exists(AggregateRootRepositoryWithoutDispatchMessage::class)) {
             throw new LogicException('Message outbox is not available. Try running "composer require andreo/eventsauce-outbox".');
         }
 
-        $backOffConfig = $messageOutboxConfig['back_off'];
-        $backOffStrategyServiceId = $backOffConfig['strategy'];
-        $backOffStrategyOptions = $backOffConfig['options'];
-        if (!in_array($backOffStrategyServiceId, [null, BackOffStrategy::class, ExponentialBackOffStrategy::class], true)) {
-            $container->setAlias(BackOffStrategy::class, $backOffStrategyServiceId);
-        }
+        $loader->load('outbox.yaml');
 
-        if (!empty($backOffStrategyOptions)) {
-            $initialDelayMs = $backOffStrategyOptions['initial_delay_ms'];
-            $maxTries = $backOffStrategyOptions['max_tries'];
-            if (null !== $initialDelayMs) {
-                $container->setParameter('andreo.event_sauce.back_off_strategy.initial_delay_ms', $initialDelayMs);
+        $initialDelayMsParam = '%andreo.event_sauce.outbox.back_off.initial_delay_ms%';
+        $maxTriesParam = '%andreo.event_sauce.outbox.back_off.max_tries%';
+
+        $backOffConfig = $messageOutboxConfig['back_off'];
+        if ($this->isConfigEnabled($container, $exponentialConfig = $backOffConfig['exponential'])) {
+            $initialDelayMs = $exponentialConfig['initial_delay_ms'];
+            $maxTries = $exponentialConfig['max_tries'];
+            if (null !== $initialDelayMs || null !== $maxTries) {
+                $container
+                    ->getDefinition(ExponentialBackOffStrategy::class)
+                    ->replaceArgument(0, $initialDelayMs ?? $initialDelayMsParam)
+                    ->replaceArgument(1, $maxTries ?? $maxTriesParam)
+                ;
             }
+        } elseif ($this->isConfigEnabled($container, $fibonacciConfig = $backOffConfig['fibonacci'])) {
+            $initialDelayMs = $fibonacciConfig['initial_delay_ms'];
+            $maxTries = $fibonacciConfig['max_tries'];
+            if (null !== $initialDelayMs || null !== $maxTries) {
+                $container
+                    ->getDefinition(FibonacciBackOffStrategy::class)
+                    ->replaceArgument(1, $maxTries ?? $maxTriesParam)
+                ;
+            }
+            $container->setAlias(BackOffStrategy::class, FibonacciBackOffStrategy::class);
+        } elseif ($this->isConfigEnabled($container, $linearBackConfig = $backOffConfig['linear_back'])) {
+            $initialDelayMs = $linearBackConfig['initial_delay_ms'];
+            $maxTries = $linearBackConfig['max_tries'];
+            if (null !== $initialDelayMs || null !== $maxTries) {
+                $container
+                    ->getDefinition(LinearBackOffStrategy::class)
+                    ->replaceArgument(0, $initialDelayMs ?? $initialDelayMsParam)
+                    ->replaceArgument(1, $maxTries ?? $maxTriesParam)
+                ;
+            }
+            $container->setAlias(BackOffStrategy::class, LinearBackOffStrategy::class);
+        } elseif ($this->isConfigEnabled($container, $noWaitingConfig = $backOffConfig['no_waiting'])) {
+            $maxTries = $noWaitingConfig['max_tries'];
             if (null !== $maxTries) {
-                $container->setParameter('andreo.event_sauce.back_off_strategy.max_tries', $maxTries);
+                $container
+                    ->getDefinition(NoWaitingBackOffStrategy::class)
+                    ->replaceArgument(0, $maxTries)
+                ;
             }
+            $container->setAlias(BackOffStrategy::class, NoWaitingBackOffStrategy::class);
+        } elseif ($this->isConfigEnabled($container, $backOffConfig['immediately_failing'])) {
+            $container->setAlias(BackOffStrategy::class, ImmediatelyFailingBackOffStrategy::class);
+        } elseif ($this->isConfigEnabled($container, $customConfig = $backOffConfig['custom'])) {
+            $container->setAlias(BackOffStrategy::class, $customConfig['id']);
         }
 
         $relayCommitConfig = $messageOutboxConfig['relay_commit'];
-        $relayCommitStrategyServiceId = $relayCommitConfig['strategy'];
-
-        if (!in_array($relayCommitStrategyServiceId, [null, RelayCommitStrategy::class, MarkMessagesConsumedOnCommit::class], true)) {
-            $container->setAlias(RelayCommitStrategy::class, $relayCommitStrategyServiceId);
+        if ($this->isConfigEnabled($container, $relayCommitConfig['delete'])) {
+            $container->setAlias(RelayCommitStrategy::class, DeleteMessageOnCommit::class);
         }
     }
 

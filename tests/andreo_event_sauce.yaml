@@ -23,12 +23,27 @@ andreo_event_sauce:
         outbox:
             enabled: true
             back_off:
-                strategy: EventSauce\BackOff\BackOffStrategy
-                options:
-                    initial_delay_ms: 100000
-                    max_tries: 10
+                strategy:
+                    exponential:
+                        initial_delay_ms: 100000
+                        max_tries: 10
+                    fibonacci:
+                        initial_delay_ms: 100000
+                        max_tries: 10
+                    linear_back:
+                        initial_delay_ms: 100000
+                        max_tries: 10
+                    no_waiting:
+                        max_tries: 10
+                    immediately_failing:
+                        enabled: true
+                    custom:
+                        id: Foo/Bar/Baz
             relay_commit:
-                strategy: EventSauce\MessageOutbox\RelayCommitStrategy
+                delete:
+                    enabled: true
+                mark_consumed:
+                    enabled: true
     snapshot:
         enabled: true
         versioned: true

@@ -6,17 +6,10 @@ namespace Andreo\EventSauceBundle\DependencyInjection;
 
 use Andreo\EventSauce\Serialization\SymfonyPayloadSerializer;
 use Andreo\EventSauce\Snapshotting\ConstructingSnapshotStateSerializer;
-use EventSauce\BackOff\ExponentialBackOffStrategy;
-use EventSauce\BackOff\FibonacciBackOffStrategy;
-use EventSauce\BackOff\ImmediatelyFailingBackOffStrategy;
-use EventSauce\BackOff\LinearBackOffStrategy;
-use EventSauce\BackOff\NoWaitingBackOffStrategy;
 use EventSauce\Clock\SystemClock;
 use EventSauce\EventSourcing\DotSeparatedSnakeCaseInflector;
 use EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer;
 use EventSauce\EventSourcing\Serialization\ConstructingPayloadSerializer;
-use EventSauce\MessageOutbox\DeleteMessageOnCommit;
-use EventSauce\MessageOutbox\MarkMessagesConsumedOnCommit;
 use EventSauce\MessageRepository\TableSchema\DefaultTableSchema;
 use EventSauce\UuidEncoding\BinaryUuidEncoder;
 use EventSauce\UuidEncoding\StringUuidEncoder;
@@ -144,7 +137,7 @@ final class Configuration implements ConfigurationInterface
                             ->info('Table name postfix.')
                             ->cannotBeEmpty()
                             ->defaultValue('event_message')
-                            ->end()
+                        ->end()
                     ?->end()
                 ->end()
             ->end();
@@ -193,6 +186,15 @@ final class Configuration implements ConfigurationInterface
 
     private function getMessageOutboxSection(): NodeDefinition
     {
+        $backOfStrategies = [
+            'exponential',
+            'fibonacci',
+            'linear_back',
+            'no_waiting',
+            'immediately',
+            'custom',
+        ];
+
         $node = new ArrayNodeDefinition('outbox');
         $node
             ->canBeEnabled()
@@ -200,45 +202,83 @@ final class Configuration implements ConfigurationInterface
             ->children()
                 ->arrayNode('back_off')
                     ->addDefaultsIfNotSet()
+                    ->validate()
+                        ->ifTrue(static function (array $strategies) {
+                            $count = 0;
+                            foreach ($strategies as $strategy) {
+                                if ($strategy['enabled']) {
+                                    ++$count;
+                                }
+                            }
+
+                            return $count > 1;
+                        })
+                        ->thenInvalid(
+                            sprintf(
+                                'Only one strategy of outbox back off can be set: %s.',
+                                $this->implode($backOfStrategies)
+                            )
+                        )
+                    ->end()
                     ->children()
-                        ->scalarNode('strategy')
-                            ->defaultNull()
-                            ->info(
-                                sprintf(
-                                    'You can set a custom back off strategy here, or choose from one of the existing: %s. Default is: %s',
-                                    $this->implode([
-                                        ExponentialBackOffStrategy::class,
-                                        FibonacciBackOffStrategy::class,
-                                        LinearBackOffStrategy::class,
-                                        NoWaitingBackOffStrategy::class,
-                                        ImmediatelyFailingBackOffStrategy::class,
-                                    ]),
-                                    ExponentialBackOffStrategy::class
-                                ))
-                        ->end()
-                        ?->arrayNode('options')
+                        ->arrayNode('exponential')
+                            ->canBeEnabled()
                             ->addDefaultsIfNotSet()
                             ->children()
                                 ->integerNode('initial_delay_ms')->defaultNull()->end()
                                 ?->integerNode('max_tries')->defaultNull()->end()
                             ?->end()
                         ->end()
+                        ->arrayNode('fibonacci')
+                            ->canBeEnabled()
+                            ->addDefaultsIfNotSet()
+                            ->children()
+                                ->integerNode('initial_delay_ms')->defaultNull()->end()
+                                ?->integerNode('max_tries')->defaultNull()->end()
+                            ?->end()
+                        ->end()
+                        ->arrayNode('linear_back')
+                            ->canBeEnabled()
+                            ->addDefaultsIfNotSet()
+                            ->children()
+                                ->integerNode('initial_delay_ms')->defaultNull()->end()
+                                ?->integerNode('max_tries')->defaultNull()->end()
+                            ?->end()
+                        ->end()
+                        ->arrayNode('no_waiting')
+                            ->canBeEnabled()
+                            ->addDefaultsIfNotSet()
+                            ->children()
+                                ?->integerNode('max_tries')->defaultNull()->end()
+                            ?->end()
+                        ->end()
+                        ->arrayNode('immediately_failing')
+                            ->canBeEnabled()
+                            ->addDefaultsIfNotSet()
+                        ->end()
+                        ?->arrayNode('custom')
+                            ->canBeEnabled()
+                            ->addDefaultsIfNotSet()
+                            ->children()
+                                ->scalarNode('id')->isRequired()->end()
+                            ?->end()
+                        ->end()
                     ->end()
                 ->end()
                 ->arrayNode('relay_commit')
                     ->addDefaultsIfNotSet()
+                    ->validate()
+                        ->ifTrue(static fn (array $config) => $config['mark_consumed']['enabled'] && $config['delete']['enabled'])
+                        ->thenInvalid('Only one strategy of outbox relay commit can be set: mark_consumed or delete')
+                    ->end()
                     ->children()
-                        ?->scalarNode('strategy')
-                            ->defaultNull()
-                            ->info(
-                                sprintf(
-                                    'You can set a custom relay commit strategy here, or choose from one of the existing: %s. Default is: %s',
-                                    $this->implode([
-                                        MarkMessagesConsumedOnCommit::class,
-                                        DeleteMessageOnCommit::class,
-                                    ]),
-                                    MarkMessagesConsumedOnCommit::class
-                                ))
+                        ->arrayNode('mark_consumed')
+                            ->canBeEnabled()
+                            ->addDefaultsIfNotSet()
+                        ->end()
+                        ?->arrayNode('delete')
+                            ->canBeEnabled()
+                            ->addDefaultsIfNotSet()
                         ->end()
                     ?->end()
                 ->end()
@@ -246,8 +286,8 @@ final class Configuration implements ConfigurationInterface
                     ->info('Only one type of repository can be selected.')
                     ->addDefaultsIfNotSet()
                     ->validate()
-                        ->ifTrue(fn (array $config) => $config['memory']['enabled'] && $config['doctrine']['enabled'])
-                        ->thenInvalid('Only one type of message outbox repository can be set: memory or doctrine. Remove one of them.')
+                        ->ifTrue(static fn (array $config) => $config['memory']['enabled'] && $config['doctrine']['enabled'])
+                        ->thenInvalid('Only one type of message outbox repository can be set: memory or doctrine')
                     ->end()
                     ->children()
                         ->arrayNode('memory')
@@ -282,8 +322,8 @@ final class Configuration implements ConfigurationInterface
                     ->info('Only one type of repository can be selected.')
                     ->addDefaultsIfNotSet()
                     ->validate()
-                        ->ifTrue(fn (array $config) => $config['memory']['enabled'] && $config['doctrine']['enabled'])
-                        ->thenInvalid('Only one type of snapshot repository can be set: memory or doctrine. Remove one of them.')
+                        ->ifTrue(static fn (array $config) => $config['memory']['enabled'] && $config['doctrine']['enabled'])
+                        ->thenInvalid('Only one type of snapshot repository can be set: memory or doctrine')
                     ->end()
                     ->children()
                         ->arrayNode('memory')
@@ -306,8 +346,8 @@ final class Configuration implements ConfigurationInterface
                 ?->arrayNode('store_strategy')
                     ->addDefaultsIfNotSet()
                     ->validate()
-                        ->ifTrue(fn (array $config) => $config['every_n_event']['enabled'] && $config['custom']['enabled'])
-                        ->thenInvalid('Only one type of snapshot store strategy can be set: every_n_event or custom. Remove one of them.')
+                        ->ifTrue(static fn (array $config) => $config['every_n_event']['enabled'] && $config['custom']['enabled'])
+                        ->thenInvalid('Only one strategy of snapshot store can be set: every_n_event or custom')
                     ->end()
                     ->children()
                         ->arrayNode('every_n_event')
