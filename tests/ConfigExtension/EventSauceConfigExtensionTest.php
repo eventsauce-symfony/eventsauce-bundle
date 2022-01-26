@@ -10,6 +10,7 @@ use Andreo\EventSauce\Messenger\MessengerMessageEventDispatcher;
 use Andreo\EventSauce\Snapshotting\ConstructingSnapshotStateSerializer;
 use Andreo\EventSauce\Snapshotting\SnapshotStateSerializer;
 use Andreo\EventSauceBundle\Attribute\AsMessageDecorator;
+use Andreo\EventSauceBundle\Attribute\AsUpcaster;
 use Andreo\EventSauceBundle\DelegatingSynchronousMessageDispatcher;
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
 use EventSauce\BackOff\BackOffStrategy;
@@ -19,10 +20,13 @@ use EventSauce\BackOff\ImmediatelyFailingBackOffStrategy;
 use EventSauce\BackOff\LinearBackOffStrategy;
 use EventSauce\BackOff\NoWaitingBackOffStrategy;
 use EventSauce\Clock\Clock;
+use EventSauce\EventSourcing\ClassNameInflector;
 use EventSauce\EventSourcing\Serialization\MessageSerializer;
+use EventSauce\EventSourcing\Serialization\PayloadSerializer;
 use EventSauce\MessageOutbox\DeleteMessageOnCommit;
 use EventSauce\MessageOutbox\MarkMessagesConsumedOnCommit;
 use EventSauce\MessageOutbox\RelayCommitStrategy;
+use EventSauce\UuidEncoding\UuidEncoder;
 use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
@@ -556,6 +560,62 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
         ]);
 
         $this->assertContainerBuilderNotHasService(ConstructingSnapshotStateSerializer::class);
+    }
+
+    /**
+     * @test
+     */
+    public function upcast_config_is_loading(): void
+    {
+        $this->load([
+            'upcast' => [
+                'enabled' => true,
+            ],
+        ]);
+
+        $this->assertArrayHasKey(AsUpcaster::class, $this->container->getAutoconfiguredAttributes());
+    }
+
+    /**
+     * @test
+     */
+    public function custom_payload_serializer_is_loading(): void
+    {
+        $this->load([
+            'payload_serializer' => DummyCustomPayloadSerializer::class,
+        ]);
+
+        $this->assertContainerBuilderHasAlias(PayloadSerializer::class);
+        $payloadSerializerAlias = $this->container->getAlias(PayloadSerializer::class);
+        $this->assertEquals(DummyCustomPayloadSerializer::class, $payloadSerializerAlias->__toString());
+    }
+
+    /**
+     * @test
+     */
+    public function custom_uuid_encoder_is_loading(): void
+    {
+        $this->load([
+            'uuid_encoder' => DummyUuidEncoder::class,
+        ]);
+
+        $this->assertContainerBuilderHasAlias(UuidEncoder::class);
+        $uuidEncoderAlias = $this->container->getAlias(UuidEncoder::class);
+        $this->assertEquals(DummyUuidEncoder::class, $uuidEncoderAlias->__toString());
+    }
+
+    /**
+     * @test
+     */
+    public function custom_class_name_inflector_is_loading(): void
+    {
+        $this->load([
+            'class_name_inflector' => DummyClassNameInflector::class,
+        ]);
+
+        $this->assertContainerBuilderHasAlias(ClassNameInflector::class);
+        $classNameInflectorAlias = $this->container->getAlias(ClassNameInflector::class);
+        $this->assertEquals(DummyClassNameInflector::class, $classNameInflectorAlias->__toString());
     }
 
     protected function getContainerExtensions(): array

@@ -75,7 +75,7 @@ final class DefaultEventSauceConfigExtensionTest extends AbstractExtensionTestCa
     /**
      * @test
      */
-    public function default_upcast_config_loaded(): void
+    public function default_upcast_config_is_loading(): void
     {
         $this->load();
 
@@ -85,7 +85,7 @@ final class DefaultEventSauceConfigExtensionTest extends AbstractExtensionTestCa
     /**
      * @test
      */
-    public function default_mixed_configs_loaded(): void
+    public function default_configs_is_loading(): void
     {
         $this->load();
 
