@@ -30,7 +30,7 @@ andreo_event_sauce:
                     fibonacci:
                         initial_delay_ms: 100000
                         max_tries: 10
-                    linear_back:
+                    linear:
                         initial_delay_ms: 100000
                         max_tries: 10
                     no_waiting:

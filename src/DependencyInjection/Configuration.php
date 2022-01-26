@@ -189,7 +189,7 @@ final class Configuration implements ConfigurationInterface
         $backOfStrategies = [
             'exponential',
             'fibonacci',
-            'linear_back',
+            'linear',
             'no_waiting',
             'immediately',
             'custom',
@@ -237,7 +237,7 @@ final class Configuration implements ConfigurationInterface
                                 ?->integerNode('max_tries')->defaultNull()->end()
                             ?->end()
                         ->end()
-                        ->arrayNode('linear_back')
+                        ->arrayNode('linear')
                             ->canBeEnabled()
                             ->addDefaultsIfNotSet()
                             ->children()
@@ -327,7 +327,7 @@ final class Configuration implements ConfigurationInterface
                     ->end()
                     ->children()
                         ->arrayNode('memory')
-                            ->canBeDisabled()
+                            ->canBeEnabled()
                         ->end()
                         ?->arrayNode('doctrine')
                             ->canBeEnabled()

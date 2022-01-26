@@ -7,6 +7,8 @@ namespace Tests\ConfigExtension;
 use Andreo\EventSauce\Messenger\MessengerEventWithHeadersDispatcher;
 use Andreo\EventSauce\Messenger\MessengerMessageDispatcher;
 use Andreo\EventSauce\Messenger\MessengerMessageEventDispatcher;
+use Andreo\EventSauce\Snapshotting\ConstructingSnapshotStateSerializer;
+use Andreo\EventSauce\Snapshotting\SnapshotStateSerializer;
 use Andreo\EventSauceBundle\Attribute\AsMessageDecorator;
 use Andreo\EventSauceBundle\DelegatingSynchronousMessageDispatcher;
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
@@ -31,7 +33,7 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function time_config_is_valid_loading(): void
+    public function time_config_is_loading(): void
     {
         $this->load([
             'time' => [
@@ -54,7 +56,7 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function message_config_is_valid_loading(): void
+    public function message_config_is_loading(): void
     {
         $this->load([
             'message' => [
@@ -83,7 +85,7 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function messenger_message_dispatcher_config_is_valid_loading(): void
+    public function messenger_message_dispatcher_of_mode_event_with_headers_is_loading(): void
     {
         $this->load([
             'message' => [
@@ -121,7 +123,13 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
         $busDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.bar_bus');
         $this->assertEquals(MessengerEventWithHeadersDispatcher::class, $busDefinition->getClass());
         $this->assertEquals($busDefinition->getArgument(0), new Reference('barBus'));
+    }
 
+    /**
+     * @test
+     */
+    public function messenger_message_dispatcher_of_mode_event_is_loading(): void
+    {
         $this->load([
             'message' => [
                 'dispatcher' => [
@@ -140,7 +148,13 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
         $busDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.foo_bus');
         $this->assertEquals(MessengerMessageEventDispatcher::class, $busDefinition->getClass());
         $this->assertEquals($busDefinition->getArgument(0), new Reference('fooBus'));
+    }
 
+    /**
+     * @test
+     */
+    public function messenger_message_dispatcher_of_mode_message_is_loading(): void
+    {
         $this->load([
             'message' => [
                 'dispatcher' => [
@@ -159,7 +173,13 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
         $busDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.foo_bus');
         $this->assertEquals(MessengerMessageDispatcher::class, $busDefinition->getClass());
         $this->assertEquals($busDefinition->getArgument(0), new Reference('fooBus'));
+    }
 
+    /**
+     * @test
+     */
+    public function messenger_message_dispatcher_config_throw_error_if_null_bus_service(): void
+    {
         $this->expectException(InvalidConfigurationException::class);
         $this->load([
             'message' => [
@@ -178,7 +198,7 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function message_dispatcher_config_is_valid_loading(): void
+    public function default_message_dispatcher_config_is_loading(): void
     {
         $this->load([
             'message' => [
@@ -213,7 +233,7 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function message_decorator_config_is_valid_loading(): void
+    public function message_decorator_config_is_loading(): void
     {
         $this->load([
             'message' => [
@@ -227,7 +247,7 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function outbox_back_of_config_is_valid_loading(): void
+    public function outbox_exponential_back_of_strategy_is_loading(): void
     {
         $this->load([
             'message' => [
@@ -250,7 +270,13 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
         $exponentialDefinition = $this->container->getDefinition(ExponentialBackOffStrategy::class);
         $this->assertEquals(200000, $exponentialDefinition->getArgument(0));
         $this->assertEquals(20, $exponentialDefinition->getArgument(1));
+    }
 
+    /**
+     * @test
+     */
+    public function outbox_fibonacci_back_of_strategy_is_loading(): void
+    {
         $this->load([
             'message' => [
                 'outbox' => [
@@ -274,13 +300,19 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
             $fibonacciDefinition->getArgument(0)
         );
         $this->assertEquals(30, $fibonacciDefinition->getArgument(1));
+    }
 
+    /**
+     * @test
+     */
+    public function outbox_linear_back_of_strategy_is_loading(): void
+    {
         $this->load([
             'message' => [
                 'outbox' => [
                     'enabled' => true,
                     'back_off' => [
-                        'linear_back' => [
+                        'linear' => [
                             'enabled' => true,
                             'initial_delay_ms' => 300000,
                         ],
@@ -295,7 +327,13 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
         $linearDefinition = $this->container->getDefinition(LinearBackOffStrategy::class);
         $this->assertEquals(300000, $linearDefinition->getArgument(0));
         $this->assertEquals('%andreo.event_sauce.outbox.back_off.max_tries%', $linearDefinition->getArgument(1));
+    }
 
+    /**
+     * @test
+     */
+    public function outbox_no_waiting_back_of_strategy_is_loading(): void
+    {
         $this->load([
             'message' => [
                 'outbox' => [
@@ -315,7 +353,13 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
         $this->assertEquals(NoWaitingBackOffStrategy::class, $backOffStrategyAlias->__toString());
         $noWaitingDefinition = $this->container->getDefinition(NoWaitingBackOffStrategy::class);
         $this->assertEquals(20, $noWaitingDefinition->getArgument(0));
+    }
 
+    /**
+     * @test
+     */
+    public function outbox_immediately_back_of_strategy_is_loading(): void
+    {
         $this->load([
             'message' => [
                 'outbox' => [
@@ -332,14 +376,20 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
         $this->assertContainerBuilderHasAlias(BackOffStrategy::class);
         $backOffStrategyAlias = $this->container->getAlias(BackOffStrategy::class);
         $this->assertEquals(ImmediatelyFailingBackOffStrategy::class, $backOffStrategyAlias->__toString());
+    }
 
+    /**
+     * @test
+     */
+    public function outbox_custom_back_of_strategy_is_loading(): void
+    {
         $this->load([
             'message' => [
                 'outbox' => [
                     'enabled' => true,
                     'back_off' => [
                         'custom' => [
-                            'id' => DummyBackOfStrategy::class,
+                            'id' => DummyCustomBackOfStrategy::class,
                         ],
                     ],
                 ],
@@ -348,10 +398,15 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
 
         $this->assertContainerBuilderHasAlias(BackOffStrategy::class);
         $backOffStrategyAlias = $this->container->getAlias(BackOffStrategy::class);
-        $this->assertEquals(DummyBackOfStrategy::class, $backOffStrategyAlias->__toString());
+        $this->assertEquals(DummyCustomBackOfStrategy::class, $backOffStrategyAlias->__toString());
+    }
 
+    /**
+     * @test
+     */
+    public function outbox_back_of_strategy_config_throw_error_if_more_than_one_strategy_selected(): void
+    {
         $this->expectException(InvalidConfigurationException::class);
-
         $this->load([
             'message' => [
                 'outbox' => [
@@ -375,7 +430,7 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function outbox_relay_commit_config_is_valid_loading(): void
+    public function outbox_delete_relay_commit_strategy_is_loading(): void
     {
         $this->load([
             'message' => [
@@ -393,7 +448,13 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
         $this->assertContainerBuilderHasAlias(RelayCommitStrategy::class);
         $relayCommitStrategyAlias = $this->container->getAlias(RelayCommitStrategy::class);
         $this->assertEquals(DeleteMessageOnCommit::class, $relayCommitStrategyAlias->__toString());
+    }
 
+    /**
+     * @test
+     */
+    public function outbox_mark_consumed_relay_commit_strategy_is_loading(): void
+    {
         $this->load([
             'message' => [
                 'outbox' => [
@@ -410,9 +471,14 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
         $this->assertContainerBuilderHasAlias(RelayCommitStrategy::class);
         $relayCommitStrategyAlias = $this->container->getAlias(RelayCommitStrategy::class);
         $this->assertEquals(MarkMessagesConsumedOnCommit::class, $relayCommitStrategyAlias->__toString());
+    }
 
+    /**
+     * @test
+     */
+    public function outbox_relay_commit_strategy_config_throw_error_if_more_than_one_strategy_selected(): void
+    {
         $this->expectException(InvalidConfigurationException::class);
-
         $this->load([
             'message' => [
                 'outbox' => [
@@ -428,6 +494,68 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
                 ],
             ],
         ]);
+    }
+
+    /**
+     * @test
+     */
+    public function snapshot_state_serializer_is_loading(): void
+    {
+        $this->load([
+            'snapshot' => [
+                'enabled' => true,
+                'repository' => [
+                    'doctrine' => [
+                        'enabled' => true,
+                    ],
+                ],
+            ],
+        ]);
+
+        $this->assertContainerBuilderHasAlias(SnapshotStateSerializer::class);
+        $snapshotSerializerAlias = $this->container->getAlias(SnapshotStateSerializer::class);
+        $this->assertEquals(ConstructingSnapshotStateSerializer::class, $snapshotSerializerAlias->__toString());
+    }
+
+    /**
+     * @test
+     */
+    public function custom_snapshot_state_serializer_is_loading(): void
+    {
+        $this->load([
+            'snapshot' => [
+                'enabled' => true,
+                'repository' => [
+                    'doctrine' => [
+                        'enabled' => true,
+                    ],
+                ],
+                'serializer' => DummySnapshotStateSerializer::class,
+            ],
+        ]);
+
+        $this->assertContainerBuilderHasAlias(SnapshotStateSerializer::class);
+        $snapshotSerializerAlias = $this->container->getAlias(SnapshotStateSerializer::class);
+        $this->assertEquals(DummySnapshotStateSerializer::class, $snapshotSerializerAlias->__toString());
+    }
+
+    /**
+     * @test
+     */
+    public function snapshot_state_serializer_is_not_loading(): void
+    {
+        $this->load([
+            'snapshot' => [
+                'enabled' => true,
+                'repository' => [
+                    'memory' => [
+                        'enabled' => true,
+                    ],
+                ],
+            ],
+        ]);
+
+        $this->assertContainerBuilderNotHasService(ConstructingSnapshotStateSerializer::class);
     }
 
     protected function getContainerExtensions(): array

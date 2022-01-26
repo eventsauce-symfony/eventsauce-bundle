@@ -28,7 +28,7 @@ final class DefaultEventSauceConfigExtensionTest extends AbstractExtensionTestCa
     /**
      * @test
      */
-    public function default_time_config_is_valid_loading(): void
+    public function default_time_config_is_loading(): void
     {
         $this->load();
 
@@ -46,7 +46,7 @@ final class DefaultEventSauceConfigExtensionTest extends AbstractExtensionTestCa
     /**
      * @test
      */
-    public function default_message_config_is_valid_loading(): void
+    public function default_message_config_is_loading(): void
     {
         $this->load();
 
@@ -65,7 +65,7 @@ final class DefaultEventSauceConfigExtensionTest extends AbstractExtensionTestCa
     /**
      * @test
      */
-    public function default_snapshot_config_is_valid_loading(): void
+    public function default_snapshot_config_is_loading(): void
     {
         $this->load();
 

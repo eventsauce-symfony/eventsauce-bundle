@@ -17,7 +17,7 @@ use Andreo\EventSauce\Snapshotting\AggregateRootRepositoryWithSnapshottingAndSto
 use Andreo\EventSauce\Snapshotting\AggregateRootRepositoryWithVersionedSnapshotting;
 use Andreo\EventSauce\Snapshotting\CanStoreSnapshotStrategy;
 use Andreo\EventSauce\Snapshotting\ConstructingSnapshotStateSerializer;
-use Andreo\EventSauce\Snapshotting\DoctrineDbalSnapshotRepository;
+use Andreo\EventSauce\Snapshotting\DoctrineSnapshotRepository;
 use Andreo\EventSauce\Snapshotting\EveryNEventCanStoreSnapshotStrategy;
 use Andreo\EventSauce\Snapshotting\SnapshotStateSerializer;
 use Andreo\EventSauce\Upcasting\MessageUpcasterChain;
@@ -248,7 +248,7 @@ final class AndreoEventSauceExtension extends Extension
                 ;
             }
             $container->setAlias(BackOffStrategy::class, FibonacciBackOffStrategy::class);
-        } elseif ($this->isConfigEnabled($container, $linearBackConfig = $backOffConfig['linear_back'])) {
+        } elseif ($this->isConfigEnabled($container, $linearBackConfig = $backOffConfig['linear'])) {
             $initialDelayMs = $linearBackConfig['initial_delay_ms'];
             $maxTries = $linearBackConfig['max_tries'];
             if (null !== $initialDelayMs || null !== $maxTries) {
@@ -284,26 +284,28 @@ final class AndreoEventSauceExtension extends Extension
     {
         $needLoad = false;
         $snapshotConfig = $config['snapshot'];
+        if (!$this->isConfigEnabled($container, $snapshotConfig)) {
+            return;
+        }
+
         $snapshotRepositoryConfig = $snapshotConfig['repository'];
-        if ($this->isConfigEnabled($container, $snapshotRepositoryConfig['doctrine'])) {
-            if (!class_exists(DoctrineDbalSnapshotRepository::class)) {
+        if ($snapshotDoctrineRepositoryEnabled = $this->isConfigEnabled($container, $snapshotRepositoryConfig['doctrine'])) {
+            if (!class_exists(DoctrineSnapshotRepository::class)) {
                 throw new LogicException('Doctrine snapshot repository is not available. Try running "composer require andreo/eventsauce-snapshotting".');
             }
             $needLoad = true;
+        }
+
+        $snapshotSerializerId = $snapshotConfig['serializer'];
+        if ($snapshotDoctrineRepositoryEnabled &&
+            !in_array($snapshotSerializerId, [null, SnapshotStateSerializer::class, ConstructingSnapshotStateSerializer::class], true)) {
+            $container->setAlias(SnapshotStateSerializer::class, $snapshotSerializerId);
         }
 
         $storeStrategyConfig = $snapshotConfig['store_strategy'];
         if ($this->isConfigEnabled($container, $storeStrategyConfig['every_n_event'])) {
             if (!interface_exists(CanStoreSnapshotStrategy::class)) {
                 throw new LogicException('Store snapshot strategy is not available. Try running "composer require andreo/eventsauce-snapshotting".');
-            }
-            $needLoad = true;
-        }
-
-        $serializer = $snapshotConfig['serializer'];
-        if (null !== $serializer) {
-            if (!interface_exists(SnapshotStateSerializer::class)) {
-                throw new LogicException('Snapshot state serializer is not available. Try running "composer require andreo/eventsauce-snapshotting".');
             }
             $needLoad = true;
         }
@@ -634,7 +636,7 @@ final class AndreoEventSauceExtension extends Extension
             $snapshotRepositoryDoctrineConfig = $snapshotRepositoryConfig['doctrine'];
             $tableName = sprintf('%s_%s', $aggregateName, $snapshotRepositoryDoctrineConfig['table_name']);
 
-            $snapshotRepositoryDef = new Definition(DoctrineDbalSnapshotRepository::class, [
+            $snapshotRepositoryDef = new Definition(DoctrineSnapshotRepository::class, [
                 new Reference('andreo.event_sauce.doctrine.connection'),
                 $tableName,
                 new Reference(SnapshotStateSerializer::class),
