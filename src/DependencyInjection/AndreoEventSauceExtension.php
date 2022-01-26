@@ -353,7 +353,7 @@ final class AndreoEventSauceExtension extends Extension
             $aggregateOutboxEnabled = $aggregateMessageConfig['outbox'];
             $aggregateSnapshotEnabled = $aggregateConfig['snapshot'];
 
-            $aggregateConfig['repository_alias'] ??= sprintf('%s%s', $aggregateName, 'Repository');
+            $aggregateConfig['repository_alias'] ??= sprintf('%sRepository', $aggregateName);
 
             $this->loadAggregateDispatchersConfiguration(
                 $aggregateName,
