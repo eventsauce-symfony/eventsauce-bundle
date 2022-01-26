@@ -35,7 +35,7 @@ andreo_event_sauce:
                         max_tries: 10
                     no_waiting:
                         max_tries: 10
-                    immediately_failing:
+                    immediately:
                         enabled: true
                     custom:
                         id: Foo/Bar/Baz

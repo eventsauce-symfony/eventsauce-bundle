@@ -321,7 +321,7 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
                 'outbox' => [
                     'enabled' => true,
                     'back_off' => [
-                        'immediately_failing' => [
+                        'immediately' => [
                             'enabled' => true,
                         ],
                     ],

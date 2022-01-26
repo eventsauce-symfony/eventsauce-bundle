@@ -252,7 +252,7 @@ final class Configuration implements ConfigurationInterface
                                 ?->integerNode('max_tries')->defaultNull()->end()
                             ?->end()
                         ->end()
-                        ->arrayNode('immediately_failing')
+                        ->arrayNode('immediately')
                             ->canBeEnabled()
                             ->addDefaultsIfNotSet()
                         ->end()

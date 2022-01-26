@@ -268,7 +268,7 @@ final class AndreoEventSauceExtension extends Extension
                 ;
             }
             $container->setAlias(BackOffStrategy::class, NoWaitingBackOffStrategy::class);
-        } elseif ($this->isConfigEnabled($container, $backOffConfig['immediately_failing'])) {
+        } elseif ($this->isConfigEnabled($container, $backOffConfig['immediately'])) {
             $container->setAlias(BackOffStrategy::class, ImmediatelyFailingBackOffStrategy::class);
         } elseif ($this->isConfigEnabled($container, $customConfig = $backOffConfig['custom'])) {
             $container->setAlias(BackOffStrategy::class, $customConfig['id']);
