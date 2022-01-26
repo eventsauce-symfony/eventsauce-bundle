@@ -26,10 +26,10 @@ use Andreo\EventSauce\Upcasting\UpcastingMessageObjectSerializer;
 use Andreo\EventSauceBundle\Attribute\AsMessageConsumer;
 use Andreo\EventSauceBundle\Attribute\AsMessageDecorator;
 use Andreo\EventSauceBundle\Attribute\AsUpcaster;
-use Andreo\EventSauceBundle\DelegatingMessageDecoratorChain;
-use Andreo\EventSauceBundle\DelegatingMessageDispatcherChain;
-use Andreo\EventSauceBundle\DelegatingSynchronousMessageDispatcher;
+use Andreo\EventSauceBundle\MessageDecoratorChainFactory;
+use Andreo\EventSauceBundle\MessageDispatcherChainFactory;
 use Andreo\EventSauceBundle\NothingMessageDecorator;
+use Andreo\EventSauceBundle\SynchronousMessageDispatcherFactory;
 use DateTimeZone;
 use EventSauce\BackOff\BackOffStrategy;
 use EventSauce\BackOff\ExponentialBackOffStrategy;
@@ -44,7 +44,9 @@ use EventSauce\EventSourcing\ClassNameInflector;
 use EventSauce\EventSourcing\DotSeparatedSnakeCaseInflector;
 use EventSauce\EventSourcing\EventSourcedAggregateRootRepository;
 use EventSauce\EventSourcing\MessageDecorator;
+use EventSauce\EventSourcing\MessageDecoratorChain;
 use EventSauce\EventSourcing\MessageDispatcher;
+use EventSauce\EventSourcing\MessageDispatcherChain;
 use EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer;
 use EventSauce\EventSourcing\Serialization\ConstructingPayloadSerializer;
 use EventSauce\EventSourcing\Serialization\MessageSerializer;
@@ -52,6 +54,7 @@ use EventSauce\EventSourcing\Serialization\PayloadSerializer;
 use EventSauce\EventSourcing\Snapshotting\AggregateRootRepositoryWithSnapshotting;
 use EventSauce\EventSourcing\Snapshotting\ConstructingAggregateRootRepositoryWithSnapshotting;
 use EventSauce\EventSourcing\Snapshotting\InMemorySnapshotRepository;
+use EventSauce\EventSourcing\SynchronousMessageDispatcher;
 use EventSauce\EventSourcing\Upcasting\UpcasterChain;
 use EventSauce\EventSourcing\Upcasting\UpcastingMessageSerializer;
 use EventSauce\MessageOutbox\DeleteMessageOnCommit;
@@ -199,7 +202,8 @@ final class AndreoEventSauceExtension extends Extension
                 }
             } elseif (in_array($dispatcherServiceId, [null, 'default'], true)) {
                 $container
-                    ->register("andreo.event_sauce.message_dispatcher.$dispatcherName", DelegatingSynchronousMessageDispatcher::class)
+                    ->register("andreo.event_sauce.message_dispatcher.$dispatcherName", SynchronousMessageDispatcher::class)
+                    ->setFactory([SynchronousMessageDispatcherFactory::class, '__invoke'])
                     ->addArgument(new TaggedIteratorArgument("andreo.event_sauce.message_consumer.$dispatcherName"))
                     ->setPublic(false)
                 ;
@@ -423,8 +427,9 @@ final class AndreoEventSauceExtension extends Extension
         $container
             ->register(
             "andreo.event_sauce.message_dispatcher_chain.$aggregateName",
-            DelegatingMessageDispatcherChain::class
+                MessageDispatcherChain::class
         )
+            ->setFactory([MessageDispatcherChainFactory::class, '__invoke'])
             ->addArgument(new IteratorArgument($messageDispatcherRefers))
             ->setPublic(false)
         ;
@@ -577,9 +582,10 @@ final class AndreoEventSauceExtension extends Extension
                 throw new LogicException('Message decorator config is disabled. If you want to use it, enable it.');
             }
 
-            $messageDecoratorArgument = new Definition(DelegatingMessageDecoratorChain::class, [
+            $messageDecoratorArgument = (new Definition(MessageDecoratorChain::class, [
                 new TaggedIteratorArgument("andreo.event_sauce.message_decorator.$aggregateName"),
-            ]);
+            ]))->setFactory([MessageDecoratorChainFactory::class, '__invoke']);
+
             $container
                 ->findDefinition(MessageDecorator::class)
                 ->addTag("andreo.event_sauce.message_decorator.$aggregateName", ['priority' => 0]);

@@ -11,7 +11,6 @@ use Andreo\EventSauce\Snapshotting\ConstructingSnapshotStateSerializer;
 use Andreo\EventSauce\Snapshotting\SnapshotStateSerializer;
 use Andreo\EventSauceBundle\Attribute\AsMessageDecorator;
 use Andreo\EventSauceBundle\Attribute\AsUpcaster;
-use Andreo\EventSauceBundle\DelegatingSynchronousMessageDispatcher;
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
 use EventSauce\BackOff\BackOffStrategy;
 use EventSauce\BackOff\ExponentialBackOffStrategy;
@@ -23,6 +22,7 @@ use EventSauce\Clock\Clock;
 use EventSauce\EventSourcing\ClassNameInflector;
 use EventSauce\EventSourcing\Serialization\MessageSerializer;
 use EventSauce\EventSourcing\Serialization\PayloadSerializer;
+use EventSauce\EventSourcing\SynchronousMessageDispatcher;
 use EventSauce\MessageOutbox\DeleteMessageOnCommit;
 use EventSauce\MessageOutbox\MarkMessagesConsumedOnCommit;
 use EventSauce\MessageOutbox\RelayCommitStrategy;
@@ -218,7 +218,7 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
         $this->assertContainerBuilderHasAlias('foo_service');
         $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher.foo_service');
         $dispatcherDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.foo_service');
-        $this->assertEquals(DelegatingSynchronousMessageDispatcher::class, $dispatcherDefinition->getClass());
+        $this->assertEquals(SynchronousMessageDispatcher::class, $dispatcherDefinition->getClass());
         $this->assertEquals(
             $dispatcherDefinition->getArgument(0),
             new TaggedIteratorArgument('andreo.event_sauce.message_consumer.foo_service')
@@ -227,7 +227,7 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
         $this->assertContainerBuilderHasAlias('bar_service');
         $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher.bar_service');
         $dispatcherDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.bar_service');
-        $this->assertEquals(DelegatingSynchronousMessageDispatcher::class, $dispatcherDefinition->getClass());
+        $this->assertEquals(SynchronousMessageDispatcher::class, $dispatcherDefinition->getClass());
         $this->assertEquals(
             $dispatcherDefinition->getArgument(0),
             new TaggedIteratorArgument('andreo.event_sauce.message_consumer.bar_service')
