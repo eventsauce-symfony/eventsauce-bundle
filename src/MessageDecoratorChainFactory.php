@@ -10,10 +10,10 @@ use EventSauce\EventSourcing\MessageDecoratorChain;
 final class MessageDecoratorChainFactory
 {
     /**
-     * @param iterable<MessageDecorator> $processors
+     * @param iterable<MessageDecorator> $decorators
      */
-    public function __invoke(iterable $processors): MessageDecoratorChain
+    public function __invoke(iterable $decorators): MessageDecoratorChain
     {
-        return new MessageDecoratorChain(...$processors);
+        return new MessageDecoratorChain(...$decorators);
     }
 }

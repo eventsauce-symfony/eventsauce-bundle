@@ -286,11 +286,12 @@ final class AndreoEventSauceExtension extends Extension
 
     private function loadSnapshot(ContainerBuilder $container, YamlFileLoader $loader, array $config): void
     {
-        $needLoad = false;
         $snapshotConfig = $config['snapshot'];
         if (!$this->isConfigEnabled($container, $snapshotConfig)) {
             return;
         }
+
+        $needLoad = false;
 
         $snapshotRepositoryConfig = $snapshotConfig['repository'];
         if ($snapshotDoctrineRepositoryEnabled = $this->isConfigEnabled($container, $snapshotRepositoryConfig['doctrine'])) {
