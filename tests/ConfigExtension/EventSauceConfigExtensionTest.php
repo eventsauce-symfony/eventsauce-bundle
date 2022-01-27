@@ -7,6 +7,8 @@ namespace Tests\ConfigExtension;
 use Andreo\EventSauce\Messenger\MessengerEventWithHeadersDispatcher;
 use Andreo\EventSauce\Messenger\MessengerMessageDispatcher;
 use Andreo\EventSauce\Messenger\MessengerMessageEventDispatcher;
+use Andreo\EventSauce\Outbox\AggregateRootRepositoryWithoutDispatchMessage;
+use Andreo\EventSauce\Snapshotting\AggregateRootRepositoryWithVersionedSnapshotting;
 use Andreo\EventSauce\Snapshotting\ConstructingSnapshotStateSerializer;
 use Andreo\EventSauce\Snapshotting\SnapshotStateSerializer;
 use Andreo\EventSauceBundle\Attribute\AsMessageDecorator;
@@ -20,15 +22,20 @@ use EventSauce\BackOff\LinearBackOffStrategy;
 use EventSauce\BackOff\NoWaitingBackOffStrategy;
 use EventSauce\Clock\Clock;
 use EventSauce\EventSourcing\ClassNameInflector;
+use EventSauce\EventSourcing\EventSourcedAggregateRootRepository;
 use EventSauce\EventSourcing\Serialization\MessageSerializer;
 use EventSauce\EventSourcing\Serialization\PayloadSerializer;
+use EventSauce\EventSourcing\Snapshotting\ConstructingAggregateRootRepositoryWithSnapshotting;
 use EventSauce\EventSourcing\SynchronousMessageDispatcher;
 use EventSauce\MessageOutbox\DeleteMessageOnCommit;
+use EventSauce\MessageOutbox\DoctrineOutbox\DoctrineTransactionalMessageRepository;
 use EventSauce\MessageOutbox\MarkMessagesConsumedOnCommit;
 use EventSauce\MessageOutbox\RelayCommitStrategy;
+use EventSauce\MessageRepository\DoctrineMessageRepository\DoctrineUuidV4MessageRepository;
 use EventSauce\UuidEncoding\UuidEncoder;
 use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
+use Symfony\Component\DependencyInjection\Argument\IteratorArgument;
 use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
 use Symfony\Component\DependencyInjection\Reference;
 
@@ -254,15 +261,13 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     public function outbox_exponential_back_of_strategy_is_loading(): void
     {
         $this->load([
-            'message' => [
-                'outbox' => [
-                    'enabled' => true,
-                    'back_off' => [
-                        'exponential' => [
-                            'enabled' => true,
-                            'initial_delay_ms' => 200000,
-                            'max_tries' => 20,
-                        ],
+            'outbox' => [
+                'enabled' => true,
+                'back_off' => [
+                    'exponential' => [
+                        'enabled' => true,
+                        'initial_delay_ms' => 200000,
+                        'max_tries' => 20,
                     ],
                 ],
             ],
@@ -282,14 +287,12 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     public function outbox_fibonacci_back_of_strategy_is_loading(): void
     {
         $this->load([
-            'message' => [
-                'outbox' => [
-                    'enabled' => true,
-                    'back_off' => [
-                        'fibonacci' => [
-                            'enabled' => true,
-                            'max_tries' => 30,
-                        ],
+            'outbox' => [
+                'enabled' => true,
+                'back_off' => [
+                    'fibonacci' => [
+                        'enabled' => true,
+                        'max_tries' => 30,
                     ],
                 ],
             ],
@@ -312,14 +315,12 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     public function outbox_linear_back_of_strategy_is_loading(): void
     {
         $this->load([
-            'message' => [
-                'outbox' => [
-                    'enabled' => true,
-                    'back_off' => [
-                        'linear' => [
-                            'enabled' => true,
-                            'initial_delay_ms' => 300000,
-                        ],
+            'outbox' => [
+                'enabled' => true,
+                'back_off' => [
+                    'linear' => [
+                        'enabled' => true,
+                        'initial_delay_ms' => 300000,
                     ],
                 ],
             ],
@@ -339,14 +340,12 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     public function outbox_no_waiting_back_of_strategy_is_loading(): void
     {
         $this->load([
-            'message' => [
-                'outbox' => [
-                    'enabled' => true,
-                    'back_off' => [
-                        'no_waiting' => [
-                            'enabled' => true,
-                            'max_tries' => 20,
-                        ],
+            'outbox' => [
+                'enabled' => true,
+                'back_off' => [
+                    'no_waiting' => [
+                        'enabled' => true,
+                        'max_tries' => 20,
                     ],
                 ],
             ],
@@ -365,13 +364,11 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     public function outbox_immediately_back_of_strategy_is_loading(): void
     {
         $this->load([
-            'message' => [
-                'outbox' => [
-                    'enabled' => true,
-                    'back_off' => [
-                        'immediately' => [
-                            'enabled' => true,
-                        ],
+            'outbox' => [
+                'enabled' => true,
+                'back_off' => [
+                    'immediately' => [
+                        'enabled' => true,
                     ],
                 ],
             ],
@@ -388,13 +385,11 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     public function outbox_custom_back_of_strategy_is_loading(): void
     {
         $this->load([
-            'message' => [
-                'outbox' => [
-                    'enabled' => true,
-                    'back_off' => [
-                        'custom' => [
-                            'id' => DummyCustomBackOfStrategy::class,
-                        ],
+            'outbox' => [
+                'enabled' => true,
+                'back_off' => [
+                    'custom' => [
+                        'id' => DummyCustomBackOfStrategy::class,
                     ],
                 ],
             ],
@@ -412,19 +407,17 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     {
         $this->expectException(InvalidConfigurationException::class);
         $this->load([
-            'message' => [
-                'outbox' => [
-                    'enabled' => true,
-                    'back_off' => [
-                        'exponential' => [
-                            'enabled' => true,
-                            'initial_delay_ms' => 200000,
-                            'max_tries' => 20,
-                        ],
-                        'no_waiting' => [
-                            'enabled' => true,
-                            'max_tries' => 20,
-                        ],
+            'outbox' => [
+                'enabled' => true,
+                'back_off' => [
+                    'exponential' => [
+                        'enabled' => true,
+                        'initial_delay_ms' => 200000,
+                        'max_tries' => 20,
+                    ],
+                    'no_waiting' => [
+                        'enabled' => true,
+                        'max_tries' => 20,
                     ],
                 ],
             ],
@@ -437,13 +430,11 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     public function outbox_delete_relay_commit_strategy_is_loading(): void
     {
         $this->load([
-            'message' => [
-                'outbox' => [
-                    'enabled' => true,
-                    'relay_commit' => [
-                        'delete' => [
-                            'enabled' => true,
-                        ],
+            'outbox' => [
+                'enabled' => true,
+                'relay_commit' => [
+                    'delete' => [
+                        'enabled' => true,
                     ],
                 ],
             ],
@@ -460,13 +451,11 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     public function outbox_mark_consumed_relay_commit_strategy_is_loading(): void
     {
         $this->load([
-            'message' => [
-                'outbox' => [
-                    'enabled' => true,
-                    'relay_commit' => [
-                        'mark_consumed' => [
-                            'enabled' => true,
-                        ],
+            'outbox' => [
+                'enabled' => true,
+                'relay_commit' => [
+                    'mark_consumed' => [
+                        'enabled' => true,
                     ],
                 ],
             ],
@@ -484,16 +473,14 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     {
         $this->expectException(InvalidConfigurationException::class);
         $this->load([
-            'message' => [
-                'outbox' => [
-                    'enabled' => true,
-                    'relay_commit' => [
-                        'delete' => [
-                            'enabled' => true,
-                        ],
-                        'mark_consumed' => [
-                            'enabled' => true,
-                        ],
+            'outbox' => [
+                'enabled' => true,
+                'relay_commit' => [
+                    'delete' => [
+                        'enabled' => true,
+                    ],
+                    'mark_consumed' => [
+                        'enabled' => true,
                     ],
                 ],
             ],
@@ -616,6 +603,187 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
         $this->assertContainerBuilderHasAlias(ClassNameInflector::class);
         $classNameInflectorAlias = $this->container->getAlias(ClassNameInflector::class);
         $this->assertEquals(DummyClassNameInflector::class, $classNameInflectorAlias->__toString());
+    }
+
+    /**
+     * @test
+     */
+    public function aggregate_config_is_loading(): void
+    {
+        $this->load([
+            'message' => [
+                'dispatcher' => [
+                    'messenger' => [
+                        'enabled' => true,
+                        'mode' => 'event',
+                    ],
+                    'chain' => [
+                        'foo_bus' => 'fooBus',
+                        'bar_bus' => 'barBus',
+                    ],
+                ],
+            ],
+            'aggregates' => [
+                'foo' => [
+                    'class' => DummyFooAggregate::class,
+                    'message' => [
+                        'dispatchers' => ['foo_bus', 'bar_bus'],
+                    ],
+                ],
+            ],
+        ]);
+
+        $this->assertContainerBuilderHasService('andreo.event_sauce.message_repository.foo');
+        $definition = $this->container->getDefinition('andreo.event_sauce.message_repository.foo');
+        $this->assertEquals(DoctrineUuidV4MessageRepository::class, $definition->getClass());
+
+        $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher_chain.foo');
+        $dispatcherChainDef = $this->container->getDefinition('andreo.event_sauce.message_dispatcher_chain.foo');
+        $this->assertInstanceOf(IteratorArgument::class, $argument = $dispatcherChainDef->getArgument(0));
+        $this->assertCount(2, $argument->getValues());
+
+        $this->assertContainerBuilderHasAlias('fooRepository');
+        $repositoryDef = $this->container->getDefinition('andreo.event_sauce.aggregate_repository.foo');
+        $this->assertEquals(EventSourcedAggregateRootRepository::class, $repositoryDef->getClass());
+    }
+
+    /**
+     * @test
+     */
+    public function aggregate_with_outbox_config_is_loading(): void
+    {
+        $this->load([
+            'message' => [
+                'dispatcher' => [
+                    'messenger' => [
+                        'enabled' => true,
+                        'mode' => 'event',
+                    ],
+                    'chain' => [
+                        'foo_bus' => 'fooBus',
+                    ],
+                ],
+            ],
+            'outbox' => [
+                'enabled' => true,
+            ],
+            'aggregates' => [
+                'bar' => [
+                    'class' => DummyFooAggregate::class,
+                    'message' => [
+                        'dispatchers' => ['foo_bus'],
+                        'outbox' => true,
+                    ],
+                ],
+            ],
+        ]);
+
+        $this->assertContainerBuilderHasService('andreo.event_sauce.message_repository.bar');
+        $definition = $this->container->getDefinition('andreo.event_sauce.message_repository.bar');
+        $this->assertEquals(DoctrineTransactionalMessageRepository::class, $definition->getClass());
+
+        $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher_chain.bar');
+        $dispatcherChainDef = $this->container->getDefinition('andreo.event_sauce.message_dispatcher_chain.bar');
+        $this->assertInstanceOf(IteratorArgument::class, $argument = $dispatcherChainDef->getArgument(0));
+        $this->assertCount(1, $argument->getValues());
+
+        $this->assertContainerBuilderHasAlias('barRepository');
+        $repositoryDef = $this->container->getDefinition('andreo.event_sauce.aggregate_repository.bar');
+        $this->assertEquals(AggregateRootRepositoryWithoutDispatchMessage::class, $repositoryDef->getClass());
+    }
+
+    /**
+     * @test
+     */
+    public function aggregate_with_snapshotting_config_is_loading(): void
+    {
+        $this->load([
+            'snapshot' => [
+                'enabled' => true,
+            ],
+            'message' => [
+                'dispatcher' => [
+                    'messenger' => [
+                        'enabled' => true,
+                        'mode' => 'event',
+                    ],
+                    'chain' => [
+                        'foo_bus' => 'fooBus',
+                        'bar_bus' => 'barBus',
+                    ],
+                ],
+            ],
+            'aggregates' => [
+                'baz' => [
+                    'class' => DummyFooAggregateWithSnapshotting::class,
+                    'message' => [
+                        'dispatchers' => ['bar_bus'],
+                    ],
+                    'snapshot' => true,
+                ],
+            ],
+        ]);
+
+        $this->assertContainerBuilderHasService('andreo.event_sauce.message_repository.baz');
+        $definition = $this->container->getDefinition('andreo.event_sauce.message_repository.baz');
+        $this->assertEquals(DoctrineUuidV4MessageRepository::class, $definition->getClass());
+
+        $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher_chain.baz');
+        $dispatcherChainDef = $this->container->getDefinition('andreo.event_sauce.message_dispatcher_chain.baz');
+        $this->assertInstanceOf(IteratorArgument::class, $argument = $dispatcherChainDef->getArgument(0));
+        $this->assertCount(1, $argument->getValues());
+
+        $this->assertContainerBuilderHasAlias('bazRepository');
+        $repositoryDef = $this->container->getDefinition('andreo.event_sauce.aggregate_repository.baz');
+        $this->assertEquals(ConstructingAggregateRootRepositoryWithSnapshotting::class, $repositoryDef->getClass());
+    }
+
+    /**
+     * @test
+     */
+    public function aggregate_with_versioned_snapshotting_config_is_loading(): void
+    {
+        $this->load([
+            'snapshot' => [
+                'enabled' => true,
+                'versioned' => true,
+            ],
+            'message' => [
+                'dispatcher' => [
+                    'messenger' => [
+                        'enabled' => true,
+                        'mode' => 'event',
+                    ],
+                    'chain' => [
+                        'foo_bus' => 'fooBus',
+                        'bar_bus' => 'barBus',
+                    ],
+                ],
+            ],
+            'aggregates' => [
+                'foo' => [
+                    'class' => DummyFooAggregateWithVersionedSnapshotting::class,
+                    'repository_alias' => 'customNameRepository',
+                    'message' => [
+                        'dispatchers' => ['foo_bus', 'bar_bus'],
+                    ],
+                    'snapshot' => true,
+                ],
+            ],
+        ]);
+
+        $this->assertContainerBuilderHasService('andreo.event_sauce.message_repository.foo');
+        $definition = $this->container->getDefinition('andreo.event_sauce.message_repository.foo');
+        $this->assertEquals(DoctrineUuidV4MessageRepository::class, $definition->getClass());
+
+        $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher_chain.foo');
+        $dispatcherChainDef = $this->container->getDefinition('andreo.event_sauce.message_dispatcher_chain.foo');
+        $this->assertInstanceOf(IteratorArgument::class, $argument = $dispatcherChainDef->getArgument(0));
+        $this->assertCount(2, $argument->getValues());
+
+        $this->assertContainerBuilderHasAlias('customNameRepository');
+        $repositoryDef = $this->container->getDefinition('andreo.event_sauce.aggregate_repository.foo');
+        $this->assertEquals(AggregateRootRepositoryWithVersionedSnapshotting::class, $repositoryDef->getClass());
     }
 
     protected function getContainerExtensions(): array

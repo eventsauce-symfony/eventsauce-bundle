@@ -95,14 +95,14 @@ final class AndreoEventSauceExtension extends Extension
         $this->loadTime($container, $config);
         $this->loadMessageRepository($container, $config);
         $this->loadMessageDispatcher($container, $config);
-        $this->loadMessageOutbox($container, $loader, $config);
+        $this->loadOutbox($container, $loader, $config);
         $this->loadSnapshot($container, $loader, $config);
         $this->loadUpcast($container, $config);
         $this->loadPayloadSerializer($container, $loader, $config);
         $this->loadUuidEncoder($container, $config);
         $this->loadClassNameInflector($container, $config);
-        $this->loadAggregatesConfiguration($config, $container);
         $this->loadGenerateMigration($container, $loader, $config);
+        $this->loadAggregates($config, $container);
     }
 
     private function loadTime(ContainerBuilder $container, array $config): void
@@ -215,11 +215,10 @@ final class AndreoEventSauceExtension extends Extension
         }
     }
 
-    private function loadMessageOutbox(ContainerBuilder $container, YamlFileLoader $loader, array $config): void
+    private function loadOutbox(ContainerBuilder $container, YamlFileLoader $loader, array $config): void
     {
-        $messageConfig = $config['message'];
-        $messageOutboxConfig = $messageConfig['outbox'];
-        if (!$this->isConfigEnabled($container, $messageOutboxConfig)) {
+        $outboxConfig = $config['outbox'];
+        if (!$this->isConfigEnabled($container, $outboxConfig)) {
             return;
         }
         if (!class_exists(AggregateRootRepositoryWithoutDispatchMessage::class)) {
@@ -231,7 +230,7 @@ final class AndreoEventSauceExtension extends Extension
         $initialDelayMsParam = '%andreo.event_sauce.outbox.back_off.initial_delay_ms%';
         $maxTriesParam = '%andreo.event_sauce.outbox.back_off.max_tries%';
 
-        $backOffConfig = $messageOutboxConfig['back_off'];
+        $backOffConfig = $outboxConfig['back_off'];
         if ($this->isConfigEnabled($container, $exponentialConfig = $backOffConfig['exponential'])) {
             $initialDelayMs = $exponentialConfig['initial_delay_ms'];
             $maxTries = $exponentialConfig['max_tries'];
@@ -278,7 +277,7 @@ final class AndreoEventSauceExtension extends Extension
             $container->setAlias(BackOffStrategy::class, $customConfig['id']);
         }
 
-        $relayCommitConfig = $messageOutboxConfig['relay_commit'];
+        $relayCommitConfig = $outboxConfig['relay_commit'];
         if ($this->isConfigEnabled($container, $relayCommitConfig['delete'])) {
             $container->setAlias(RelayCommitStrategy::class, DeleteMessageOnCommit::class);
         }
@@ -349,7 +348,68 @@ final class AndreoEventSauceExtension extends Extension
         );
     }
 
-    private function loadAggregatesConfiguration(array $config, ContainerBuilder $container): void
+    private function loadPayloadSerializer(ContainerBuilder $container, YamlFileLoader $loader, array $config): void
+    {
+        $payloadSerializer = $config['payload_serializer'];
+        if (SymfonyPayloadSerializer::class === $payloadSerializer) {
+            if (!class_exists(SymfonyPayloadSerializer::class)) {
+                throw new LogicException('Symfony payload serializer is not available. Try running "composer require andreo/eventsauce-symfony-serializer".');
+            }
+
+            $loader->load('serialization.yaml');
+        }
+
+        $payloadSerializerServiceId = $config['payload_serializer'];
+        if (!in_array($payloadSerializerServiceId, [null, PayloadSerializer::class, ConstructingPayloadSerializer::class], true)) {
+            $container->setAlias(PayloadSerializer::class, $payloadSerializerServiceId);
+        }
+    }
+
+    private function loadUuidEncoder(ContainerBuilder $container, array $config): void
+    {
+        $encoderServiceId = $config['uuid_encoder'];
+        if (!in_array($encoderServiceId, [null, UuidEncoder::class, BinaryUuidEncoder::class], true)) {
+            $container->setAlias(UuidEncoder::class, $encoderServiceId);
+        }
+    }
+
+    private function loadClassNameInflector(ContainerBuilder $container, array $config): void
+    {
+        $aggregateClassNameInflectorServiceId = $config['class_name_inflector'];
+        if (!in_array($aggregateClassNameInflectorServiceId, [null, ClassNameInflector::class, DotSeparatedSnakeCaseInflector::class], true)) {
+            $container->setAlias(ClassNameInflector::class, $aggregateClassNameInflectorServiceId);
+        }
+    }
+
+    private function loadGenerateMigration(ContainerBuilder $container, YamlFileLoader $loader, array $config): void
+    {
+        if (!class_exists(GenerateAggregateMigrationCommand::class)) {
+            return;
+        }
+
+        $messageDoctrineConfig = $config['message']['repository']['doctrine'];
+        $eventTableName = $messageDoctrineConfig['table_name'];
+
+        $snapshotDoctrineConfig = $config['snapshot']['repository']['doctrine'];
+        $snapshotTableName = $snapshotDoctrineConfig['table_name'];
+
+        $outboxDoctrineConfig = $config['outbox']['repository']['doctrine'];
+        $outboxTableName = $outboxDoctrineConfig['table_name'];
+
+        $container
+            ->register(TableNameSuffix::class, TableNameSuffix::class)
+            ->setArguments([
+                $eventTableName,
+                $snapshotTableName,
+                $outboxTableName,
+            ])
+            ->setPublic(false)
+        ;
+
+        $loader->load('migration.yaml');
+    }
+
+    private function loadAggregates(array $config, ContainerBuilder $container): void
     {
         $messageConfig = $config['message'];
         $snapshotConfig = $config['snapshot'];
@@ -357,66 +417,70 @@ final class AndreoEventSauceExtension extends Extension
 
         foreach ($config['aggregates'] as $aggregateName => $aggregateConfig) {
             $aggregateMessageConfig = $aggregateConfig['message'];
-            $aggregateOutboxEnabled = $aggregateMessageConfig['outbox'];
-            $aggregateSnapshotEnabled = $aggregateConfig['snapshot'];
 
             $aggregateConfig['repository_alias'] ??= sprintf('%sRepository', $aggregateName);
 
-            $this->loadAggregateDispatchersConfiguration(
+            $this->loadAggregateDispatchers(
+                $container,
                 $aggregateName,
                 $messageConfig,
-                $aggregateConfig,
-                $container
+                $aggregateConfig
             );
 
-            $this->loadAggregateMessageRepositoryConfiguration(
+            $messageDecoratorArgument = $this->loadMessageDecorator(
+                $container,
                 $aggregateName,
                 $aggregateConfig,
-                $messageConfig,
-                $upcastConfig,
-                $container
+                $messageConfig
             );
 
-            if ($aggregateOutboxEnabled) {
-                $this->loadAggregateOutboxConfiguration($aggregateName, $messageConfig, $container);
-            }
-
-            $messageRepositoryRef = $aggregateOutboxEnabled ?
-                new Reference("andreo.event_sauce.transactional_message_repository.$aggregateName") :
-                new Reference("andreo.event_sauce.message_repository.$aggregateName");
-
-            $this->loadAggregateRepositoryConfiguration(
+            $this->loadAggregateMessageRepository(
+                $container,
                 $aggregateName,
                 $aggregateConfig,
                 $messageConfig,
-                $messageRepositoryRef,
-                $container
+                $upcastConfig
             );
 
-            if ($aggregateSnapshotEnabled) {
-                $this->loadAggregateSnapshotConfiguration(
+            if (!$aggregateMessageConfig['outbox']) {
+                $this->loadAggregateRepository(
+                    $container,
                     $aggregateName,
                     $aggregateConfig,
-                    $snapshotConfig,
+                    $messageDecoratorArgument,
+                );
+            } else {
+                $this->loadAggregateOutboxRepository(
                     $container,
-                    $messageRepositoryRef
+                    $aggregateName,
+                    $aggregateConfig,
+                    $config['outbox'],
+                    $messageDecoratorArgument
+                );
+            }
+
+            if ($aggregateConfig['snapshot']) {
+                $this->loadAggregateSnapshotRepository(
+                    $container,
+                    $aggregateName,
+                    $aggregateConfig,
+                    $snapshotConfig
                 );
             }
         }
     }
 
-    private function loadAggregateDispatchersConfiguration(
+    private function loadAggregateDispatchers(
+        ContainerBuilder $container,
         string $aggregateName,
         array $messageConfig,
-        array $aggregateConfig,
-        ContainerBuilder $container
+        array $aggregateConfig
     ): void {
         $messageDispatcherConfig = $messageConfig['dispatcher'];
         $dispatcherChainNames = array_keys($messageDispatcherConfig['chain']);
         $aggregateMessageConfig = $aggregateConfig['message'];
         $aggregateDispatchers = $aggregateMessageConfig['dispatchers'];
 
-        $aggregateDispatchers = empty($aggregateDispatchers) ? $dispatcherChainNames : $aggregateDispatchers;
         $messageDispatcherRefers = [];
         foreach ($aggregateDispatchers as $aggregateDispatcher) {
             if (!in_array($aggregateDispatcher, $dispatcherChainNames, true)) {
@@ -436,12 +500,38 @@ final class AndreoEventSauceExtension extends Extension
         ;
     }
 
-    private function loadAggregateMessageRepositoryConfiguration(
+    private function loadMessageDecorator(
+        ContainerBuilder $container,
+        string $aggregateName,
+        array $aggregateConfig,
+        array $messageConfig
+    ): Reference|Definition {
+        $aggregateMessageConfig = $aggregateConfig['message'];
+        $aggregateMessageDecoratorEnabled = $aggregateMessageConfig['decorator'];
+
+        if ($aggregateMessageDecoratorEnabled) {
+            if (!$messageConfig['decorator']) {
+                throw new LogicException('Message decorator config is disabled. If you want to use it, enable it.');
+            }
+
+            $container
+                ->findDefinition(MessageDecorator::class)
+                ->addTag("andreo.event_sauce.message_decorator.$aggregateName", ['priority' => 0]);
+
+            return (new Definition(MessageDecoratorChain::class, [
+                new TaggedIteratorArgument("andreo.event_sauce.message_decorator.$aggregateName"),
+            ]))->setFactory([MessageDecoratorChainFactory::class, '__invoke']);
+        }
+
+        return new Reference(NothingMessageDecorator::class);
+    }
+
+    private function loadAggregateMessageRepository(
+        ContainerBuilder $container,
         string $aggregateName,
         array $aggregateConfig,
         array $messageConfig,
-        array $upcastConfig,
-        ContainerBuilder $container
+        array $upcastConfig
     ): void {
         $upcastEnabled = $aggregateConfig['upcast'];
         $messageRepositoryConfig = $messageConfig['repository'];
@@ -500,13 +590,42 @@ final class AndreoEventSauceExtension extends Extension
         ;
     }
 
-    private function loadAggregateOutboxConfiguration(
+    private function loadAggregateRepository(
+        ContainerBuilder $container,
         string $aggregateName,
-        array $messageConfig,
-        ContainerBuilder $container
+        array $aggregateConfig,
+        Definition|Reference $messageDecoratorArgument
     ): void {
-        $outboxConfig = $messageConfig['outbox'];
+        $aggregateClass = $aggregateConfig['class'];
+        $repositoryAlias = $aggregateConfig['repository_alias'];
+
+        $container
+            ->register("andreo.event_sauce.aggregate_repository.$aggregateName", EventSourcedAggregateRootRepository::class)
+            ->setArguments([
+                $aggregateClass,
+                new Reference("andreo.event_sauce.message_repository.$aggregateName"),
+                new Reference("andreo.event_sauce.message_dispatcher_chain.$aggregateName"),
+                $messageDecoratorArgument,
+                new Reference(ClassNameInflector::class),
+            ])
+            ->setPublic(false)
+        ;
+
+        $container->setAlias($repositoryAlias, "andreo.event_sauce.aggregate_repository.$aggregateName");
+        $container->registerAliasForArgument($repositoryAlias, AggregateRootRepository::class);
+    }
+
+    private function loadAggregateOutboxRepository(
+        ContainerBuilder $container,
+        string $aggregateName,
+        array $aggregateConfig,
+        array $outboxConfig,
+        Definition|Reference $messageDecoratorArgument
+    ): void {
         $outboxRepositoryConfig = $outboxConfig['repository'];
+        $repositoryAlias = $aggregateConfig['repository_alias'];
+        $aggregateClass = $aggregateConfig['class'];
+
         if (!$this->isConfigEnabled($container, $outboxConfig)) {
             throw new LogicException('Message outbox config is disabled. If you want to use it, enable and configure it .');
         }
@@ -531,15 +650,30 @@ final class AndreoEventSauceExtension extends Extension
             return;
         }
 
+        $regularMessageRepositoryDef = $container->getDefinition("andreo.event_sauce.message_repository.$aggregateName");
         $container
-            ->register("andreo.event_sauce.transactional_message_repository.$aggregateName", DoctrineTransactionalMessageRepository::class)
+            ->register("andreo.event_sauce.message_repository.$aggregateName", DoctrineTransactionalMessageRepository::class)
             ->setArguments([
                 new Reference('andreo.event_sauce.doctrine.connection'),
-                new Reference("andreo.event_sauce.message_repository.$aggregateName"),
+                $regularMessageRepositoryDef,
                 new Reference("andreo.event_sauce.outbox_repository.$aggregateName"),
             ])
             ->setPublic(false)
         ;
+
+        $container
+            ->register("andreo.event_sauce.aggregate_repository.$aggregateName", AggregateRootRepositoryWithoutDispatchMessage::class)
+            ->setArguments([
+                $aggregateClass,
+                new Reference("andreo.event_sauce.message_repository.$aggregateName"),
+                $messageDecoratorArgument,
+                new Reference(ClassNameInflector::class),
+            ])
+            ->setPublic(false)
+        ;
+
+        $container->setAlias($repositoryAlias, "andreo.event_sauce.aggregate_repository.$aggregateName");
+        $container->registerAliasForArgument($repositoryAlias, AggregateRootRepository::class);
 
         $messageConsumerDefinition = new Definition(ForwardingMessageConsumer::class, [
             new Reference("andreo.event_sauce.message_dispatcher_chain.$aggregateName"),
@@ -565,67 +699,11 @@ final class AndreoEventSauceExtension extends Extension
         ;
     }
 
-    private function loadAggregateRepositoryConfiguration(
-        string $aggregateName,
-        array $aggregateConfig,
-        array $messageConfig,
-        Reference $messageRepositoryRef,
-        ContainerBuilder $container
-    ): void {
-        $aggregateClass = $aggregateConfig['class'];
-        $aggregateMessageConfig = $aggregateConfig['message'];
-        $aggregateOutboxEnabled = $aggregateMessageConfig['outbox'];
-        $aggregateMessageDecoratorEnabled = $aggregateMessageConfig['decorator'];
-        $repositoryAlias = $aggregateConfig['repository_alias'];
-
-        if ($aggregateMessageDecoratorEnabled) {
-            if (!$messageConfig['decorator']) {
-                throw new LogicException('Message decorator config is disabled. If you want to use it, enable it.');
-            }
-
-            $messageDecoratorArgument = (new Definition(MessageDecoratorChain::class, [
-                new TaggedIteratorArgument("andreo.event_sauce.message_decorator.$aggregateName"),
-            ]))->setFactory([MessageDecoratorChainFactory::class, '__invoke']);
-
-            $container
-                ->findDefinition(MessageDecorator::class)
-                ->addTag("andreo.event_sauce.message_decorator.$aggregateName", ['priority' => 0]);
-        } else {
-            $messageDecoratorArgument = new Reference(NothingMessageDecorator::class);
-        }
-
-        if (!$aggregateOutboxEnabled) {
-            $aggregateRepositoryDef = new Definition(EventSourcedAggregateRootRepository::class, [
-                $aggregateClass,
-                $messageRepositoryRef,
-                new Reference("andreo.event_sauce.message_dispatcher_chain.$aggregateName"),
-                $messageDecoratorArgument,
-                new Reference(ClassNameInflector::class),
-            ]);
-        } else {
-            $aggregateRepositoryDef = new Definition(AggregateRootRepositoryWithoutDispatchMessage::class, [
-                $aggregateClass,
-                $messageRepositoryRef,
-                $messageDecoratorArgument,
-                new Reference(ClassNameInflector::class),
-            ]);
-        }
-
-        $container
-            ->setDefinition("andreo.event_sauce.aggregate_repository.$aggregateName", $aggregateRepositoryDef)
-            ->setPublic(false)
-        ;
-
-        $container->setAlias($repositoryAlias, "andreo.event_sauce.aggregate_repository.$aggregateName");
-        $container->registerAliasForArgument($repositoryAlias, AggregateRootRepository::class);
-    }
-
-    private function loadAggregateSnapshotConfiguration(
-        string $aggregateName,
-        array $aggregateConfig,
-        array $snapshotConfig,
+    private function loadAggregateSnapshotRepository(
         ContainerBuilder $container,
-        Reference $messageRepositoryRef
+        string $aggregateName,
+        array $aggregateConfig,
+        array $snapshotConfig
     ): void {
         if (!$this->isConfigEnabled($container, $snapshotConfig)) {
             throw new LogicException(sprintf('To use snapshot for aggregate "%s", you must enable snapshot in main section.', $aggregateName));
@@ -633,7 +711,6 @@ final class AndreoEventSauceExtension extends Extension
 
         $aggregateClass = $aggregateConfig['class'];
         $snapshotRepositoryConfig = $snapshotConfig['repository'];
-        $versioningEnabled = $snapshotConfig['versioned'];
         $repositoryAlias = $aggregateConfig['repository_alias'];
         $storeStrategyConfig = $snapshotConfig['store_strategy'];
 
@@ -651,19 +728,20 @@ final class AndreoEventSauceExtension extends Extension
             ]);
         }
 
-        if ($versioningEnabled) {
+        $regularRepositoryDef = $container->getDefinition("andreo.event_sauce.aggregate_repository.$aggregateName");
+        if ($snapshotConfig['versioned']) {
             $snapshottingRepositoryDef = new Definition(AggregateRootRepositoryWithVersionedSnapshotting::class, [
                 $aggregateClass,
-                $messageRepositoryRef,
+                new Reference("andreo.event_sauce.message_repository.$aggregateName"),
                 $snapshotRepositoryDef,
-                new Reference("andreo.event_sauce.aggregate_repository.$aggregateName"),
+                $regularRepositoryDef,
             ]);
         } else {
             $snapshottingRepositoryDef = new Definition(ConstructingAggregateRootRepositoryWithSnapshotting::class, [
                 $aggregateClass,
-                $messageRepositoryRef,
+                new Reference("andreo.event_sauce.message_repository.$aggregateName"),
                 $snapshotRepositoryDef,
-                new Reference("andreo.event_sauce.aggregate_repository.$aggregateName"),
+                $regularRepositoryDef,
             ]);
         }
 
@@ -680,72 +758,11 @@ final class AndreoEventSauceExtension extends Extension
         }
 
         $container
-            ->setDefinition("andreo.event_sauce.aggregate_snapshotting_repository.$aggregateName", $snapshottingRepositoryDef)
+            ->setDefinition("andreo.event_sauce.aggregate_repository.$aggregateName", $snapshottingRepositoryDef)
             ->setPublic(false)
         ;
 
         $container->setAlias($repositoryAlias, "andreo.event_sauce.aggregate_snapshotting_repository.$aggregateName");
         $container->registerAliasForArgument($repositoryAlias, AggregateRootRepositoryWithSnapshotting::class);
-    }
-
-    private function loadPayloadSerializer(ContainerBuilder $container, YamlFileLoader $loader, array $config): void
-    {
-        $payloadSerializer = $config['payload_serializer'];
-        if (SymfonyPayloadSerializer::class === $payloadSerializer) {
-            if (!class_exists(SymfonyPayloadSerializer::class)) {
-                throw new LogicException('Symfony payload serializer is not available. Try running "composer require andreo/eventsauce-symfony-serializer".');
-            }
-
-            $loader->load('serialization.yaml');
-        }
-
-        $payloadSerializerServiceId = $config['payload_serializer'];
-        if (!in_array($payloadSerializerServiceId, [null, PayloadSerializer::class, ConstructingPayloadSerializer::class], true)) {
-            $container->setAlias(PayloadSerializer::class, $payloadSerializerServiceId);
-        }
-    }
-
-    private function loadUuidEncoder(ContainerBuilder $container, array $config): void
-    {
-        $encoderServiceId = $config['uuid_encoder'];
-        if (!in_array($encoderServiceId, [null, UuidEncoder::class, BinaryUuidEncoder::class], true)) {
-            $container->setAlias(UuidEncoder::class, $encoderServiceId);
-        }
-    }
-
-    private function loadClassNameInflector(ContainerBuilder $container, array $config): void
-    {
-        $aggregateClassNameInflectorServiceId = $config['class_name_inflector'];
-        if (!in_array($aggregateClassNameInflectorServiceId, [null, ClassNameInflector::class, DotSeparatedSnakeCaseInflector::class], true)) {
-            $container->setAlias(ClassNameInflector::class, $aggregateClassNameInflectorServiceId);
-        }
-    }
-
-    private function loadGenerateMigration(ContainerBuilder $container, YamlFileLoader $loader, array $config): void
-    {
-        if (!class_exists(GenerateAggregateMigrationCommand::class)) {
-            return;
-        }
-
-        $messageDoctrineConfig = $config['message']['repository']['doctrine'];
-        $eventTableName = $messageDoctrineConfig['table_name'];
-
-        $snapshotDoctrineConfig = $config['snapshot']['repository']['doctrine'];
-        $snapshotTableName = $snapshotDoctrineConfig['table_name'];
-
-        $outboxDoctrineConfig = $config['message']['outbox']['repository']['doctrine'];
-        $outboxTableName = $outboxDoctrineConfig['table_name'];
-
-        $container
-            ->register(TableNameSuffix::class, TableNameSuffix::class)
-            ->setArguments([
-                $eventTableName,
-                $snapshotTableName,
-                $outboxTableName,
-            ])
-            ->setPublic(false)
-        ;
-
-        $loader->load('migration.yaml');
     }
 }

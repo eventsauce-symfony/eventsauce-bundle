@@ -20,7 +20,7 @@ final class FactoryTest extends TestCase
     public function message_decorator_chain_has_been_created(): void
     {
         $factory = new MessageDecoratorChainFactory();
-        $chain = $factory([new DummyMessageDecorator()]);
+        $chain = $factory([new DummyMessageDecorator(), new DummyMessageDecorator()]);
         $this->assertInstanceOf(MessageDecoratorChain::class, $chain);
     }
 
@@ -30,7 +30,7 @@ final class FactoryTest extends TestCase
     public function message_dispatcher_chain_has_been_created(): void
     {
         $factory = new MessageDispatcherChainFactory();
-        $chain = $factory([new DummyMessageDispatcher()]);
+        $chain = $factory([new DummyMessageDispatcher(), new DummyMessageDispatcher()]);
         $this->assertInstanceOf(MessageDispatcherChain::class, $chain);
     }
 
@@ -40,7 +40,7 @@ final class FactoryTest extends TestCase
     public function synchronous_message_dispatcher_has_been_created(): void
     {
         $factory = new SynchronousMessageDispatcherFactory();
-        $dispatcher = $factory([new DummyMessageConsumer()]);
+        $dispatcher = $factory([new DummyMessageConsumer(), new DummyMessageConsumer()]);
         $this->assertInstanceOf(SynchronousMessageDispatcher::class, $dispatcher);
     }
 }

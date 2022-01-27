@@ -49,6 +49,7 @@ final class Configuration implements ConfigurationInterface
             ->children()
                 ->append($this->getTimeSection())
                 ->append($this->getMessageSection())
+                ->append($this->getOutboxSection())
                 ->append($this->getSnapshotSection())
                 ->append($this->getUpcastSection())
                 ->append($this->getAggregatesSection())
@@ -100,8 +101,7 @@ final class Configuration implements ConfigurationInterface
                 ->end()
                 ?->append($this->getMessageDispatcherSection())
                 ->booleanNode('decorator')->defaultTrue()->end()
-                ?->append($this->getMessageOutboxSection())
-            ->end();
+            ?->end();
 
         return $node;
     }
@@ -184,7 +184,7 @@ final class Configuration implements ConfigurationInterface
         return $node;
     }
 
-    private function getMessageOutboxSection(): NodeDefinition
+    private function getOutboxSection(): NodeDefinition
     {
         $backOfStrategies = [
             'exponential',
@@ -424,7 +424,7 @@ final class Configuration implements ConfigurationInterface
                             ?->end()
                         ->end()
                     ->end()
-                    ?->booleanNode('upcast')->defaultTrue()->end()
+                    ?->booleanNode('upcast')->defaultFalse()->end()
                     ?->booleanNode('snapshot')->defaultFalse()->end()
                 ?->end()
             ->end();
