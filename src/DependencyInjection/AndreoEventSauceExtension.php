@@ -295,7 +295,9 @@ final class AndreoEventSauceExtension extends Extension
         $snapshotRepositoryConfig = $snapshotConfig['repository'];
         if ($snapshotDoctrineRepositoryEnabled = $this->isConfigEnabled($container, $snapshotRepositoryConfig['doctrine'])) {
             if (!class_exists(DoctrineSnapshotRepository::class)) {
-                throw new LogicException('Doctrine snapshot repository is not available. Try running "composer require andreo/eventsauce-snapshotting".');
+                throw new LogicException(
+                    'Doctrine snapshot repository is not available. Try running "composer require andreo/eventsauce-snapshotting".'
+                );
             }
             $needLoad = true;
         }
@@ -309,15 +311,18 @@ final class AndreoEventSauceExtension extends Extension
         $storeStrategyConfig = $snapshotConfig['store_strategy'];
         if ($this->isConfigEnabled($container, $storeStrategyConfig['every_n_event'])) {
             if (!interface_exists(CanStoreSnapshotStrategy::class)) {
-                throw new LogicException('Store snapshot strategy is not available. Try running "composer require andreo/eventsauce-snapshotting".');
+                throw new LogicException(
+                    'Store snapshot strategy is not available. Try running "composer require andreo/eventsauce-snapshotting".'
+                );
             }
             $needLoad = true;
         }
 
-        $versioned = $snapshotConfig['versioned'];
-        if ($versioned) {
+        if ($snapshotConfig['versioned']) {
             if (!class_exists(AggregateRootRepositoryWithVersionedSnapshotting::class)) {
-                throw new LogicException('Versioned snapshotting is not available. Try running "composer require andreo/eventsauce-snapshotting".');
+                throw new LogicException(
+                    'Versioned snapshotting is not available. Try running "composer require andreo/eventsauce-snapshotting".'
+                );
             }
             $needLoad = true;
         }
