@@ -8,8 +8,10 @@ use Andreo\EventSauce\Messenger\MessengerEventWithHeadersDispatcher;
 use Andreo\EventSauce\Messenger\MessengerMessageDispatcher;
 use Andreo\EventSauce\Messenger\MessengerMessageEventDispatcher;
 use Andreo\EventSauce\Outbox\AggregateRootRepositoryWithoutDispatchMessage;
+use Andreo\EventSauce\Snapshotting\AggregateRootRepositoryWithSnapshottingAndStoreStrategy;
 use Andreo\EventSauce\Snapshotting\AggregateRootRepositoryWithVersionedSnapshotting;
 use Andreo\EventSauce\Snapshotting\ConstructingSnapshotStateSerializer;
+use Andreo\EventSauce\Snapshotting\EveryNEventCanStoreSnapshotStrategy;
 use Andreo\EventSauce\Snapshotting\SnapshotStateSerializer;
 use Andreo\EventSauceBundle\Attribute\AsMessageDecorator;
 use Andreo\EventSauceBundle\Attribute\AsUpcaster;
@@ -33,10 +35,12 @@ use EventSauce\MessageOutbox\MarkMessagesConsumedOnCommit;
 use EventSauce\MessageOutbox\RelayCommitStrategy;
 use EventSauce\MessageRepository\DoctrineMessageRepository\DoctrineUuidV4MessageRepository;
 use EventSauce\UuidEncoding\UuidEncoder;
+use LogicException;
 use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\Argument\IteratorArgument;
 use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
+use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 
 final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
@@ -608,7 +612,7 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function aggregate_config_is_loading(): void
+    public function aggregate_repository_is_loading(): void
     {
         $this->load([
             'message' => [
@@ -650,7 +654,7 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function aggregate_with_outbox_config_is_loading(): void
+    public function aggregate_repository_with_outbox_is_loading(): void
     {
         $this->load([
             'message' => [
@@ -695,7 +699,7 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function aggregate_with_snapshotting_config_is_loading(): void
+    public function aggregate_repository_with_snapshotting_is_loading(): void
     {
         $this->load([
             'snapshot' => [
@@ -741,7 +745,7 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function aggregate_with_versioned_snapshotting_config_is_loading(): void
+    public function aggregate_repository_with_versioned_snapshotting_is_loading(): void
     {
         $this->load([
             'snapshot' => [
@@ -784,6 +788,195 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
         $this->assertContainerBuilderHasAlias('customNameRepository');
         $repositoryDef = $this->container->getDefinition('andreo.event_sauce.aggregate_repository.foo');
         $this->assertEquals(AggregateRootRepositoryWithVersionedSnapshotting::class, $repositoryDef->getClass());
+    }
+
+    /**
+     * @test
+     */
+    public function aggregate_repository_with_snapshotting_and_every_n_event_store_strategy_is_loading(): void
+    {
+        $this->load([
+            'snapshot' => [
+                'enabled' => true,
+                'store_strategy' => [
+                    'every_n_event' => [
+                        'enabled' => true,
+                        'number' => 300,
+                    ],
+                ],
+            ],
+            'aggregates' => [
+                'bar' => [
+                    'class' => DummyFooAggregateWithSnapshotting::class,
+                    'snapshot' => true,
+                ],
+            ],
+        ]);
+
+        $this->assertContainerBuilderHasAlias('barRepository');
+        $repositoryDef = $this->container->getDefinition('andreo.event_sauce.aggregate_repository.bar');
+        $this->assertEquals(AggregateRootRepositoryWithSnapshottingAndStoreStrategy::class, $repositoryDef->getClass());
+        /** @var Definition $canStoreDef */
+        $canStoreDef = $repositoryDef->getArgument(1);
+        $this->assertEquals(EveryNEventCanStoreSnapshotStrategy::class, $canStoreDef->getClass());
+    }
+
+    /**
+     * @test
+     */
+    public function aggregate_repository_with_snapshotting_and_custom_store_strategy_is_loading(): void
+    {
+        $this->load([
+            'snapshot' => [
+                'enabled' => true,
+                'store_strategy' => [
+                    'custom' => [
+                        'id' => DummyCustomStoreStrategy::class,
+                    ],
+                ],
+            ],
+            'aggregates' => [
+                'baz' => [
+                    'class' => DummyFooAggregateWithSnapshotting::class,
+                    'snapshot' => true,
+                ],
+            ],
+        ]);
+
+        $this->assertContainerBuilderHasAlias('bazRepository');
+        $repositoryDef = $this->container->getDefinition('andreo.event_sauce.aggregate_repository.baz');
+        $this->assertEquals(AggregateRootRepositoryWithSnapshottingAndStoreStrategy::class, $repositoryDef->getClass());
+        /** @var Reference $canStoreDef */
+        $canStoreDef = $repositoryDef->getArgument(1);
+        $this->assertEquals(DummyCustomStoreStrategy::class, $canStoreDef->__toString());
+    }
+
+    /**
+     * @test
+     */
+    public function aggregate_repository_throw_exception_if_dispatcher_not_be_configured(): void
+    {
+        $this->expectException(LogicException::class);
+        $this->load([
+            'message' => [
+                'dispatcher' => [
+                    'messenger' => [
+                        'enabled' => true,
+                        'mode' => 'event',
+                    ],
+                    'chain' => [
+                        'foo_bus' => 'fooBus',
+                    ],
+                ],
+            ],
+            'aggregates' => [
+                'foo' => [
+                    'class' => DummyFooAggregate::class,
+                    'message' => [
+                        'dispatchers' => ['bar_bus'],
+                    ],
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * @test
+     */
+    public function aggregate_repository_throw_exception_if_decorator_enabled_but_not_enabled_in_root_node(): void
+    {
+        $this->expectException(LogicException::class);
+        $this->load([
+            'message' => [
+                'dispatcher' => [
+                    'messenger' => [
+                        'enabled' => true,
+                        'mode' => 'event',
+                    ],
+                    'chain' => [
+                        'foo_bus' => 'fooBus',
+                    ],
+                ],
+                'decorator' => false,
+            ],
+            'aggregates' => [
+                'foo' => [
+                    'class' => DummyFooAggregate::class,
+                    'message' => [
+                        'dispatchers' => ['foo_bus'],
+                        'decorator' => true,
+                    ],
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * @test
+     */
+    public function aggregate_repository_throw_exception_if_snapshot_enabled_but_not_enabled_in_root_node(): void
+    {
+        $this->expectException(LogicException::class);
+        $this->load([
+            'message' => [
+                'dispatcher' => [
+                    'messenger' => [
+                        'enabled' => true,
+                        'mode' => 'event',
+                    ],
+                    'chain' => [
+                        'foo_bus' => 'fooBus',
+                    ],
+                ],
+            ],
+            'snapshot' => [
+                'enabled' => false,
+            ],
+            'aggregates' => [
+                'foo' => [
+                    'class' => DummyFooAggregate::class,
+                    'message' => [
+                        'dispatchers' => ['foo_bus'],
+                        'decorator' => true,
+                    ],
+                    'snapshot' => true,
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * @test
+     */
+    public function aggregate_repository_throw_exception_if_upcast_enabled_but_not_enabled_in_root_node(): void
+    {
+        $this->expectException(LogicException::class);
+        $this->load([
+            'message' => [
+                'dispatcher' => [
+                    'messenger' => [
+                        'enabled' => true,
+                        'mode' => 'event',
+                    ],
+                    'chain' => [
+                        'foo_bus' => 'fooBus',
+                    ],
+                ],
+            ],
+            'upcast' => [
+                'enabled' => false,
+            ],
+            'aggregates' => [
+                'foo' => [
+                    'class' => DummyFooAggregate::class,
+                    'message' => [
+                        'dispatchers' => ['foo_bus'],
+                        'decorator' => true,
+                    ],
+                    'upcast' => true,
+                ],
+            ],
+        ]);
     }
 
     protected function getContainerExtensions(): array

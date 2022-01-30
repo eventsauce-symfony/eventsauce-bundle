@@ -395,43 +395,6 @@ final class Configuration implements ConfigurationInterface
         return $node;
     }
 
-    private function getAggregatesSection(): NodeDefinition
-    {
-        $node = new ArrayNodeDefinition('aggregates');
-
-        $node
-            ->normalizeKeys(false)
-            ->arrayPrototype()
-                ->children()
-                    ->scalarNode('class')
-                        ->info('Aggregate root class')
-                        ->cannotBeEmpty()
-                        ->isRequired()
-                    ->end()
-                    ?->scalarNode('repository_alias')
-                        ->info('Default "${aggregateName}Repository"')
-                        ->defaultNull()
-                        ->cannotBeEmpty()
-                    ->end()
-                    ?->arrayNode('message')
-                        ->addDefaultsIfNotSet()
-                        ->children()
-                            ?->booleanNode('outbox')->defaultFalse()->end()
-                            ?->booleanNode('decorator')->defaultTrue()->end()
-                            ?->arrayNode('dispatchers')
-                                ->normalizeKeys(false)
-                                ->scalarPrototype()->end()
-                            ?->end()
-                        ->end()
-                    ->end()
-                    ?->booleanNode('upcast')->defaultFalse()->end()
-                    ?->booleanNode('snapshot')->defaultFalse()->end()
-                ?->end()
-            ->end();
-
-        return $node;
-    }
-
     public function getPayloadSerializerSection(): NodeDefinition
     {
         $node = new ScalarNodeDefinition('payload_serializer');
@@ -476,6 +439,43 @@ final class Configuration implements ConfigurationInterface
                 ))
             ->end()
         ?->end();
+
+        return $node;
+    }
+
+    private function getAggregatesSection(): NodeDefinition
+    {
+        $node = new ArrayNodeDefinition('aggregates');
+
+        $node
+            ->normalizeKeys(false)
+            ->arrayPrototype()
+                ->children()
+                    ->scalarNode('class')
+                        ->info('Aggregate root class')
+                        ->cannotBeEmpty()
+                        ->isRequired()
+                    ->end()
+                    ?->scalarNode('repository_alias')
+                        ->info('Default "${aggregateName}Repository"')
+                        ->defaultNull()
+                        ->cannotBeEmpty()
+                    ->end()
+                    ?->arrayNode('message')
+                        ->addDefaultsIfNotSet()
+                        ->children()
+                            ?->booleanNode('outbox')->defaultFalse()->end()
+                            ?->booleanNode('decorator')->defaultTrue()->end()
+                            ?->arrayNode('dispatchers')
+                                ->normalizeKeys(false)
+                                ->scalarPrototype()->end()
+                            ?->end()
+                        ->end()
+                    ->end()
+                    ?->booleanNode('upcast')->defaultFalse()->end()
+                    ?->booleanNode('snapshot')->defaultFalse()->end()
+                ?->end()
+            ->end();
 
         return $node;
     }

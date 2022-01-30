@@ -76,7 +76,6 @@ use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
 use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
-use Symfony\Component\DependencyInjection\Exception\RuntimeException;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
@@ -295,9 +294,7 @@ final class AndreoEventSauceExtension extends Extension
         $snapshotRepositoryConfig = $snapshotConfig['repository'];
         if ($snapshotDoctrineRepositoryEnabled = $this->isConfigEnabled($container, $snapshotRepositoryConfig['doctrine'])) {
             if (!class_exists(DoctrineSnapshotRepository::class)) {
-                throw new LogicException(
-                    'Doctrine snapshot repository is not available. Try running "composer require andreo/eventsauce-snapshotting".'
-                );
+                throw new LogicException('Doctrine snapshot repository is not available. Try running "composer require andreo/eventsauce-snapshotting".');
             }
             $needLoad = true;
         }
@@ -311,18 +308,14 @@ final class AndreoEventSauceExtension extends Extension
         $storeStrategyConfig = $snapshotConfig['store_strategy'];
         if ($this->isConfigEnabled($container, $storeStrategyConfig['every_n_event'])) {
             if (!interface_exists(CanStoreSnapshotStrategy::class)) {
-                throw new LogicException(
-                    'Store snapshot strategy is not available. Try running "composer require andreo/eventsauce-snapshotting".'
-                );
+                throw new LogicException('Store snapshot strategy is not available. Try running "composer require andreo/eventsauce-snapshotting".');
             }
             $needLoad = true;
         }
 
         if ($snapshotConfig['versioned']) {
             if (!class_exists(AggregateRootRepositoryWithVersionedSnapshotting::class)) {
-                throw new LogicException(
-                    'Versioned snapshotting is not available. Try running "composer require andreo/eventsauce-snapshotting".'
-                );
+                throw new LogicException('Versioned snapshotting is not available. Try running "composer require andreo/eventsauce-snapshotting".');
             }
             $needLoad = true;
         }
@@ -489,7 +482,7 @@ final class AndreoEventSauceExtension extends Extension
         $messageDispatcherRefers = [];
         foreach ($aggregateDispatchers as $aggregateDispatcher) {
             if (!in_array($aggregateDispatcher, $dispatcherChainNames, true)) {
-                throw new RuntimeException(sprintf('Dispatcher with name "%s" is not configured. Configure it in the message section.', $aggregateDispatcher));
+                throw new LogicException(sprintf('Dispatcher with name "%s" is not configured. Configure it in the message section.', $aggregateDispatcher));
             }
             $messageDispatcherRefers[] = new Reference("andreo.event_sauce.message_dispatcher.$aggregateDispatcher");
         }
