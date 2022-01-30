@@ -22,20 +22,47 @@
     </a>
 </p>
 
-## Symfony EventSauce
+# Symfony EventSauce
 
 This bundle provides the basic and extended container configuration of 
 symfony for the [EventSauce](https://eventsauce.io/) library.
 Before using it, I strongly recommend that you read the official [documentation](https://eventsauce.io/docs/).
 
+### Features
+
+- Doctrine event message repository
+- All events in table per aggregate type
+- Outbox pattern
+- Symfony messenger
+- Symfony serializer
+- Snapshot doctrine repository
+- Snapshot versioning
+- Automatic generate migration for every aggregate
+- Message upcasting
+
 ### Requirements
 
-- PHP >8.1
+- PHP ^8.1
 - Symfony ^6.0
 
 ### Installation
 
-```
+```php
 composer require andreo/event-sauce-bundle
+```
+
+After completing the installation process, verify that 
+the bundle has been added the `config/bundles.php` file
+
+```php
+return [
+    Andreo\EventSauceBundle\AndreoEventSauceBundle::class => ['all' => true],
+];
+```
+
+### Configuration
+
+```yaml
+
 ```
 
