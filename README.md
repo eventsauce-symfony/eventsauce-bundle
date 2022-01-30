@@ -28,7 +28,7 @@ This bundle provides the basic and extended container configuration of
 symfony for the [EventSauce](https://eventsauce.io/) library.
 Before using it, I strongly recommend that you read the official [documentation](https://eventsauce.io/docs/).
 
-### Features
+### Supports
 
 - Doctrine event message repository
 - All events in table per aggregate type

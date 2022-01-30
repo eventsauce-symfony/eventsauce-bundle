@@ -1,0 +1,10 @@
+* text=auto
+
+/.php-cs-fixer.php export-ignore
+/.gitattributes export-ignore
+/.gitignore export-ignore
+/run-tests.sh export-ignore
+/fix-cs.sh export-ignore
+/phpstan.neon export-ignore
+/phpunit.xml.dist export-ignore
+/tests export-ignore
