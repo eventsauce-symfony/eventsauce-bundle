@@ -47,7 +47,7 @@ Before using it, I strongly recommend that you read the official [documentation]
 
 ### Installation
 
-```php
+```bash
 composer require andreo/event-sauce-bundle
 ```
 
@@ -60,9 +60,91 @@ return [
 ];
 ```
 
-### Configuration
+### Timezone
+
+You probably want to set your time zone. Default value is UTC
 
 ```yaml
 
+andreo_event_sauce:
+    time:
+        recording_timezone: Europe/Warsaw 
 ```
 
+### Message dispatching
+Defaults EventSauce to dispatch events use [SynchronousMessageDispatcher](https://eventsauce.io/docs/reacting-to-events/setup-consumers/#synchronous-message-dispatcher).
+An example configuration for this case is as follows
+
+```yaml
+
+andreo_event_sauce:
+    dispatcher:
+        chain:
+            eventBus: #just define an alias
+```
+
+Defining the consumer is as follows
+
+```php
+
+use EventSauce\EventSourcing\MessageConsumer;
+use Andreo\EventSauceBundle\Attribute\AsMessageConsumer;
+
+#[AsMessageConsumer(dispatcher: eventBus)]
+final class FooConsumer implements MessageConsumer {
+
+}
+```
+
+If you need it, you can inject dispatcher
+
+```php
+
+use Symfony\Component\DependencyInjection\Attribute\Target;
+use EventSauce\EventSourcing\MessageDispatcher;
+
+final class Example {
+    public function __construct(
+        #[Target('eventBus')] private MessageDispatcher $fooBus
+    ){}
+}
+
+```
+
+### Message dispatching with symfony messenger
+
+If you want to use the symfony messenger component for dispatch messages, 
+you need to install the package
+
+```bash
+composer require andreo/eventsauce-messenger
+```
+
+An example configuration for this case is as follows
+
+```yaml
+
+andreo_event_sauce:
+    dispatcher:
+        messenger:
+            mode: event
+        chain:
+            eventBus: outboxBus # message bus alias from messenger config
+
+```
+
+The mode option is a way of dispatch messages. Available values:
+
+`event`
+
+- Event is only send to the handler that supports the  event type 
+- Doesn't send headers
+
+`event_with_headers`
+
+- Event is only send to the handler that supports the  event type
+- Receive of message headers in the second handler argument
+
+`message`
+
+- Message is send to the any handler that supports the Message type

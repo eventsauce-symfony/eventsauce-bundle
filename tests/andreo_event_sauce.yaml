@@ -13,13 +13,13 @@ andreo_event_sauce:
                 table_schema: EventSauce\MessageRepository\TableSchema\TableSchema
                 table_name: event_message
         serializer: EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer
-        dispatcher:
-            messenger:
-                enabled: true
-                mode: event_with_headers
-            chain:
-                event_bus: eventBus
         decorator: true
+    dispatcher:
+        messenger:
+            enabled: true
+            mode: event_with_headers
+        chain:
+            event_bus: eventBus
     outbox:
         enabled: true
         back_off:
@@ -86,9 +86,9 @@ andreo_event_sauce:
             class: App\Domain\Square\Square
             repository_alias: squareRepository
             message:
-                outbox: true
                 decorator: true
                 dispatchers:
                     - event_bus
+            outbox: true
             upcast: true
             snapshot: false

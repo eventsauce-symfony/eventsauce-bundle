@@ -93,7 +93,7 @@ final class AndreoEventSauceExtension extends Extension
 
         $this->loadTime($container, $config);
         $this->loadMessageRepository($container, $config);
-        $this->loadMessageDispatcher($container, $config);
+        $this->loadDispatcher($container, $config);
         $this->loadOutbox($container, $loader, $config);
         $this->loadSnapshot($container, $loader, $config);
         $this->loadUpcast($container, $config);
@@ -152,16 +152,43 @@ final class AndreoEventSauceExtension extends Extension
         }
     }
 
-    private function loadMessageDispatcher(ContainerBuilder $container, array $config): void
+    private function loadDispatcher(ContainerBuilder $container, array $config): void
     {
-        $messageConfig = $config['message'];
-        $messageDispatcherConfig = $messageConfig['dispatcher'];
+        $messageDispatcherConfig = $config['dispatcher'];
         $messengerConfig = $messageDispatcherConfig['messenger'];
         $messengerEnabled = $this->isConfigEnabled($container, $messengerConfig);
         $mode = $messengerConfig['mode'];
         $chainConfig = $messageDispatcherConfig['chain'];
 
-        if (!$messengerEnabled) {
+        if ($messengerEnabled) {
+            foreach ($chainConfig as $dispatcherAlias => $busAlias) {
+                if (!class_exists(MessengerMessageDispatcher::class)) {
+                    throw new LogicException('Messenger message dispatcher is not installed. Try running "composer require andreo/eventsauce-snapshotting".');
+                }
+                if ('event' === $mode) {
+                    $container
+                        ->register("andreo.event_sauce.message_dispatcher.$dispatcherAlias", MessengerMessageEventDispatcher::class)
+                        ->addArgument(new Reference($busAlias))
+                        ->setPublic(false);
+                } elseif ('event_with_headers' === $mode) {
+                    $container
+                        ->register("andreo.event_sauce.message_dispatcher.$dispatcherAlias", MessengerEventWithHeadersDispatcher::class)
+                        ->addArgument(new Reference($busAlias))
+                        ->setPublic(false)
+                        ->addTag('andreo.event_sauce.event_with_headers_dispatcher', [
+                            'bus' => $busAlias,
+                        ]);
+                } else {
+                    $container
+                        ->register("andreo.event_sauce.message_dispatcher.$dispatcherAlias", MessengerMessageDispatcher::class)
+                        ->addArgument(new Reference($busAlias))
+                        ->setPublic(false)
+                    ;
+                }
+                $container->setAlias($dispatcherAlias, "andreo.event_sauce.message_dispatcher.$dispatcherAlias");
+                $container->registerAliasForArgument($dispatcherAlias, MessageDispatcher::class);
+            }
+        } else {
             $container->registerAttributeForAutoconfiguration(
                 AsMessageConsumer::class,
                 static function (ChildDefinition $definition, AsMessageConsumer $attribute): void {
@@ -169,47 +196,17 @@ final class AndreoEventSauceExtension extends Extension
                     $definition->addTag("andreo.event_sauce.message_consumer.$dispatcherName");
                 }
             );
-        }
-        foreach ($chainConfig as $dispatcherName => $dispatcherServiceId) {
-            if ($messengerEnabled) {
-                if (!class_exists(MessengerMessageDispatcher::class)) {
-                    throw new LogicException('Messenger message dispatcher is not installed. Try running "composer require andreo/eventsauce-snapshotting".');
-                }
 
-                if ('event' === $mode) {
-                    $container
-                        ->register("andreo.event_sauce.message_dispatcher.$dispatcherName", MessengerMessageEventDispatcher::class)
-                        ->addArgument(new Reference($dispatcherServiceId))
-                        ->setPublic(false)
-                    ;
-                } elseif ('message' === $mode) {
-                    $container
-                        ->register("andreo.event_sauce.message_dispatcher.$dispatcherName", MessengerMessageDispatcher::class)
-                        ->addArgument(new Reference($dispatcherServiceId))
-                        ->setPublic(false)
-                        ->setPublic(false)
-                    ;
-                } else {
-                    $container
-                        ->register("andreo.event_sauce.message_dispatcher.$dispatcherName", MessengerEventWithHeadersDispatcher::class)
-                        ->addArgument(new Reference($dispatcherServiceId))
-                        ->setPublic(false)
-                        ->addTag('andreo.event_sauce.event_with_headers_dispatcher', [
-                            'bus' => $dispatcherServiceId,
-                        ])
-                    ;
-                }
-            } elseif (in_array($dispatcherServiceId, [null, 'default'], true)) {
+            /** @var string $dispatcherAlias */
+            foreach (array_keys($chainConfig) as $dispatcherAlias) {
                 $container
-                    ->register("andreo.event_sauce.message_dispatcher.$dispatcherName", SynchronousMessageDispatcher::class)
+                    ->register("andreo.event_sauce.message_dispatcher.$dispatcherAlias", SynchronousMessageDispatcher::class)
                     ->setFactory([SynchronousMessageDispatcherFactory::class, '__invoke'])
-                    ->addArgument(new TaggedIteratorArgument("andreo.event_sauce.message_consumer.$dispatcherName"))
+                    ->addArgument(new TaggedIteratorArgument("andreo.event_sauce.message_consumer.$dispatcherAlias"))
                     ->setPublic(false)
                 ;
-                $container->setAlias($dispatcherName, "andreo.event_sauce.message_dispatcher.$dispatcherName");
-                $container->registerAliasForArgument($dispatcherName, MessageDispatcher::class);
-            } else {
-                $container->setAlias("andreo.event_sauce.message_dispatcher.$dispatcherName", $dispatcherServiceId);
+                $container->setAlias($dispatcherAlias, "andreo.event_sauce.message_dispatcher.$dispatcherAlias");
+                $container->registerAliasForArgument($dispatcherAlias, MessageDispatcher::class);
             }
         }
     }
@@ -421,8 +418,8 @@ final class AndreoEventSauceExtension extends Extension
             $this->loadAggregateDispatchers(
                 $container,
                 $aggregateName,
-                $messageConfig,
-                $aggregateConfig
+                $aggregateConfig,
+                $config,
             );
 
             $messageDecoratorArgument = $this->loadMessageDecorator(
@@ -471,10 +468,10 @@ final class AndreoEventSauceExtension extends Extension
     private function loadAggregateDispatchers(
         ContainerBuilder $container,
         string $aggregateName,
-        array $messageConfig,
-        array $aggregateConfig
+        array $aggregateConfig,
+        array $config
     ): void {
-        $messageDispatcherConfig = $messageConfig['dispatcher'];
+        $messageDispatcherConfig = $config['dispatcher'];
         $dispatcherChainNames = array_keys($messageDispatcherConfig['chain']);
         $aggregateMessageConfig = $aggregateConfig['message'];
         $aggregateDispatchers = $aggregateMessageConfig['dispatchers'];

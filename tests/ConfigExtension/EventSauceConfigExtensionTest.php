@@ -103,41 +103,39 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     public function messenger_message_dispatcher_of_mode_event_with_headers_is_loading(): void
     {
         $this->load([
-            'message' => [
-                'dispatcher' => [
-                    'messenger' => [
-                        'enabled' => true,
-                        'mode' => 'event_with_headers',
-                    ],
-                    'chain' => [
-                        'foo_bus' => 'fooBus',
-                        'bar_bus' => 'barBus',
-                    ],
+            'dispatcher' => [
+                'messenger' => [
+                    'enabled' => true,
+                    'mode' => 'event_with_headers',
+                ],
+                'chain' => [
+                    'fooBus' => 'barBus',
+                    'barBus' => 'bazBus',
                 ],
             ],
         ]);
 
         $this->assertContainerBuilderHasServiceDefinitionWithTag(
-            'andreo.event_sauce.message_dispatcher.foo_bus',
-            'andreo.event_sauce.event_with_headers_dispatcher',
-            [
-                'bus' => 'fooBus',
-            ]
-        );
-        $busDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.foo_bus');
-        $this->assertEquals(MessengerEventWithHeadersDispatcher::class, $busDefinition->getClass());
-        $this->assertEquals($busDefinition->getArgument(0), new Reference('fooBus'));
-
-        $this->assertContainerBuilderHasServiceDefinitionWithTag(
-            'andreo.event_sauce.message_dispatcher.bar_bus',
+            'andreo.event_sauce.message_dispatcher.fooBus',
             'andreo.event_sauce.event_with_headers_dispatcher',
             [
                 'bus' => 'barBus',
             ]
         );
-        $busDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.bar_bus');
+        $busDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.fooBus');
         $this->assertEquals(MessengerEventWithHeadersDispatcher::class, $busDefinition->getClass());
         $this->assertEquals($busDefinition->getArgument(0), new Reference('barBus'));
+
+        $this->assertContainerBuilderHasServiceDefinitionWithTag(
+            'andreo.event_sauce.message_dispatcher.barBus',
+            'andreo.event_sauce.event_with_headers_dispatcher',
+            [
+                'bus' => 'bazBus',
+            ]
+        );
+        $busDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.barBus');
+        $this->assertEquals(MessengerEventWithHeadersDispatcher::class, $busDefinition->getClass());
+        $this->assertEquals($busDefinition->getArgument(0), new Reference('bazBus'));
     }
 
     /**
@@ -146,23 +144,21 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     public function messenger_message_dispatcher_of_mode_event_is_loading(): void
     {
         $this->load([
-            'message' => [
-                'dispatcher' => [
-                    'messenger' => [
-                        'enabled' => true,
-                        'mode' => 'event',
-                    ],
-                    'chain' => [
-                        'foo_bus' => 'fooBus',
-                    ],
+            'dispatcher' => [
+                'messenger' => [
+                    'enabled' => true,
+                    'mode' => 'event',
+                ],
+                'chain' => [
+                    'fooBus' => 'barBus',
                 ],
             ],
         ]);
 
-        $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher.foo_bus', );
-        $busDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.foo_bus');
+        $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher.fooBus', );
+        $busDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.fooBus');
         $this->assertEquals(MessengerMessageEventDispatcher::class, $busDefinition->getClass());
-        $this->assertEquals($busDefinition->getArgument(0), new Reference('fooBus'));
+        $this->assertEquals($busDefinition->getArgument(0), new Reference('barBus'));
     }
 
     /**
@@ -171,43 +167,21 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     public function messenger_message_dispatcher_of_mode_message_is_loading(): void
     {
         $this->load([
-            'message' => [
-                'dispatcher' => [
-                    'messenger' => [
-                        'enabled' => true,
-                        'mode' => 'message',
-                    ],
-                    'chain' => [
-                        'foo_bus' => 'fooBus',
-                    ],
+            'dispatcher' => [
+                'messenger' => [
+                    'enabled' => true,
+                    'mode' => 'message',
+                ],
+                'chain' => [
+                    'fooBus' => 'bazBus',
                 ],
             ],
         ]);
 
-        $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher.foo_bus', );
-        $busDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.foo_bus');
+        $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher.fooBus', );
+        $busDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.fooBus');
         $this->assertEquals(MessengerMessageDispatcher::class, $busDefinition->getClass());
-        $this->assertEquals($busDefinition->getArgument(0), new Reference('fooBus'));
-    }
-
-    /**
-     * @test
-     */
-    public function messenger_message_dispatcher_config_throw_error_if_null_bus_service(): void
-    {
-        $this->expectException(InvalidConfigurationException::class);
-        $this->load([
-            'message' => [
-                'dispatcher' => [
-                    'messenger' => [
-                        'enabled' => true,
-                    ],
-                    'chain' => [
-                        'foo_bus' => null,
-                    ],
-                ],
-            ],
-        ]);
+        $this->assertEquals($busDefinition->getArgument(0), new Reference('bazBus'));
     }
 
     /**
@@ -216,33 +190,51 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     public function default_message_dispatcher_config_is_loading(): void
     {
         $this->load([
-            'message' => [
-                'dispatcher' => [
-                    'chain' => [
-                        'foo_service' => 'default',
-                        'bar_service' => null,
-                    ],
+            'dispatcher' => [
+                'chain' => [
+                    'fooBus' => null,
+                    'barBus' => null,
                 ],
             ],
         ]);
 
-        $this->assertContainerBuilderHasAlias('foo_service');
-        $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher.foo_service');
-        $dispatcherDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.foo_service');
+        $this->assertContainerBuilderHasAlias('fooBus');
+        $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher.fooBus');
+        $dispatcherDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.fooBus');
         $this->assertEquals(SynchronousMessageDispatcher::class, $dispatcherDefinition->getClass());
+
         $this->assertEquals(
             $dispatcherDefinition->getArgument(0),
-            new TaggedIteratorArgument('andreo.event_sauce.message_consumer.foo_service')
+            new TaggedIteratorArgument('andreo.event_sauce.message_consumer.fooBus')
         );
 
-        $this->assertContainerBuilderHasAlias('bar_service');
-        $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher.bar_service');
-        $dispatcherDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.bar_service');
+        $this->assertContainerBuilderHasAlias('barBus');
+        $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher.barBus');
+        $dispatcherDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.barBus');
         $this->assertEquals(SynchronousMessageDispatcher::class, $dispatcherDefinition->getClass());
         $this->assertEquals(
             $dispatcherDefinition->getArgument(0),
-            new TaggedIteratorArgument('andreo.event_sauce.message_consumer.bar_service')
+            new TaggedIteratorArgument('andreo.event_sauce.message_consumer.barBus')
         );
+    }
+
+    /**
+     * @test
+     */
+    public function messenger_message_dispatcher_config_throw_exception_if_bus_not_defined(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->load([
+            'dispatcher' => [
+                'messenger' => [
+                    'enabled' => true,
+                    'mode' => 'message',
+                ],
+                'chain' => [
+                    'fooBus' => null,
+                ],
+            ],
+        ]);
     }
 
     /**
@@ -615,23 +607,21 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     public function aggregate_repository_is_loading(): void
     {
         $this->load([
-            'message' => [
-                'dispatcher' => [
-                    'messenger' => [
-                        'enabled' => true,
-                        'mode' => 'event',
-                    ],
-                    'chain' => [
-                        'foo_bus' => 'fooBus',
-                        'bar_bus' => 'barBus',
-                    ],
+            'dispatcher' => [
+                'messenger' => [
+                    'enabled' => true,
+                    'mode' => 'event',
+                ],
+                'chain' => [
+                    'fooBus' => 'bazBus',
+                    'barBus' => 'xyzBus',
                 ],
             ],
             'aggregates' => [
                 'foo' => [
                     'class' => DummyFooAggregate::class,
                     'message' => [
-                        'dispatchers' => ['foo_bus', 'bar_bus'],
+                        'dispatchers' => ['fooBus', 'barBus'],
                     ],
                 ],
             ],
@@ -657,15 +647,13 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     public function aggregate_repository_with_outbox_is_loading(): void
     {
         $this->load([
-            'message' => [
-                'dispatcher' => [
-                    'messenger' => [
-                        'enabled' => true,
-                        'mode' => 'event',
-                    ],
-                    'chain' => [
-                        'foo_bus' => 'fooBus',
-                    ],
+            'dispatcher' => [
+                'messenger' => [
+                    'enabled' => true,
+                    'mode' => 'event',
+                ],
+                'chain' => [
+                    'fooBus' => 'bazBus',
                 ],
             ],
             'outbox' => [
@@ -675,7 +663,7 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
                 'bar' => [
                     'class' => DummyFooAggregate::class,
                     'message' => [
-                        'dispatchers' => ['foo_bus'],
+                        'dispatchers' => ['fooBus'],
                         'outbox' => true,
                     ],
                 ],
@@ -705,23 +693,21 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
             'snapshot' => [
                 'enabled' => true,
             ],
-            'message' => [
-                'dispatcher' => [
-                    'messenger' => [
-                        'enabled' => true,
-                        'mode' => 'event',
-                    ],
-                    'chain' => [
-                        'foo_bus' => 'fooBus',
-                        'bar_bus' => 'barBus',
-                    ],
+            'dispatcher' => [
+                'messenger' => [
+                    'enabled' => true,
+                    'mode' => 'event',
+                ],
+                'chain' => [
+                    'fooBus' => 'bazBus',
+                    'barBus' => 'xyzBus',
                 ],
             ],
             'aggregates' => [
                 'baz' => [
                     'class' => DummyFooAggregateWithSnapshotting::class,
                     'message' => [
-                        'dispatchers' => ['bar_bus'],
+                        'dispatchers' => ['barBus'],
                     ],
                     'snapshot' => true,
                 ],
@@ -752,16 +738,14 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
                 'enabled' => true,
                 'versioned' => true,
             ],
-            'message' => [
-                'dispatcher' => [
-                    'messenger' => [
-                        'enabled' => true,
-                        'mode' => 'event',
-                    ],
-                    'chain' => [
-                        'foo_bus' => 'fooBus',
-                        'bar_bus' => 'barBus',
-                    ],
+            'dispatcher' => [
+                'messenger' => [
+                    'enabled' => true,
+                    'mode' => 'event',
+                ],
+                'chain' => [
+                    'fooBus' => 'bazBus',
+                    'barBus' => 'xyzBus',
                 ],
             ],
             'aggregates' => [
@@ -769,7 +753,7 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
                     'class' => DummyFooAggregateWithVersionedSnapshotting::class,
                     'repository_alias' => 'customNameRepository',
                     'message' => [
-                        'dispatchers' => ['foo_bus', 'bar_bus'],
+                        'dispatchers' => ['fooBus', 'barBus'],
                     ],
                     'snapshot' => true,
                 ],
@@ -858,22 +842,20 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     {
         $this->expectException(LogicException::class);
         $this->load([
-            'message' => [
-                'dispatcher' => [
-                    'messenger' => [
-                        'enabled' => true,
-                        'mode' => 'event',
-                    ],
-                    'chain' => [
-                        'foo_bus' => 'fooBus',
-                    ],
+            'dispatcher' => [
+                'messenger' => [
+                    'enabled' => true,
+                    'mode' => 'event',
+                ],
+                'chain' => [
+                    'fooBus' => 'bazBus',
                 ],
             ],
             'aggregates' => [
                 'foo' => [
                     'class' => DummyFooAggregate::class,
                     'message' => [
-                        'dispatchers' => ['bar_bus'],
+                        'dispatchers' => ['bazBus'],
                     ],
                 ],
             ],
@@ -888,22 +870,22 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
         $this->expectException(LogicException::class);
         $this->load([
             'message' => [
-                'dispatcher' => [
-                    'messenger' => [
-                        'enabled' => true,
-                        'mode' => 'event',
-                    ],
-                    'chain' => [
-                        'foo_bus' => 'fooBus',
-                    ],
-                ],
                 'decorator' => false,
+            ],
+            'dispatcher' => [
+                'messenger' => [
+                    'enabled' => true,
+                    'mode' => 'event',
+                ],
+                'chain' => [
+                    'fooBus' => 'bazBus',
+                ],
             ],
             'aggregates' => [
                 'foo' => [
                     'class' => DummyFooAggregate::class,
                     'message' => [
-                        'dispatchers' => ['foo_bus'],
+                        'dispatchers' => ['fooBus'],
                         'decorator' => true,
                     ],
                 ],
@@ -918,17 +900,6 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     {
         $this->expectException(LogicException::class);
         $this->load([
-            'message' => [
-                'dispatcher' => [
-                    'messenger' => [
-                        'enabled' => true,
-                        'mode' => 'event',
-                    ],
-                    'chain' => [
-                        'foo_bus' => 'fooBus',
-                    ],
-                ],
-            ],
             'snapshot' => [
                 'enabled' => false,
             ],
@@ -936,7 +907,6 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
                 'foo' => [
                     'class' => DummyFooAggregate::class,
                     'message' => [
-                        'dispatchers' => ['foo_bus'],
                         'decorator' => true,
                     ],
                     'snapshot' => true,
@@ -952,17 +922,6 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     {
         $this->expectException(LogicException::class);
         $this->load([
-            'message' => [
-                'dispatcher' => [
-                    'messenger' => [
-                        'enabled' => true,
-                        'mode' => 'event',
-                    ],
-                    'chain' => [
-                        'foo_bus' => 'fooBus',
-                    ],
-                ],
-            ],
             'upcast' => [
                 'enabled' => false,
             ],
@@ -970,7 +929,6 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
                 'foo' => [
                     'class' => DummyFooAggregate::class,
                     'message' => [
-                        'dispatchers' => ['foo_bus'],
                         'decorator' => true,
                     ],
                     'upcast' => true,

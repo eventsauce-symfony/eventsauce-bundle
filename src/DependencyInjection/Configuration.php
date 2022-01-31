@@ -49,6 +49,7 @@ final class Configuration implements ConfigurationInterface
             ->children()
                 ->append($this->getTimeSection())
                 ->append($this->getMessageSection())
+                ->append($this->getDispatcherSection())
                 ->append($this->getOutboxSection())
                 ->append($this->getSnapshotSection())
                 ->append($this->getUpcastSection())
@@ -99,8 +100,7 @@ final class Configuration implements ConfigurationInterface
                             ConstructingMessageSerializer::class
                         ))
                 ->end()
-                ?->append($this->getMessageDispatcherSection())
-                ->booleanNode('decorator')->defaultTrue()->end()
+                ?->booleanNode('decorator')->defaultTrue()->end()
             ?->end();
 
         return $node;
@@ -145,24 +145,24 @@ final class Configuration implements ConfigurationInterface
         return $node;
     }
 
-    private function getMessageDispatcherSection(): NodeDefinition
+    private function getDispatcherSection(): NodeDefinition
     {
         $node = new ArrayNodeDefinition('dispatcher');
         $node
             ->addDefaultsIfNotSet()
             ->validate()
-                ->ifTrue(function (array $values) {
+                ->ifTrue(static function (array $values) {
                     $messenger = $values['messenger'];
                     $dispatchers = $values['chain'];
-                    foreach ($dispatchers as $dispatcherId) {
-                        if ($messenger['enabled'] && empty($dispatcherId)) {
+                    foreach ($dispatchers as $busId) {
+                        if ($messenger['enabled'] && empty($busId)) {
                             return true;
                         }
                     }
 
                     return false;
                 })
-                ->thenInvalid('If you use symfony messenger you must specify your message bus id as key value.')
+                ->thenInvalid('If you use symfony messenger you must specify your message bus alias.')
             ->end()
             ->children()
                 ->arrayNode('messenger')
@@ -177,7 +177,7 @@ final class Configuration implements ConfigurationInterface
                 ->end()
                 ?->arrayNode('chain')
                     ->normalizeKeys(false)
-                    ->variablePrototype()->end()
+                    ->scalarPrototype()->end()
                 ?->end()
             ->end();
 
