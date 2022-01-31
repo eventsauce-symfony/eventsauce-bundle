@@ -96,18 +96,17 @@ final class FooConsumer implements MessageConsumer {
 }
 ```
 
-If you need it, you can inject dispatcher
+If you need to, you can inject a dispatcher into some service using the 
+alias
 
 ```php
 
 use Symfony\Component\DependencyInjection\Attribute\Target;
 use EventSauce\EventSourcing\MessageDispatcher;
 
-final class Example {
-    public function __construct(
-        #[Target('eventBus')] private MessageDispatcher $fooBus
-    ){}
-}
+public function __construct(
+    #[Target('eventBus')] private MessageDispatcher $eventBus
+){}
 
 ```
 
