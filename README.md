@@ -147,5 +147,6 @@ The mode option is a way of dispatch messages. Available values:
 `message`
 
 - Message is send to the any handler that supports the Message type
+- Message object includes the event and headers
 
 ### Defining aggregates

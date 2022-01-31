@@ -193,7 +193,7 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
             'dispatcher' => [
                 'chain' => [
                     'fooBus' => null,
-                    'barBus' => null,
+                    'bar_bus' => 'barBus',
                 ],
             ],
         ]);
