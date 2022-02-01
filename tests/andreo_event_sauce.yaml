@@ -19,7 +19,7 @@ andreo_event_sauce:
             enabled: true
             mode: event_with_headers
         chain:
-            event_bus: eventBus
+            - eventBus
     outbox:
         enabled: true
         back_off:

@@ -191,10 +191,7 @@ final class EventSauceConfigExtensionTest extends AbstractExtensionTestCase
     {
         $this->load([
             'dispatcher' => [
-                'chain' => [
-                    'fooBus' => null,
-                    'bar_bus' => 'barBus',
-                ],
+                'chain' => ['fooBus', 'barBus'],
             ],
         ]);
 

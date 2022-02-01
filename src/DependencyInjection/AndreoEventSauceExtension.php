@@ -197,8 +197,7 @@ final class AndreoEventSauceExtension extends Extension
                 }
             );
 
-            foreach ($chainConfig as $dispatcherAlias => $redefinedDispatcherAlias) {
-                $dispatcherAlias = $redefinedDispatcherAlias ?? $dispatcherAlias;
+            foreach ($chainConfig as $dispatcherAlias) {
                 $container
                     ->register("andreo.event_sauce.message_dispatcher.$dispatcherAlias", SynchronousMessageDispatcher::class)
                     ->setFactory([SynchronousMessageDispatcherFactory::class, '__invoke'])
