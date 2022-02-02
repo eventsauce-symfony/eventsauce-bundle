@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Tests\ConfigExtension;
+namespace Tests\Config;
 
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
 use EventSauce\EventSourcing\ClassNameInflector;
 use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
-use Tests\ConfigExtension\Dummy\DummyClassNameInflector;
+use Tests\Config\Dummy\DummyClassNameInflector;
 
 final class ClassNameInflectorConfigTest extends AbstractExtensionTestCase
 {
@@ -21,7 +21,7 @@ final class ClassNameInflectorConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function custom_class_name_inflector_is_loading(): void
+    public function should_register_class_name_inflector(): void
     {
         $this->load([
             'class_name_inflector' => DummyClassNameInflector::class,

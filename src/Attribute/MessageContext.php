@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Andreo\EventSauceBundle\Attribute;
 
-enum MessageDecoratorContext
+enum MessageContext
 {
     case AGGREGATE;
     case EVENT_DISPATCHER;

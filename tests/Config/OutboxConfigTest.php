@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\ConfigExtension;
+namespace Tests\Config;
 
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
 use EventSauce\BackOff\BackOffStrategy;
@@ -16,7 +16,7 @@ use EventSauce\MessageOutbox\MarkMessagesConsumedOnCommit;
 use EventSauce\MessageOutbox\RelayCommitStrategy;
 use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
-use Tests\ConfigExtension\Dummy\DummyCustomBackOfStrategy;
+use Tests\Config\Dummy\DummyCustomBackOfStrategy;
 
 final class OutboxConfigTest extends AbstractExtensionTestCase
 {
@@ -30,7 +30,7 @@ final class OutboxConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function outbox_exponential_back_of_strategy_is_loading(): void
+    public function should_register_exponential_back_of_strategy(): void
     {
         $this->load([
             'outbox' => [
@@ -56,7 +56,7 @@ final class OutboxConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function outbox_fibonacci_back_of_strategy_is_loading(): void
+    public function should_register_fibonacci_back_of_strategy(): void
     {
         $this->load([
             'outbox' => [
@@ -84,7 +84,7 @@ final class OutboxConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function outbox_linear_back_of_strategy_is_loading(): void
+    public function should_register_linear_back_of_strategy(): void
     {
         $this->load([
             'outbox' => [
@@ -109,7 +109,7 @@ final class OutboxConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function outbox_no_waiting_back_of_strategy_is_loading(): void
+    public function should_register_no_waiting_back_of_strategy(): void
     {
         $this->load([
             'outbox' => [
@@ -133,7 +133,7 @@ final class OutboxConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function outbox_immediately_back_of_strategy_is_loading(): void
+    public function should_register_immediately_back_of_strategy(): void
     {
         $this->load([
             'outbox' => [
@@ -154,7 +154,7 @@ final class OutboxConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function outbox_custom_back_of_strategy_is_loading(): void
+    public function should_register_custom_back_of_strategy(): void
     {
         $this->load([
             'outbox' => [
@@ -175,7 +175,7 @@ final class OutboxConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function outbox_back_of_strategy_config_throw_error_if_more_than_one_strategy_selected(): void
+    public function should_throw_exception_if_more_than_one_back_off_strategy_defined(): void
     {
         $this->expectException(InvalidConfigurationException::class);
         $this->load([
@@ -199,7 +199,7 @@ final class OutboxConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function outbox_delete_relay_commit_strategy_is_loading(): void
+    public function should_register_deleted_relay_commit_strategy(): void
     {
         $this->load([
             'outbox' => [
@@ -220,7 +220,7 @@ final class OutboxConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function outbox_mark_consumed_relay_commit_strategy_is_loading(): void
+    public function should_register_mark_consumed_relay_commit_strategy(): void
     {
         $this->load([
             'outbox' => [
@@ -241,7 +241,7 @@ final class OutboxConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function outbox_relay_commit_strategy_config_throw_error_if_more_than_one_strategy_selected(): void
+    public function should_throw_exception_if_more_than_one_relay_commit_strategy_defined(): void
     {
         $this->expectException(InvalidConfigurationException::class);
         $this->load([

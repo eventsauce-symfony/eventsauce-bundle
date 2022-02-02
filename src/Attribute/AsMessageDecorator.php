@@ -11,7 +11,7 @@ final class AsMessageDecorator
 {
     public function __construct(
         public int $order = 0,
-        public MessageDecoratorContext $context = MessageDecoratorContext::ALL,
+        public MessageContext $context = MessageContext::ALL,
     ) {
     }
 }

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Tests\ConfigExtension;
+namespace Tests\Config;
 
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
 use EventSauce\Clock\Clock;
 use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
-use Tests\ConfigExtension\Dummy\DummyCustomClock;
+use Tests\Config\Dummy\DummyCustomClock;
 
 final class TimeConfigTest extends AbstractExtensionTestCase
 {
@@ -21,7 +21,7 @@ final class TimeConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function time_is_loading(): void
+    public function should_register_time_components(): void
     {
         $this->load([
             'time' => [

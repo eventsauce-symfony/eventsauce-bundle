@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\ConfigExtension\Dummy;
+namespace Tests\Config\Dummy;
 
 use EventSauce\UuidEncoding\UuidEncoder;
 use Ramsey\Uuid\UuidInterface;

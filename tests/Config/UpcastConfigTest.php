@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\ConfigExtension;
+namespace Tests\Config;
 
 use Andreo\EventSauceBundle\Attribute\AsUpcaster;
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
@@ -20,7 +20,7 @@ final class UpcastConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function upcast_config_is_loading(): void
+    public function should_register_upcaster_autoconfiguration(): void
     {
         $this->load([
             'upcast' => [

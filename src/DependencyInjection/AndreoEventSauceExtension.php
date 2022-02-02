@@ -26,7 +26,7 @@ use Andreo\EventSauce\Upcasting\UpcastingMessageObjectSerializer;
 use Andreo\EventSauceBundle\Attribute\AsMessageConsumer;
 use Andreo\EventSauceBundle\Attribute\AsMessageDecorator;
 use Andreo\EventSauceBundle\Attribute\AsUpcaster;
-use Andreo\EventSauceBundle\Attribute\MessageDecoratorContext;
+use Andreo\EventSauceBundle\Attribute\MessageContext;
 use Andreo\EventSauceBundle\MessageDecoratorChainFactory;
 use Andreo\EventSauceBundle\MessageDispatcherChainFactory;
 use Andreo\EventSauceBundle\SynchronousMessageDispatcherFactory;
@@ -154,12 +154,10 @@ final class AndreoEventSauceExtension extends Extension
                 AsMessageDecorator::class,
                 static function (ChildDefinition $definition, AsMessageDecorator $attribute) use ($eventDispatcherEnabled): void {
                     $context = $attribute->context;
-                    if (in_array($context, [MessageDecoratorContext::ALL, MessageDecoratorContext::AGGREGATE], true)) {
+                    if (in_array($context, [MessageContext::ALL, MessageContext::AGGREGATE], true)) {
                         $definition->addTag('andreo.event_sauce.aggregate_message_decorator', ['priority' => -$attribute->order]);
                     }
-                    if ($eventDispatcherEnabled &&
-                        in_array($context, [MessageDecoratorContext::ALL, MessageDecoratorContext::EVENT_DISPATCHER], true)
-                    ) {
+                    if ($eventDispatcherEnabled && in_array($context, [MessageContext::ALL, MessageContext::EVENT_DISPATCHER], true)) {
                         $definition->addTag('andreo.event_sauce.event_dispatcher_message_decorator', ['priority' => -$attribute->order]);
                     }
                 }
@@ -168,18 +166,24 @@ final class AndreoEventSauceExtension extends Extension
             $container
                 ->findDefinition(MessageDecorator::class)
                 ->addTag('andreo.event_sauce.aggregate_message_decorator', ['priority' => 0]);
-        }
 
-        $container
-            ->register('andreo.event_sauce.aggregate_message_decorator_chain', MessageDecoratorChain::class)
-            ->addArgument(new TaggedIteratorArgument('andreo.event_sauce.aggregate_message_decorator'))
-            ->setFactory([MessageDecoratorChainFactory::class, '__invoke'])
-        ;
-
-        if ($eventDispatcherEnabled) {
             $container
-                ->register('andreo.event_sauce.event_dispatcher_message_decorator_chain', MessageDecoratorChain::class)
-                ->addArgument(new TaggedIteratorArgument('andreo.event_sauce.event_dispatcher_message_decorator'))
+                ->register('andreo.event_sauce.aggregate_message_decorator_chain', MessageDecoratorChain::class)
+                ->addArgument(new TaggedIteratorArgument('andreo.event_sauce.aggregate_message_decorator'))
+                ->setFactory([MessageDecoratorChainFactory::class, '__invoke'])
+            ;
+
+            if ($eventDispatcherEnabled) {
+                $container
+                    ->register('andreo.event_sauce.event_dispatcher_message_decorator_chain', MessageDecoratorChain::class)
+                    ->addArgument(new TaggedIteratorArgument('andreo.event_sauce.event_dispatcher_message_decorator'))
+                    ->setFactory([MessageDecoratorChainFactory::class, '__invoke'])
+                ;
+            }
+        } else {
+            $container
+                ->register('andreo.event_sauce.aggregate_message_decorator_chain', MessageDecoratorChain::class)
+                ->addArgument([])
                 ->setFactory([MessageDecoratorChainFactory::class, '__invoke'])
             ;
         }

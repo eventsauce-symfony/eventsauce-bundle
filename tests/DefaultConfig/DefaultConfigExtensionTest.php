@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-namespace Tests\ConfigExtension;
+namespace Tests\DefaultConfig;
 
-use Andreo\EventSauce\Doctrine\Migration\GenerateAggregateMigrationCommand;
 use Andreo\EventSauce\Doctrine\Migration\TableNameSuffix;
 use Andreo\EventSauce\Messenger\MessengerMessageEventDispatcher;
 use Andreo\EventSauce\Snapshotting\SnapshotStateSerializer;
@@ -28,7 +27,7 @@ final class DefaultConfigExtensionTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function default_time_config_is_loading(): void
+    public function should_register_time_components(): void
     {
         $this->load();
 
@@ -46,7 +45,7 @@ final class DefaultConfigExtensionTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function default_message_config_is_loading(): void
+    public function should_register_message_components(): void
     {
         $this->load();
 
@@ -56,44 +55,37 @@ final class DefaultConfigExtensionTest extends AbstractExtensionTestCase
 
         $this->assertArrayHasKey(AsMessageDecorator::class, $this->container->getAutoconfiguredAttributes());
         $this->assertArrayHasKey(AsMessageConsumer::class, $this->container->getAutoconfiguredAttributes());
-
-        $this->assertContainerBuilderNotHasService(MessengerMessageEventDispatcher::class);
-        $this->assertContainerBuilderNotHasService(BackOffStrategy::class);
-        $this->assertContainerBuilderNotHasService(RelayCommitStrategy::class);
     }
 
     /**
      * @test
      */
-    public function default_snapshot_config_is_loading(): void
-    {
-        $this->load();
-
-        $this->assertContainerBuilderNotHasService(SnapshotStateSerializer::class);
-    }
-
-    /**
-     * @test
-     */
-    public function default_upcast_config_is_loading(): void
-    {
-        $this->load();
-
-        $this->assertArrayNotHasKey(AsUpcaster::class, $this->container->getAutoconfiguredAttributes());
-    }
-
-    /**
-     * @test
-     */
-    public function default_configs_is_loading(): void
+    public function should_register_these_components(): void
     {
         $this->load();
 
         $this->assertContainerBuilderHasAlias(UuidEncoder::class);
         $this->assertContainerBuilderHasAlias(ClassNameInflector::class);
         $this->assertContainerBuilderHasAlias(PayloadSerializer::class);
+
         $this->assertContainerBuilderHasService(TableNameSuffix::class);
-        $this->assertContainerBuilderHasService(GenerateAggregateMigrationCommand::class);
+    }
+
+    /**
+     * @test
+     */
+    public function should_not_register_these_components(): void
+    {
+        $this->load();
+
+        $this->assertContainerBuilderNotHasService(MessengerMessageEventDispatcher::class);
+
+        $this->assertContainerBuilderNotHasService(BackOffStrategy::class);
+        $this->assertContainerBuilderNotHasService(RelayCommitStrategy::class);
+
+        $this->assertContainerBuilderNotHasService(SnapshotStateSerializer::class);
+
+        $this->assertArrayNotHasKey(AsUpcaster::class, $this->container->getAutoconfiguredAttributes());
     }
 
     protected function getContainerExtensions(): array

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Tests\ConfigExtension;
+namespace Tests\Config;
 
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
 use EventSauce\EventSourcing\Serialization\PayloadSerializer;
 use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
-use Tests\ConfigExtension\Dummy\DummyCustomPayloadSerializer;
+use Tests\Config\Dummy\DummyCustomPayloadSerializer;
 
 final class SerializerConfigTest extends AbstractExtensionTestCase
 {
@@ -21,7 +21,7 @@ final class SerializerConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function custom_payload_serializer_is_loading(): void
+    public function should_register_custom_payload_serializer(): void
     {
         $this->load([
             'payload_serializer' => DummyCustomPayloadSerializer::class,

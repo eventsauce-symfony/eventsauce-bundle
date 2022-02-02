@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\ConfigExtension;
+namespace Tests\Config;
 
 use Andreo\EventSauce\Outbox\AggregateRootRepositoryWithoutDispatchMessage;
 use Andreo\EventSauce\Snapshotting\AggregateRootRepositoryWithSnapshottingAndStoreStrategy;
@@ -18,10 +18,10 @@ use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
 use Symfony\Component\DependencyInjection\Argument\IteratorArgument;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
-use Tests\ConfigExtension\Dummy\DummyCustomStoreStrategy;
-use Tests\ConfigExtension\Dummy\DummyFooAggregate;
-use Tests\ConfigExtension\Dummy\DummyFooAggregateWithSnapshotting;
-use Tests\ConfigExtension\Dummy\DummyFooAggregateWithVersionedSnapshotting;
+use Tests\Config\Dummy\DummyCustomStoreStrategy;
+use Tests\Config\Dummy\DummyFooAggregate;
+use Tests\Config\Dummy\DummyFooAggregateWithSnapshotting;
+use Tests\Config\Dummy\DummyFooAggregateWithVersionedSnapshotting;
 
 final class AggregatesConfigTest extends AbstractExtensionTestCase
 {
@@ -35,25 +35,24 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function aggregate_repository_is_loading(): void
+    public function should_register_default_aggregate_repository(): void
     {
         $this->load([
             'message' => [
                 'dispatcher' => [
                     'messenger' => [
-                        'enabled' => true,
                         'mode' => 'event',
                     ],
                     'chain' => [
-                        'fooBus' => 'bazBus',
-                        'barBus' => 'xyzBus',
+                        'fooBus' => 'barBus',
+                        'bazBus' => 'quxBus',
                     ],
                 ],
             ],
             'aggregates' => [
                 'foo' => [
                     'class' => DummyFooAggregate::class,
-                    'dispatchers' => ['fooBus', 'barBus'],
+                    'dispatchers' => ['fooBus', 'bazBus'],
                 ],
             ],
         ]);
@@ -75,17 +74,16 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function aggregate_repository_with_outbox_is_loading(): void
+    public function should_register_outbox_aggregate_repository(): void
     {
         $this->load([
             'message' => [
                 'dispatcher' => [
                     'messenger' => [
-                        'enabled' => true,
                         'mode' => 'event',
                     ],
                     'chain' => [
-                        'fooBus' => 'bazBus',
+                        'fooBus' => 'barBus',
                     ],
                 ],
             ],
@@ -118,7 +116,26 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function aggregate_repository_with_snapshotting_is_loading(): void
+    public function should_throw_exception_if_aggregate_outbox_is_enabled_but_root_outbox_option_is_disabled(): void
+    {
+        $this->expectException(LogicException::class);
+        $this->load([
+            'outbox' => [
+                'enabled' => false,
+            ],
+            'aggregates' => [
+                'qux' => [
+                    'class' => DummyFooAggregate::class,
+                    'outbox' => true,
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * @test
+     */
+    public function should_register_snapshot_aggregate_repository(): void
     {
         $this->load([
             'snapshot' => [
@@ -127,19 +144,18 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
             'message' => [
                 'dispatcher' => [
                     'messenger' => [
-                        'enabled' => true,
                         'mode' => 'event',
                     ],
                     'chain' => [
-                        'fooBus' => 'bazBus',
-                        'barBus' => 'xyzBus',
+                        'fooBus' => 'barBus',
+                        'bazBus' => 'quxBus',
                     ],
                 ],
             ],
             'aggregates' => [
                 'baz' => [
                     'class' => DummyFooAggregateWithSnapshotting::class,
-                    'dispatchers' => ['barBus'],
+                    'dispatchers' => ['fooBus'],
                     'snapshot' => true,
                 ],
             ],
@@ -162,22 +178,39 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function aggregate_repository_with_versioned_snapshotting_is_loading(): void
+    public function should_throw_exception_if_aggregate_snapshot_is_enabled_but_root_snapshot_option_is_disabled(): void
+    {
+        $this->expectException(LogicException::class);
+        $this->load([
+            'snapshot' => [
+                'enabled' => false,
+            ],
+            'aggregates' => [
+                'bar' => [
+                    'class' => DummyFooAggregate::class,
+                    'snapshot' => true,
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * @test
+     */
+    public function should_register_versioned_snapshot_aggregate_repository(): void
     {
         $this->load([
             'snapshot' => [
-                'enabled' => true,
                 'versioned' => true,
             ],
             'message' => [
                 'dispatcher' => [
                     'messenger' => [
-                        'enabled' => true,
                         'mode' => 'event',
                     ],
                     'chain' => [
-                        'fooBus' => 'bazBus',
-                        'barBus' => 'xyzBus',
+                        'fooBus' => 'barBus',
+                        'bazBus' => 'quxBus',
                     ],
                 ],
             ],
@@ -185,7 +218,7 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
                 'foo' => [
                     'class' => DummyFooAggregateWithVersionedSnapshotting::class,
                     'repository_alias' => 'customNameRepository',
-                    'dispatchers' => ['fooBus', 'barBus'],
+                    'dispatchers' => ['fooBus', 'bazBus'],
                     'snapshot' => true,
                 ],
             ],
@@ -208,14 +241,12 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function aggregate_repository_with_snapshotting_and_every_n_event_store_strategy_is_loading(): void
+    public function should_register_snapshot_aggregate_repository_with_every_n_event_store_strategy(): void
     {
         $this->load([
             'snapshot' => [
-                'enabled' => true,
                 'store_strategy' => [
                     'every_n_event' => [
-                        'enabled' => true,
                         'number' => 300,
                     ],
                 ],
@@ -239,11 +270,10 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function aggregate_repository_with_snapshotting_and_custom_store_strategy_is_loading(): void
+    public function should_register_snapshot_aggregate_repository_with_custom_store_strategy(): void
     {
         $this->load([
             'snapshot' => [
-                'enabled' => true,
                 'store_strategy' => [
                     'custom' => [
                         'id' => DummyCustomStoreStrategy::class,
@@ -269,7 +299,7 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function aggregate_repository_throw_exception_if_dispatcher_not_be_configured(): void
+    public function should_throw_exception_if_aggregate_dispatcher_is_not_configured(): void
     {
         $this->expectException(LogicException::class);
         $this->load([
@@ -296,26 +326,7 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function aggregate_repository_throw_exception_if_snapshot_enabled_but_not_enabled_in_root_node(): void
-    {
-        $this->expectException(LogicException::class);
-        $this->load([
-            'snapshot' => [
-                'enabled' => false,
-            ],
-            'aggregates' => [
-                'foo' => [
-                    'class' => DummyFooAggregate::class,
-                    'snapshot' => true,
-                ],
-            ],
-        ]);
-    }
-
-    /**
-     * @test
-     */
-    public function aggregate_repository_throw_exception_if_upcast_enabled_but_not_enabled_in_root_node(): void
+    public function should_throw_exception_if_aggregate_upcast_is_enabled_but_root_upcast_option_is_disabled(): void
     {
         $this->expectException(LogicException::class);
         $this->load([
