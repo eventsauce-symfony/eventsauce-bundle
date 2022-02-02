@@ -1,0 +1,77 @@
+andreo_event_sauce:
+    time:
+        recording_timezone: Europe/Warsaw
+        clock: EventSauce\Clock\Clock
+    message:
+        repository:
+            json_encode_options:
+                - !php/const JSON_PRETTY_PRINT
+                - !php/const JSON_PRESERVE_ZERO_FRACTION
+            doctrine:
+                connection: doctrine.dbal.default_connection
+                table_schema: EventSauce\MessageRepository\TableSchema\TableSchema
+                table_name: event_message
+        serializer: EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer
+        decorator: true
+        dispatcher:
+            messenger:
+                enabled: true
+                mode: event | event_with_headers | message
+            event_dispatcher: true
+            chain:
+                fooBus: barBus
+    outbox:
+        enabled: true
+        back_off:
+            strategy:
+                exponential:
+                    initial_delay_ms: 100000
+                    max_tries: 10
+                fibonacci:
+                    initial_delay_ms: 100000
+                    max_tries: 10
+                linear:
+                    initial_delay_ms: 100000
+                    max_tries: 10
+                no_waiting:
+                    max_tries: 10
+                immediately:
+                    enabled: true
+                custom:
+                    id: Foo/Bar/Baz
+        relay_commit:
+            delete:
+                enabled: true
+            mark_consumed:
+                enabled: true
+    snapshot:
+        enabled: true
+        versioned: true
+        store_strategy:
+            every_n_event:
+                number: 500
+        repository:
+            doctrine: true
+        serializer: Andreo\EventSauceBundle\Snapshotting\SnapshotStateSerializer
+    upcast:
+        enabled: true
+        context: payload | message
+    payload_serializer: Andreo\EventSauceBundle\Serialization\SymfonyPayloadSerializer
+    uuid_encoder: EventSauce\UuidEncoding\UuidEncoder
+    class_name_inflector: EventSauce\EventSourcing\ClassNameInflector
+    aggregates:
+        foo:
+            class: App\Domain\Foo
+            repository_alias: fooRepository
+            outbox: false
+            dispatchers:
+                - event_bus
+            upcast: true
+            snapshot: false
+        bar:
+            class: App\Domain\Bar
+            repository_alias: barRepository
+            dispatchers:
+                - event_bus
+            upcast: true
+            snapshot: true

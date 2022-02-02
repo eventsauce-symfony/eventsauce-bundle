@@ -134,7 +134,7 @@ The mode option is a way of dispatch messages. Available values:
 
 `message`
 
-- Message is send to the any handler that supports the Message type
+- Message is send to the any handler that supports the Message type. You have to manually check event type
 - Message object includes the event and headers
 
 ### Aggregates
@@ -152,6 +152,7 @@ andreo_event_sauce:
     aggregates:
         foo:
             class: App\Domain\Foo
+            repository_alias: # default is created automatically by convention "${name}Repository"
             dispatchers:
                 - fooBus
                 - barBus
@@ -161,3 +162,17 @@ andreo_event_sauce:
                 - barBus
 ```
 
+Then you can inject the repository based on the alias
+
+```php
+
+use EventSauce\EventSourcing\AggregateRootRepository;
+use Symfony\Component\DependencyInjection\Attribute\Target;
+
+final class FooHandler {
+
+   public function __construct(
+        #[Target('fooRepository')] private AggregateRootRepository $circleRepository
+    ){}
+}
+```
