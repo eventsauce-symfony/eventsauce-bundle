@@ -696,10 +696,10 @@ final class AndreoEventSauceExtension extends Extension
         ]);
 
         $container
-            ->register("andreo.event_sauce.relay.outbox_messages_$aggregateName", RelayOutboxMessagesCommand::class)
+            ->register("andreo.event_sauce.command.relay_outbox.$aggregateName", RelayOutboxMessagesCommand::class)
             ->addArgument($outboxRelayDef)
             ->addTag('console.command', [
-                'command' => "andreo:event-sauce:relay-outbox-messages:$aggregateName",
+                'command' => "andreo:event-sauce:relay-outbox-$aggregateName",
             ])
         ;
     }

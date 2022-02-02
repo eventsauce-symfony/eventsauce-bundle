@@ -23,6 +23,7 @@ andreo_event_sauce:
     outbox:
         enabled: true
         back_off:
+            batchSize: 100
             exponential:
                 initial_delay_ms: 100000
                 max_tries: 10
@@ -39,6 +40,7 @@ andreo_event_sauce:
             custom:
                 id: Foo/Bar/Baz
         relay_commit:
+            commitSize: 1
             delete:
                 enabled: true
             mark_consumed:
