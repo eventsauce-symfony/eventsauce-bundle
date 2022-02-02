@@ -11,13 +11,16 @@ use EventSauce\EventSourcing\MessageDecoratorChain;
 use EventSauce\EventSourcing\MessageDispatcherChain;
 use EventSauce\EventSourcing\SynchronousMessageDispatcher;
 use PHPUnit\Framework\TestCase;
+use Tests\Factory\Dummy\DummyMessageConsumer;
+use Tests\Factory\Dummy\DummyMessageDecorator;
+use Tests\Factory\Dummy\DummyMessageDispatcher;
 
 final class FactoryTest extends TestCase
 {
     /**
      * @test
      */
-    public function message_decorator_chain_has_been_created(): void
+    public function should_create_message_decorator_chain(): void
     {
         $factory = new MessageDecoratorChainFactory();
         $chain = $factory([new DummyMessageDecorator(), new DummyMessageDecorator()]);
@@ -27,7 +30,7 @@ final class FactoryTest extends TestCase
     /**
      * @test
      */
-    public function message_dispatcher_chain_has_been_created(): void
+    public function should_create_message_dispatcher_chain(): void
     {
         $factory = new MessageDispatcherChainFactory();
         $chain = $factory([new DummyMessageDispatcher(), new DummyMessageDispatcher()]);
@@ -37,7 +40,7 @@ final class FactoryTest extends TestCase
     /**
      * @test
      */
-    public function synchronous_message_dispatcher_has_been_created(): void
+    public function should_create_synchronous_message_dispatcher_chain(): void
     {
         $factory = new SynchronousMessageDispatcherFactory();
         $dispatcher = $factory([new DummyMessageConsumer(), new DummyMessageConsumer()]);

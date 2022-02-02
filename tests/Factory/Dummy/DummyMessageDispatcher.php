@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Factory;
+namespace Tests\Factory\Dummy;
 
 use EventSauce\EventSourcing\Message;
 use EventSauce\EventSourcing\MessageDispatcher;

@@ -78,9 +78,10 @@ An example configuration for this case is as follows
 ```yaml
 
 andreo_event_sauce:
-    dispatcher:
-        chain:
-            - eventBus # just define an alias
+    message:
+        dispatcher:
+            chain:
+                - fooBus
 ```
 
 Defining the consumer is as follows
@@ -110,11 +111,12 @@ An example configuration for this case is as follows
 ```yaml
 
 andreo_event_sauce:
-    dispatcher:
-        messenger:
-            mode: event
-        chain:
-            eventBus: outboxBus # message bus alias from messenger config
+    message:
+        dispatcher:
+            messenger:
+                mode: event
+            chain:
+                fooBus: barBus # message bus alias from messenger config
 
 ```
 
@@ -135,4 +137,27 @@ The mode option is a way of dispatch messages. Available values:
 - Message is send to the any handler that supports the Message type
 - Message object includes the event and headers
 
-### Defining aggregates
+### Aggregates
+
+An example configuration for two aggregates is as follows
+
+```yaml
+
+andreo_event_sauce:
+    message:
+        dispatcher:
+            chain:
+                - fooBus
+                - barBus
+    aggregates:
+        foo:
+            class: App\Domain\Foo
+            dispatchers:
+                - fooBus
+                - barBus
+        bar:
+            class: App\Domain\Bar
+            dispatchers:
+                - barBus
+```
+
