@@ -23,22 +23,21 @@ andreo_event_sauce:
     outbox:
         enabled: true
         back_off:
-            strategy:
-                exponential:
-                    initial_delay_ms: 100000
-                    max_tries: 10
-                fibonacci:
-                    initial_delay_ms: 100000
-                    max_tries: 10
-                linear:
-                    initial_delay_ms: 100000
-                    max_tries: 10
-                no_waiting:
-                    max_tries: 10
-                immediately:
-                    enabled: true
-                custom:
-                    id: Foo/Bar/Baz
+            exponential:
+                initial_delay_ms: 100000
+                max_tries: 10
+            fibonacci:
+                initial_delay_ms: 100000
+                max_tries: 10
+            linear:
+                initial_delay_ms: 100000
+                max_tries: 10
+            no_waiting:
+                max_tries: 10
+            immediately:
+                enabled: true
+            custom:
+                id: Foo/Bar/Baz
         relay_commit:
             delete:
                 enabled: true

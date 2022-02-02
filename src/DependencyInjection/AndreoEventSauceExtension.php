@@ -688,20 +688,16 @@ final class AndreoEventSauceExtension extends Extension
             new Reference("andreo.event_sauce.message_dispatcher_chain.$aggregateName"),
         ]);
 
-        $container
-            ->register("andreo.event_sauce.outbox_relay.$aggregateName", OutboxRelay::class)
-            ->setArguments([
-                new Reference("andreo.event_sauce.outbox_repository.$aggregateName"),
-                $messageConsumerDefinition,
-                new Reference(BackOffStrategy::class),
-                new Reference(RelayCommitStrategy::class),
-            ])
-            ->setPublic(false)
-        ;
+        $outboxRelayDef = new Definition(OutboxRelay::class, [
+            new Reference("andreo.event_sauce.outbox_repository.$aggregateName"),
+            $messageConsumerDefinition,
+            new Reference(BackOffStrategy::class),
+            new Reference(RelayCommitStrategy::class),
+        ]);
 
         $container
             ->register("andreo.event_sauce.relay.outbox_messages_$aggregateName", RelayOutboxMessagesCommand::class)
-            ->addArgument(new Reference("andreo.event_sauce.outbox_relay.$aggregateName"))
+            ->addArgument($outboxRelayDef)
             ->addTag('console.command', [
                 'command' => "andreo:event-sauce:relay-outbox-messages:$aggregateName",
             ])

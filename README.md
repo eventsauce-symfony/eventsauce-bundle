@@ -176,3 +176,24 @@ final class FooHandler {
     ){}
 }
 ```
+
+### Outbox
+
+[About the Outbox](https://eventsauce.io/docs/message-outbox/)
+
+```yaml
+
+andreo_event_sauce:
+    message:
+        dispatcher:
+            chain:
+                - fooBus
+    outbox: # enable outbox and register its services
+        enabled: true
+    aggregates:
+        foo:
+            class: App\Domain\Foo
+            dispatchers:
+                - fooBus
+            outbox: true # register doctrine transactional message repository and outbox relay
+```

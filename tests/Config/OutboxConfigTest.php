@@ -56,6 +56,22 @@ final class OutboxConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
+    public function should_register_exponential_back_of_strategy_as_default(): void
+    {
+        $this->load([
+            'outbox' => [
+                'enabled' => true,
+            ],
+        ]);
+
+        $this->assertContainerBuilderHasAlias(BackOffStrategy::class);
+        $backOffStrategyAlias = $this->container->getAlias(BackOffStrategy::class);
+        $this->assertEquals(ExponentialBackOffStrategy::class, $backOffStrategyAlias->__toString());
+    }
+
+    /**
+     * @test
+     */
     public function should_register_fibonacci_back_of_strategy(): void
     {
         $this->load([
@@ -230,6 +246,22 @@ final class OutboxConfigTest extends AbstractExtensionTestCase
                         'enabled' => true,
                     ],
                 ],
+            ],
+        ]);
+
+        $this->assertContainerBuilderHasAlias(RelayCommitStrategy::class);
+        $relayCommitStrategyAlias = $this->container->getAlias(RelayCommitStrategy::class);
+        $this->assertEquals(MarkMessagesConsumedOnCommit::class, $relayCommitStrategyAlias->__toString());
+    }
+
+    /**
+     * @test
+     */
+    public function should_register_mark_consumed_relay_commit_strategy_as_default(): void
+    {
+        $this->load([
+            'outbox' => [
+                'enabled' => true,
             ],
         ]);
 
