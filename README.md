@@ -96,20 +96,6 @@ final class FooConsumer implements MessageConsumer {
 }
 ```
 
-If you need to, you can inject a dispatcher into some service using the 
-alias
-
-```php
-
-use Symfony\Component\DependencyInjection\Attribute\Target;
-use EventSauce\EventSourcing\MessageDispatcher;
-
-public function __construct(
-    #[Target('eventBus')] private MessageDispatcher $eventBus
-){}
-
-```
-
 ### Message dispatching with symfony messenger
 
 If you want to use the symfony messenger component for dispatch messages, 
