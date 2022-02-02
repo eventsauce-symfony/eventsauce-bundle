@@ -172,7 +172,7 @@ use Symfony\Component\DependencyInjection\Attribute\Target;
 final class FooHandler {
 
    public function __construct(
-        #[Target('fooRepository')] private AggregateRootRepository $circleRepository
+        #[Target('fooRepository')] private AggregateRootRepository $fooRepository
     ){}
 }
 ```
