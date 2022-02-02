@@ -9,13 +9,13 @@ use Symfony\Component\Config\Resource\ClassExistenceResource;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
-class AndreoEventSauceBundle extends Bundle
+final class AndreoEventSauceBundle extends Bundle
 {
     public function build(ContainerBuilder $container): void
     {
         $container->addResource(new ClassExistenceResource(HandleEventWithHeadersPass::class));
         if (class_exists(HandleEventWithHeadersPass::class)) {
-            $container->addCompilerPass(new HandleEventWithHeadersPass());
+            $container->addCompilerPass(new HandleEventWithHeadersPass(), priority: -10);
         }
     }
 }

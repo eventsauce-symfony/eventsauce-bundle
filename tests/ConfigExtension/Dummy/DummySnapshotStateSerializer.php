@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\ConfigExtension;
+namespace Tests\ConfigExtension\Dummy;
 
 use Andreo\EventSauce\Snapshotting\SnapshotState;
 use Andreo\EventSauce\Snapshotting\SnapshotStateSerializer;

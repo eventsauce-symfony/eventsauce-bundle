@@ -80,7 +80,7 @@ An example configuration for this case is as follows
 andreo_event_sauce:
     dispatcher:
         chain:
-            - eventBus #just define an alias
+            - eventBus # just define an alias
 ```
 
 Defining the consumer is as follows

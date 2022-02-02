@@ -48,8 +48,3 @@ services:
         arguments:
             - '@EventSauce\EventSourcing\ClassNameInflector'
             - '@EventSauce\Clock\Clock'
-
-    Andreo\EventSauceBundle\NothingMessageDecorator:
-        class: Andreo\EventSauceBundle\NothingMessageDecorator
-        public: false
-        lazy: true

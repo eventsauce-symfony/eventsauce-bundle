@@ -14,12 +14,13 @@ andreo_event_sauce:
                 table_name: event_message
         serializer: EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer
         decorator: true
-    dispatcher:
-        messenger:
-            enabled: true
-            mode: event_with_headers
-        chain:
-            - eventBus
+        dispatcher:
+            messenger:
+                enabled: true
+                mode: event_with_headers
+            event_dispatcher: true
+            chain:
+                eventBus: outboxBus
     outbox:
         enabled: true
         back_off:
@@ -66,29 +67,23 @@ andreo_event_sauce:
             class: App\Domain\Circle\Circle
             repository_alias: circleRepository
             message:
-                outbox: false
-                decorator: true
-                dispatchers:
-                    - event_bus
+            outbox: false
+            dispatchers:
+                - event_bus
             upcast: true
             snapshot: false
         polygon:
             class: App\Domain\Polygon\Polygon
             repository_alias: polygonRepository
-            message:
-                outbox: false
-                decorator: true
-                dispatchers:
-                    - event_bus
+            dispatchers:
+                - event_bus
             upcast: true
             snapshot: true
         square:
             class: App\Domain\Square\Square
             repository_alias: squareRepository
-            message:
-                decorator: true
-                dispatchers:
-                    - event_bus
+            dispatchers:
+                - event_bus
             outbox: true
             upcast: true
             snapshot: false

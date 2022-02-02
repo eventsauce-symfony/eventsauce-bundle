@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\DefaultConfigExtension;
+namespace Tests\ConfigExtension;
 
 use Andreo\EventSauce\Doctrine\Migration\GenerateAggregateMigrationCommand;
 use Andreo\EventSauce\Doctrine\Migration\TableNameSuffix;
@@ -23,7 +23,7 @@ use EventSauce\MessageRepository\TableSchema\TableSchema;
 use EventSauce\UuidEncoding\UuidEncoder;
 use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
 
-final class DefaultEventSauceConfigExtensionTest extends AbstractExtensionTestCase
+final class DefaultConfigExtensionTest extends AbstractExtensionTestCase
 {
     /**
      * @test

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\ConfigExtension;
+namespace Tests\ConfigExtension\Dummy;
 
 use EventSauce\EventSourcing\Serialization\PayloadSerializer;
 

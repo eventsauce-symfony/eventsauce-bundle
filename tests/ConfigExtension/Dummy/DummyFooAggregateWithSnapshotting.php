@@ -2,15 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Tests\ConfigExtension;
+namespace Tests\ConfigExtension\Dummy;
 
-use Andreo\EventSauce\Snapshotting\AggregateRootWithVersionedSnapshotting;
 use EventSauce\EventSourcing\AggregateRootBehaviour;
 use EventSauce\EventSourcing\AggregateRootId;
 use EventSauce\EventSourcing\Snapshotting\AggregateRootWithSnapshotting;
 use EventSauce\EventSourcing\Snapshotting\SnapshottingBehaviour;
 
-class DummyFooAggregateWithVersionedSnapshotting implements AggregateRootWithVersionedSnapshotting
+class DummyFooAggregateWithSnapshotting implements AggregateRootWithSnapshotting
 {
     use AggregateRootBehaviour;
     use SnapshottingBehaviour;
@@ -20,10 +19,6 @@ class DummyFooAggregateWithVersionedSnapshotting implements AggregateRootWithVer
     }
 
     protected static function reconstituteFromSnapshotState(AggregateRootId $id, $state): AggregateRootWithSnapshotting
-    {
-    }
-
-    public static function getSnapshotVersion(): int|string
     {
     }
 }

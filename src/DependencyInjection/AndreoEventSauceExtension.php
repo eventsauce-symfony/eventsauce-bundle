@@ -26,9 +26,9 @@ use Andreo\EventSauce\Upcasting\UpcastingMessageObjectSerializer;
 use Andreo\EventSauceBundle\Attribute\AsMessageConsumer;
 use Andreo\EventSauceBundle\Attribute\AsMessageDecorator;
 use Andreo\EventSauceBundle\Attribute\AsUpcaster;
+use Andreo\EventSauceBundle\Attribute\MessageDecoratorContext;
 use Andreo\EventSauceBundle\MessageDecoratorChainFactory;
 use Andreo\EventSauceBundle\MessageDispatcherChainFactory;
-use Andreo\EventSauceBundle\NothingMessageDecorator;
 use Andreo\EventSauceBundle\SynchronousMessageDispatcherFactory;
 use DateTimeZone;
 use EventSauce\BackOff\BackOffStrategy;
@@ -42,11 +42,12 @@ use EventSauce\Clock\SystemClock;
 use EventSauce\EventSourcing\AggregateRootRepository;
 use EventSauce\EventSourcing\ClassNameInflector;
 use EventSauce\EventSourcing\DotSeparatedSnakeCaseInflector;
+use EventSauce\EventSourcing\EventDispatcher;
 use EventSauce\EventSourcing\EventSourcedAggregateRootRepository;
 use EventSauce\EventSourcing\MessageDecorator;
 use EventSauce\EventSourcing\MessageDecoratorChain;
-use EventSauce\EventSourcing\MessageDispatcher;
 use EventSauce\EventSourcing\MessageDispatcherChain;
+use EventSauce\EventSourcing\MessageDispatchingEventDispatcher;
 use EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer;
 use EventSauce\EventSourcing\Serialization\ConstructingPayloadSerializer;
 use EventSauce\EventSourcing\Serialization\MessageSerializer;
@@ -93,6 +94,7 @@ final class AndreoEventSauceExtension extends Extension
 
         $this->loadTime($container, $config);
         $this->loadMessageRepository($container, $config);
+        $this->loadMessageDecorator($container, $config);
         $this->loadDispatcher($container, $config);
         $this->loadOutbox($container, $loader, $config);
         $this->loadSnapshot($container, $loader, $config);
@@ -139,22 +141,55 @@ final class AndreoEventSauceExtension extends Extension
         if (!in_array($messageSerializerServiceId, [null, MessageSerializer::class, ConstructingMessageSerializer::class], true)) {
             $container->setAlias(MessageSerializer::class, $messageSerializerServiceId);
         }
+    }
 
-        $messageDecoratorEnabled = $messageConfig['decorator'];
-        if ($messageDecoratorEnabled) {
+    private function loadMessageDecorator(ContainerBuilder $container, array $config): void
+    {
+        $messageConfig = $config['message'];
+        $messageDispatcherConfig = $messageConfig['dispatcher'];
+        $eventDispatcherEnabled = $messageDispatcherConfig['event_dispatcher'];
+
+        if ($messageConfig['decorator']) {
             $container->registerAttributeForAutoconfiguration(
                 AsMessageDecorator::class,
-                static function (ChildDefinition $definition, AsMessageDecorator $attribute): void {
-                    $aggregateName = $attribute->aggregate;
-                    $definition->addTag("andreo.event_sauce.message_decorator.$aggregateName", ['priority' => -$attribute->order]);
+                static function (ChildDefinition $definition, AsMessageDecorator $attribute) use ($eventDispatcherEnabled): void {
+                    $context = $attribute->context;
+                    if (in_array($context, [MessageDecoratorContext::ALL, MessageDecoratorContext::AGGREGATE], true)) {
+                        $definition->addTag('andreo.event_sauce.aggregate_message_decorator', ['priority' => -$attribute->order]);
+                    }
+                    if ($eventDispatcherEnabled &&
+                        in_array($context, [MessageDecoratorContext::ALL, MessageDecoratorContext::EVENT_DISPATCHER], true)
+                    ) {
+                        $definition->addTag('andreo.event_sauce.event_dispatcher_message_decorator', ['priority' => -$attribute->order]);
+                    }
                 }
             );
+
+            $container
+                ->findDefinition(MessageDecorator::class)
+                ->addTag('andreo.event_sauce.aggregate_message_decorator', ['priority' => 0]);
+        }
+
+        $container
+            ->register('andreo.event_sauce.aggregate_message_decorator_chain', MessageDecoratorChain::class)
+            ->addArgument(new TaggedIteratorArgument('andreo.event_sauce.aggregate_message_decorator'))
+            ->setFactory([MessageDecoratorChainFactory::class, '__invoke'])
+        ;
+
+        if ($eventDispatcherEnabled) {
+            $container
+                ->register('andreo.event_sauce.event_dispatcher_message_decorator_chain', MessageDecoratorChain::class)
+                ->addArgument(new TaggedIteratorArgument('andreo.event_sauce.event_dispatcher_message_decorator'))
+                ->setFactory([MessageDecoratorChainFactory::class, '__invoke'])
+            ;
         }
     }
 
     private function loadDispatcher(ContainerBuilder $container, array $config): void
     {
-        $messageDispatcherConfig = $config['dispatcher'];
+        $messageConfig = $config['message'];
+        $messageDispatcherConfig = $messageConfig['dispatcher'];
+        $eventDispatcherEnabled = $messageDispatcherConfig['event_dispatcher'];
         $messengerConfig = $messageDispatcherConfig['messenger'];
         $messengerEnabled = $this->isConfigEnabled($container, $messengerConfig);
         $mode = $messengerConfig['mode'];
@@ -185,15 +220,16 @@ final class AndreoEventSauceExtension extends Extension
                         ->setPublic(false)
                     ;
                 }
-                $container->setAlias($dispatcherAlias, "andreo.event_sauce.message_dispatcher.$dispatcherAlias");
-                $container->registerAliasForArgument($dispatcherAlias, MessageDispatcher::class);
+                if ($eventDispatcherEnabled) {
+                    $this->registerEventDispatcher($container, $dispatcherAlias);
+                }
             }
         } else {
             $container->registerAttributeForAutoconfiguration(
                 AsMessageConsumer::class,
                 static function (ChildDefinition $definition, AsMessageConsumer $attribute): void {
-                    $dispatcherName = $attribute->dispatcher;
-                    $definition->addTag("andreo.event_sauce.message_consumer.$dispatcherName");
+                    $dispatcherAlias = $attribute->dispatcher;
+                    $definition->addTag("andreo.event_sauce.message_consumer.$dispatcherAlias");
                 }
             );
 
@@ -204,10 +240,24 @@ final class AndreoEventSauceExtension extends Extension
                     ->addArgument(new TaggedIteratorArgument("andreo.event_sauce.message_consumer.$dispatcherAlias"))
                     ->setPublic(false)
                 ;
-                $container->setAlias($dispatcherAlias, "andreo.event_sauce.message_dispatcher.$dispatcherAlias");
-                $container->registerAliasForArgument($dispatcherAlias, MessageDispatcher::class);
+                if ($eventDispatcherEnabled) {
+                    $this->registerEventDispatcher($container, $dispatcherAlias);
+                }
             }
         }
+    }
+
+    private function registerEventDispatcher(ContainerBuilder $container, string $dispatcherAlias): void
+    {
+        $container
+            ->register("andreo.event_sauce.event_dispatcher.$dispatcherAlias", MessageDispatchingEventDispatcher::class)
+            ->setArguments([
+                new Reference("andreo.event_sauce.message_dispatcher.$dispatcherAlias"),
+                new Reference('andreo.event_sauce.event_dispatcher_message_decorator_chain'),
+            ])
+        ;
+        $container->setAlias($dispatcherAlias, "andreo.event_sauce.event_dispatcher.$dispatcherAlias");
+        $container->registerAliasForArgument($dispatcherAlias, EventDispatcher::class);
     }
 
     private function loadOutbox(ContainerBuilder $container, YamlFileLoader $loader, array $config): void
@@ -421,13 +471,6 @@ final class AndreoEventSauceExtension extends Extension
                 $config,
             );
 
-            $messageDecoratorArgument = $this->loadMessageDecorator(
-                $container,
-                $aggregateName,
-                $aggregateConfig,
-                $messageConfig
-            );
-
             $this->loadAggregateMessageRepository(
                 $container,
                 $aggregateName,
@@ -440,16 +483,14 @@ final class AndreoEventSauceExtension extends Extension
                 $this->loadAggregateRepository(
                     $container,
                     $aggregateName,
-                    $aggregateConfig,
-                    $messageDecoratorArgument,
+                    $aggregateConfig
                 );
             } else {
                 $this->loadAggregateOutboxRepository(
                     $container,
                     $aggregateName,
                     $aggregateConfig,
-                    $config['outbox'],
-                    $messageDecoratorArgument
+                    $config['outbox']
                 );
             }
 
@@ -471,16 +512,16 @@ final class AndreoEventSauceExtension extends Extension
         array $config
     ): void {
         $messageDispatcherConfig = $config['dispatcher'];
-        $dispatcherChainNames = array_keys($messageDispatcherConfig['chain']);
+        $dispatcherChain = array_keys($messageDispatcherConfig['chain']);
         $aggregateMessageConfig = $aggregateConfig['message'];
         $aggregateDispatchers = $aggregateMessageConfig['dispatchers'];
 
         $messageDispatcherRefers = [];
-        foreach ($aggregateDispatchers as $aggregateDispatcher) {
-            if (!in_array($aggregateDispatcher, $dispatcherChainNames, true)) {
-                throw new LogicException(sprintf('Dispatcher with name "%s" is not configured. Configure it in the message section.', $aggregateDispatcher));
+        foreach ($aggregateDispatchers as $aggregateDispatcherAlias) {
+            if (!in_array($aggregateDispatcherAlias, $dispatcherChain, true)) {
+                throw new LogicException(sprintf('Dispatcher with name "%s" is not configured. Configure it in the message section.', $aggregateDispatcherAlias));
             }
-            $messageDispatcherRefers[] = new Reference("andreo.event_sauce.message_dispatcher.$aggregateDispatcher");
+            $messageDispatcherRefers[] = new Reference("andreo.event_sauce.message_dispatcher.$aggregateDispatcherAlias");
         }
 
         $container
@@ -492,32 +533,6 @@ final class AndreoEventSauceExtension extends Extension
             ->addArgument(new IteratorArgument($messageDispatcherRefers))
             ->setPublic(false)
         ;
-    }
-
-    private function loadMessageDecorator(
-        ContainerBuilder $container,
-        string $aggregateName,
-        array $aggregateConfig,
-        array $messageConfig
-    ): Reference|Definition {
-        $aggregateMessageConfig = $aggregateConfig['message'];
-        $aggregateMessageDecoratorEnabled = $aggregateMessageConfig['decorator'];
-
-        if ($aggregateMessageDecoratorEnabled) {
-            if (!$messageConfig['decorator']) {
-                throw new LogicException('Message decorator config is disabled. If you want to use it, enable it.');
-            }
-
-            $container
-                ->findDefinition(MessageDecorator::class)
-                ->addTag("andreo.event_sauce.message_decorator.$aggregateName", ['priority' => 0]);
-
-            return (new Definition(MessageDecoratorChain::class, [
-                new TaggedIteratorArgument("andreo.event_sauce.message_decorator.$aggregateName"),
-            ]))->setFactory([MessageDecoratorChainFactory::class, '__invoke']);
-        }
-
-        return new Reference(NothingMessageDecorator::class);
     }
 
     private function loadAggregateMessageRepository(
@@ -587,8 +602,7 @@ final class AndreoEventSauceExtension extends Extension
     private function loadAggregateRepository(
         ContainerBuilder $container,
         string $aggregateName,
-        array $aggregateConfig,
-        Definition|Reference $messageDecoratorArgument
+        array $aggregateConfig
     ): void {
         $aggregateClass = $aggregateConfig['class'];
         $repositoryAlias = $aggregateConfig['repository_alias'];
@@ -599,7 +613,7 @@ final class AndreoEventSauceExtension extends Extension
                 $aggregateClass,
                 new Reference("andreo.event_sauce.message_repository.$aggregateName"),
                 new Reference("andreo.event_sauce.message_dispatcher_chain.$aggregateName"),
-                $messageDecoratorArgument,
+                new Reference('andreo.event_sauce.aggregate_message_decorator_chain'),
                 new Reference(ClassNameInflector::class),
             ])
             ->setPublic(false)
@@ -613,8 +627,7 @@ final class AndreoEventSauceExtension extends Extension
         ContainerBuilder $container,
         string $aggregateName,
         array $aggregateConfig,
-        array $outboxConfig,
-        Definition|Reference $messageDecoratorArgument
+        array $outboxConfig
     ): void {
         $outboxRepositoryConfig = $outboxConfig['repository'];
         $repositoryAlias = $aggregateConfig['repository_alias'];
@@ -660,7 +673,7 @@ final class AndreoEventSauceExtension extends Extension
             ->setArguments([
                 $aggregateClass,
                 new Reference("andreo.event_sauce.message_repository.$aggregateName"),
-                $messageDecoratorArgument,
+                new Reference('andreo.event_sauce.aggregate_message_decorator_chain'),
                 new Reference(ClassNameInflector::class),
             ])
             ->setPublic(false)
