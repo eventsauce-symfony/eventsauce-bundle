@@ -15,6 +15,7 @@ use EventSauce\MessageOutbox\DoctrineOutbox\DoctrineTransactionalMessageReposito
 use EventSauce\MessageRepository\DoctrineMessageRepository\DoctrineUuidV4MessageRepository;
 use LogicException;
 use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\Argument\IteratorArgument;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
@@ -337,6 +338,21 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
                 'foo' => [
                     'class' => DummyFooAggregate::class,
                     'upcast' => true,
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * @test
+     */
+    public function should_throw_exception_if_aggregate_name_is_not_string(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->load([
+            'aggregates' => [
+                0 => [
+                    'class' => DummyFooAggregate::class,
                 ],
             ],
         ]);

@@ -450,6 +450,18 @@ final class Configuration implements ConfigurationInterface
 
         $node
             ->normalizeKeys(false)
+            ->validate()
+                ->ifTrue(static function (array $config) {
+                    foreach (array_keys($config) as $key) {
+                        if (is_numeric($key)) {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                })
+                ->thenInvalid('Aggregate name must be string')
+            ->end()
             ->arrayPrototype()
                 ->children()
                     ->scalarNode('class')
