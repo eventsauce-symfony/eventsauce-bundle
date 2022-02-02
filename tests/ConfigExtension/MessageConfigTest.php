@@ -162,7 +162,7 @@ final class MessageConfigTest extends AbstractExtensionTestCase
             ],
         ]);
 
-        $this->assertContainerBuilderHasAlias('fooBus');
+        $this->assertFalse($this->container->hasAlias('fooBus'));
         $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher.fooBus');
         $dispatcherDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.fooBus');
         $this->assertEquals(SynchronousMessageDispatcher::class, $dispatcherDefinition->getClass());
@@ -172,7 +172,7 @@ final class MessageConfigTest extends AbstractExtensionTestCase
             new TaggedIteratorArgument('andreo.event_sauce.message_consumer.fooBus')
         );
 
-        $this->assertContainerBuilderHasAlias('barBus');
+        $this->assertFalse($this->container->hasAlias('barBus'));
         $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher.barBus');
         $dispatcherDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.barBus');
         $this->assertEquals(SynchronousMessageDispatcher::class, $dispatcherDefinition->getClass());

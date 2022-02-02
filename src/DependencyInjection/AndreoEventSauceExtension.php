@@ -460,8 +460,6 @@ final class AndreoEventSauceExtension extends Extension
         $upcastConfig = $config['upcast'];
 
         foreach ($config['aggregates'] as $aggregateName => $aggregateConfig) {
-            $aggregateMessageConfig = $aggregateConfig['message'];
-
             $aggregateConfig['repository_alias'] ??= sprintf('%sRepository', $aggregateName);
 
             $this->loadAggregateDispatchers(
@@ -479,7 +477,7 @@ final class AndreoEventSauceExtension extends Extension
                 $upcastConfig
             );
 
-            if (!$aggregateMessageConfig['outbox']) {
+            if (!$aggregateConfig['outbox']) {
                 $this->loadAggregateRepository(
                     $container,
                     $aggregateName,
@@ -511,10 +509,10 @@ final class AndreoEventSauceExtension extends Extension
         array $aggregateConfig,
         array $config
     ): void {
-        $messageDispatcherConfig = $config['dispatcher'];
+        $messageConfig = $config['message'];
+        $messageDispatcherConfig = $messageConfig['dispatcher'];
         $dispatcherChain = array_keys($messageDispatcherConfig['chain']);
-        $aggregateMessageConfig = $aggregateConfig['message'];
-        $aggregateDispatchers = $aggregateMessageConfig['dispatchers'];
+        $aggregateDispatchers = $aggregateConfig['dispatchers'];
 
         $messageDispatcherRefers = [];
         foreach ($aggregateDispatchers as $aggregateDispatcherAlias) {
