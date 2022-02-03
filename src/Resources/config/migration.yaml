@@ -9,4 +9,5 @@ services:
                 class: Andreo\EventSauce\Doctrine\Migration\OutboxMessageSchemaBuilder
             - !service
                 class: Andreo\EventSauce\Doctrine\Migration\SnapshotSchemaBuilder
-        tags: [console.command]
+        tags:
+            - { name: console.command, command: andreo:event-sauce:doctrine:migration:generate }

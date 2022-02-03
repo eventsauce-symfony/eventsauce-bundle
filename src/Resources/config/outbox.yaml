@@ -52,8 +52,10 @@ services:
         public: false
         lazy: true
 
-    Andreo\EventSauce\Outbox\ProcessOutboxMessagesCommand:
+    Andreo\EventSauce\Outbox\OutboxProcessMessagesCommand:
         arguments:
             - !tagged_iterator { tag: 'andreo.event_sauce.outbox_relay', index_by: 'name' }
             - !service
                 class: Psr\Log\NullLogger
+        tags:
+            - { name: console.command, command: andreo:event-sauce:outbox-process-messages }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Config;
 
-use Andreo\EventSauce\Outbox\ProcessOutboxMessagesCommand;
+use Andreo\EventSauce\Outbox\OutboxProcessMessagesCommand;
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
 use EventSauce\BackOff\BackOffStrategy;
 use EventSauce\BackOff\ExponentialBackOffStrategy;
@@ -306,7 +306,7 @@ final class OutboxConfigTest extends AbstractExtensionTestCase
             ],
         ]);
 
-        $processMessagesCommandDef = $this->container->getDefinition(ProcessOutboxMessagesCommand::class);
+        $processMessagesCommandDef = $this->container->getDefinition(OutboxProcessMessagesCommand::class);
         /** @var Reference $loggerArgument */
         $loggerArgument = $processMessagesCommandDef->getArgument(1);
         $this->assertEquals(DummyCustomLogger::class, $loggerArgument->__toString());

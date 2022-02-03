@@ -179,3 +179,9 @@ andreo_event_sauce:
                 - fooBus
             outbox: true # register doctrine transactional message repository and outbox relay
 ```
+
+Run outbox relay
+
+```bash
+  php bin/console 
+```

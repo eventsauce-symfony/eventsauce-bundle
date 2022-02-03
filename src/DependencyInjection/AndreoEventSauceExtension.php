@@ -11,7 +11,7 @@ use Andreo\EventSauce\Messenger\MessengerMessageDispatcher;
 use Andreo\EventSauce\Messenger\MessengerMessageEventDispatcher;
 use Andreo\EventSauce\Outbox\AggregateRootRepositoryWithoutDispatchMessage;
 use Andreo\EventSauce\Outbox\ForwardingMessageConsumer;
-use Andreo\EventSauce\Outbox\ProcessOutboxMessagesCommand;
+use Andreo\EventSauce\Outbox\OutboxProcessMessagesCommand;
 use Andreo\EventSauce\Serialization\SymfonyPayloadSerializer;
 use Andreo\EventSauce\Snapshotting\AggregateRootRepositoryWithSnapshottingAndStoreStrategy;
 use Andreo\EventSauce\Snapshotting\AggregateRootRepositoryWithVersionedSnapshotting;
@@ -332,7 +332,7 @@ final class AndreoEventSauceExtension extends Extension
         }
 
         if (null !== $loggerAlias = $outboxConfig['logger']) {
-            $processMessagesCommandDef = $container->getDefinition(ProcessOutboxMessagesCommand::class);
+            $processMessagesCommandDef = $container->getDefinition(OutboxProcessMessagesCommand::class);
             $processMessagesCommandDef->replaceArgument(1, new Reference($loggerAlias));
         }
     }
