@@ -11,7 +11,7 @@ use Andreo\EventSauce\Messenger\MessengerMessageDispatcher;
 use Andreo\EventSauce\Messenger\MessengerMessageEventDispatcher;
 use Andreo\EventSauce\Outbox\AggregateRootRepositoryWithoutDispatchMessage;
 use Andreo\EventSauce\Outbox\ForwardingMessageConsumer;
-use Andreo\EventSauce\Outbox\RelayOutboxMessagesCommand;
+use Andreo\EventSauce\Outbox\ProcessOutboxMessagesCommand;
 use Andreo\EventSauce\Serialization\SymfonyPayloadSerializer;
 use Andreo\EventSauce\Snapshotting\AggregateRootRepositoryWithSnapshottingAndStoreStrategy;
 use Andreo\EventSauce\Snapshotting\AggregateRootRepositoryWithVersionedSnapshotting;
@@ -329,6 +329,11 @@ final class AndreoEventSauceExtension extends Extension
         $relayCommitConfig = $outboxConfig['relay_commit'];
         if ($this->isConfigEnabled($container, $relayCommitConfig['delete'])) {
             $container->setAlias(RelayCommitStrategy::class, DeleteMessageOnCommit::class);
+        }
+
+        if (null !== $loggerAlias = $outboxConfig['logger']) {
+            $processMessagesCommandDef = $container->getDefinition(ProcessOutboxMessagesCommand::class);
+            $processMessagesCommandDef->replaceArgument(1, new Reference($loggerAlias));
         }
     }
 
@@ -688,18 +693,16 @@ final class AndreoEventSauceExtension extends Extension
             new Reference("andreo.event_sauce.message_dispatcher_chain.$aggregateName"),
         ]);
 
-        $outboxRelayDef = new Definition(OutboxRelay::class, [
-            new Reference("andreo.event_sauce.outbox_repository.$aggregateName"),
-            $messageConsumerDefinition,
-            new Reference(BackOffStrategy::class),
-            new Reference(RelayCommitStrategy::class),
-        ]);
-
         $container
-            ->register("andreo.event_sauce.command.relay_outbox.$aggregateName", RelayOutboxMessagesCommand::class)
-            ->addArgument($outboxRelayDef)
-            ->addTag('console.command', [
-                'command' => "andreo:event-sauce:relay-outbox-$aggregateName",
+            ->register("andreo.event_sauce.outbox_relay.$aggregateName", OutboxRelay::class)
+            ->setArguments([
+                new Reference("andreo.event_sauce.outbox_repository.$aggregateName"),
+                $messageConsumerDefinition,
+                new Reference(BackOffStrategy::class),
+                new Reference(RelayCommitStrategy::class),
+            ])
+            ->addTag('andreo.event_sauce.outbox_relay', [
+                'name' => "outbox_relay_$aggregateName",
             ])
         ;
     }

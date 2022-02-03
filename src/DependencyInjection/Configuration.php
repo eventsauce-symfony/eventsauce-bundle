@@ -201,7 +201,8 @@ final class Configuration implements ConfigurationInterface
             ->canBeEnabled()
             ->addDefaultsIfNotSet()
             ->children()
-                ->arrayNode('back_off')
+                ->scalarNode('logger')->defaultNull()->end()
+                ?->arrayNode('back_off')
                     ->addDefaultsIfNotSet()
                     ->validate()
                         ->ifTrue(static function (array $strategies) {

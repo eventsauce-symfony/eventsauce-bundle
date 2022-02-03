@@ -112,6 +112,9 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
         $this->assertContainerBuilderHasAlias('barRepository');
         $repositoryDef = $this->container->getDefinition('andreo.event_sauce.aggregate_repository.bar');
         $this->assertEquals(AggregateRootRepositoryWithoutDispatchMessage::class, $repositoryDef->getClass());
+
+        $outboxProcessMessagesCommand = $this->container->findTaggedServiceIds('andreo.event_sauce.outbox_relay');
+        $this->assertArrayHasKey('andreo.event_sauce.outbox_relay.bar', $outboxProcessMessagesCommand);
     }
 
     /**

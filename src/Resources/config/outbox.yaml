@@ -51,3 +51,9 @@ services:
         class: EventSauce\MessageOutbox\DeleteMessageOnCommit
         public: false
         lazy: true
+
+    Andreo\EventSauce\Outbox\ProcessOutboxMessagesCommand:
+        arguments:
+            - !tagged_iterator { tag: 'andreo.event_sauce.outbox_relay', index_by: 'name' }
+            - !service
+                class: Psr\Log\NullLogger

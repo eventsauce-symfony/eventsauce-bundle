@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Config;
 
+use Andreo\EventSauce\Outbox\ProcessOutboxMessagesCommand;
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
 use EventSauce\BackOff\BackOffStrategy;
 use EventSauce\BackOff\ExponentialBackOffStrategy;
@@ -16,7 +17,9 @@ use EventSauce\MessageOutbox\MarkMessagesConsumedOnCommit;
 use EventSauce\MessageOutbox\RelayCommitStrategy;
 use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
+use Symfony\Component\DependencyInjection\Reference;
 use Tests\Config\Dummy\DummyCustomBackOfStrategy;
+use Tests\Config\Dummy\DummyCustomLogger;
 
 final class OutboxConfigTest extends AbstractExtensionTestCase
 {
@@ -289,5 +292,23 @@ final class OutboxConfigTest extends AbstractExtensionTestCase
                 ],
             ],
         ]);
+    }
+
+    /**
+     * @test
+     */
+    public function should_register_custom_outbox_logger(): void
+    {
+        $this->load([
+            'outbox' => [
+                'enabled' => true,
+                'logger' => DummyCustomLogger::class,
+            ],
+        ]);
+
+        $processMessagesCommandDef = $this->container->getDefinition(ProcessOutboxMessagesCommand::class);
+        /** @var Reference $loggerArgument */
+        $loggerArgument = $processMessagesCommandDef->getArgument(1);
+        $this->assertEquals(DummyCustomLogger::class, $loggerArgument->__toString());
     }
 }

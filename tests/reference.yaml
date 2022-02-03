@@ -22,8 +22,8 @@ andreo_event_sauce:
                 fooBus: barBus
     outbox:
         enabled: true
+        logger: outboxLogger
         back_off:
-            batchSize: 100
             exponential:
                 initial_delay_ms: 100000
                 max_tries: 10
@@ -40,7 +40,6 @@ andreo_event_sauce:
             custom:
                 id: Foo/Bar/Baz
         relay_commit:
-            commitSize: 1
             delete:
                 enabled: true
             mark_consumed:
