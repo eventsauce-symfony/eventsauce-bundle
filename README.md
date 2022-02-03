@@ -161,7 +161,7 @@ final class FooHandler {
 
 ### Outbox
 
-[About the Outbox](https://eventsauce.io/docs/message-outbox/)
+[About Outbox](https://eventsauce.io/docs/message-outbox/)
 
 ```yaml
 
@@ -180,8 +180,29 @@ andreo_event_sauce:
             outbox: true # register doctrine transactional message repository and outbox relay
 ```
 
-Run outbox relay
+Process outbox messages
 
 ```bash
-  php bin/console 
+php bin/console andreo:event-sauce:outbox-process-messages
+```
+
+### Snapshotting
+
+[About Snapshotting](https://eventsauce.io/docs/snapshotting/)
+
+```yaml
+
+andreo_event_sauce:
+    message:
+        dispatcher:
+            chain:
+                - fooBus
+    snapshot: # enable snapshot and register its services
+        enabled: true
+    aggregates:
+        foo:
+            class: App\Domain\Foo
+            dispatchers:
+                - fooBus
+            snapshot: true # register snapshot repository
 ```
