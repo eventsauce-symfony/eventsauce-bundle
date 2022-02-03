@@ -144,10 +144,9 @@ andreo_event_sauce:
                 - barBus
 ```
 
-Then you can inject the repository based on the alias
+Then you can inject the repository based on the alias and dedicated interface
 
 ```php
-
 use EventSauce\EventSourcing\AggregateRootRepository;
 use Symfony\Component\DependencyInjection\Attribute\Target;
 
@@ -177,7 +176,7 @@ andreo_event_sauce:
             class: App\Domain\Foo
             dispatchers:
                 - fooBus
-            outbox: true # register doctrine transactional message repository and outbox relay
+            outbox: true # register doctrine transactional repository and outbox relay
 ```
 
 Process outbox messages
@@ -200,9 +199,23 @@ andreo_event_sauce:
     snapshot: # enable snapshot and register its services
         enabled: true
     aggregates:
-        foo:
+        bar:
             class: App\Domain\Foo
             dispatchers:
                 - fooBus
             snapshot: true # register snapshot repository
+```
+
+Then you can inject the repository based on the alias and dedicated interface
+
+```php
+use Symfony\Component\DependencyInjection\Attribute\Target;
+use EventSauce\EventSourcing\Snapshotting\AggregateRootRepositoryWithSnapshotting;
+
+final class FooHandler {
+
+   public function __construct(
+        #[Target('barRepository')] private AggregateRootRepositoryWithSnapshotting $fooRepository
+    ){}
+}
 ```
