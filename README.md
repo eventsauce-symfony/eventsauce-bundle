@@ -200,7 +200,7 @@ andreo_event_sauce:
         enabled: true
     aggregates:
         bar:
-            class: App\Domain\Foo
+            class: App\Domain\Bar
             dispatchers:
                 - fooBus
             snapshot: true # register snapshot repository
