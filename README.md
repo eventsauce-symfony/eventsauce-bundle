@@ -4,7 +4,7 @@
     </a>
 </p>
 
-# Symfony EventSauce [WIP]
+# Symfony EventSauce (WIP)
 
 This bundle provides the basic and extended container configuration of 
 symfony for the [EventSauce](https://eventsauce.io/) library.
@@ -14,12 +14,13 @@ Before using it, I strongly recommend that you read the official [documentation]
 
 - Doctrine event message repository
 - All events in table per aggregate type
-- Outbox pattern
+- Message Outbox
 - Symfony messenger
 - Symfony serializer
 - Snapshot doctrine repository
 - Snapshot versioning
-- Automatic generate migration for every aggregate
+- Snapshot store every n event
+- Automatic generate migration for aggregate
 - Message upcasting
 
 ### Requirements
@@ -82,7 +83,7 @@ final class FooConsumer implements MessageConsumer {
 ### Message dispatching with symfony messenger
 
 If you want to use the symfony messenger component for dispatch messages, 
-you need to install the package
+you need to install this [package](https://github.com/andrew-pakula/eventsauce-messenger)
 
 ```bash
 composer require andreo/eventsauce-messenger
@@ -163,7 +164,7 @@ final class FooHandler {
 [About Outbox](https://eventsauce.io/docs/message-outbox/)
 
 If you want to use the message outbox for doctrine message repository,
-you need to install the package
+you need to install this [package](https://github.com/andrew-pakula/eventsauce-outbox)
 
 ```bash
 composer require andreo/eventsauce-outbox
@@ -186,7 +187,9 @@ andreo_event_sauce:
             outbox: true # register doctrine transactional repository and outbox relay per aggregate
 ```
 
-By default, Outbox messages are stored in a database. 
+#### Outbox repository
+
+By default, outbox messages are stored in a database. 
 If you want to store them in a memory, please add a following configuration
 
 ```yaml
@@ -199,7 +202,7 @@ andreo_event_sauce:
                 enabled: true
 ```
 
-Outbox messages dispatching
+Outbox messages dispatching command
 
 ```bash
 php bin/console andreo:event-sauce:outbox-process-messages
@@ -239,9 +242,11 @@ final class FooHandler {
     ){}
 }
 ```
+#### Snapshot repository
 
-By default, Snapshots are stored in a memory.
-If you want to store them in a database with Doctrine, you need to install the package
+By default, snapshots are stored in a memory.
+If you want to store them in a database with Doctrine, you need to install
+this [package](https://github.com/andrew-pakula/eventsauce-snapshotting)
 
 ```bash
 composer require andreo/eventsauce-snapshotting
@@ -258,3 +263,23 @@ andreo_event_sauce:
             doctrine: # default is memory
                 enabled: true
 ```
+
+#### Snapshot versioning
+
+If you want to use the snapshot versioning, you need to install 
+this [package](https://github.com/andrew-pakula/eventsauce-snapshotting)
+
+```bash
+composer require andreo/eventsauce-snapshotting
+```
+
+and add the following configuration
+
+```yaml
+
+andreo_event_sauce:
+    snapshot:
+        versioned: true # default is false
+```
+
+#### Snapshot store strategy
