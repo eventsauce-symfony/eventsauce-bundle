@@ -644,12 +644,10 @@ final class AndreoEventSauceExtension extends Extension
             throw new LogicException('Message outbox config is disabled. If you want to use it, enable and configure it .');
         }
 
-        if ($this->isConfigEnabled($container, $outboxRepositoryConfig['memory'])) {
-            $container
-                ->register("andreo.event_sauce.outbox_repository.$aggregateName", InMemoryOutboxRepository::class)
-                ->setPublic(false)
-            ;
-        } elseif ($this->isConfigEnabled($container, $outboxRepositoryDoctrineConfig = $outboxRepositoryConfig['doctrine'])) {
+        $memoryRepositoryEnabled = $this->isConfigEnabled($container, $outboxRepositoryConfig['memory']);
+        $doctrineRepositoryEnabled = $this->isConfigEnabled($container, $outboxRepositoryDoctrineConfig = $outboxRepositoryConfig['doctrine']);
+
+        if ($doctrineRepositoryEnabled || !$memoryRepositoryEnabled) {
             $tableName = sprintf('%s_%s', $aggregateName, $outboxRepositoryDoctrineConfig['table_name']);
             $container
                 ->register("andreo.event_sauce.outbox_repository.$aggregateName", DoctrineOutboxRepository::class)
@@ -661,7 +659,10 @@ final class AndreoEventSauceExtension extends Extension
                 ->setPublic(false)
             ;
         } else {
-            return;
+            $container
+                ->register("andreo.event_sauce.outbox_repository.$aggregateName", InMemoryOutboxRepository::class)
+                ->setPublic(false)
+            ;
         }
 
         $regularMessageRepositoryDef = $container->getDefinition("andreo.event_sauce.message_repository.$aggregateName");
@@ -722,12 +723,13 @@ final class AndreoEventSauceExtension extends Extension
         $repositoryAlias = $aggregateConfig['repository_alias'];
         $storeStrategyConfig = $snapshotConfig['store_strategy'];
 
-        if (true === $snapshotRepositoryConfig['memory']) {
+        $snapshotMemoryRepositoryEnabled = $this->isConfigEnabled($container, $snapshotRepositoryConfig['memory']);
+        $snapshotDoctrineRepositoryEnabled = $this->isConfigEnabled($container, $snapshotDoctrineRepositoryConfig = $snapshotRepositoryConfig['doctrine']);
+
+        if ($snapshotMemoryRepositoryEnabled || !$snapshotDoctrineRepositoryEnabled) {
             $snapshotRepositoryDef = new Definition(InMemorySnapshotRepository::class);
         } else {
-            $snapshotRepositoryDoctrineConfig = $snapshotRepositoryConfig['doctrine'];
-            $tableName = sprintf('%s_%s', $aggregateName, $snapshotRepositoryDoctrineConfig['table_name']);
-
+            $tableName = sprintf('%s_%s', $aggregateName, $snapshotDoctrineRepositoryConfig['table_name']);
             $snapshotRepositoryDef = new Definition(DoctrineSnapshotRepository::class, [
                 new Reference('andreo.event_sauce.doctrine.connection'),
                 $tableName,

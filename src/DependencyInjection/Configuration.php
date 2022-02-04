@@ -296,7 +296,7 @@ final class Configuration implements ConfigurationInterface
                             ->canBeEnabled()
                         ->end()
                         ?->arrayNode('doctrine')
-                            ->canBeDisabled()
+                            ->canBeEnabled()
                             ->addDefaultsIfNotSet()
                             ->children()
                                 ->scalarNode('table_name')

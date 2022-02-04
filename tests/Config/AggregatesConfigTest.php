@@ -7,11 +7,15 @@ namespace Tests\Config;
 use Andreo\EventSauce\Outbox\AggregateRootRepositoryWithoutDispatchMessage;
 use Andreo\EventSauce\Snapshotting\AggregateRootRepositoryWithSnapshottingAndStoreStrategy;
 use Andreo\EventSauce\Snapshotting\AggregateRootRepositoryWithVersionedSnapshotting;
+use Andreo\EventSauce\Snapshotting\DoctrineSnapshotRepository;
 use Andreo\EventSauce\Snapshotting\EveryNEventCanStoreSnapshotStrategy;
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
 use EventSauce\EventSourcing\EventSourcedAggregateRootRepository;
 use EventSauce\EventSourcing\Snapshotting\ConstructingAggregateRootRepositoryWithSnapshotting;
+use EventSauce\EventSourcing\Snapshotting\InMemorySnapshotRepository;
+use EventSauce\MessageOutbox\DoctrineOutbox\DoctrineOutboxRepository;
 use EventSauce\MessageOutbox\DoctrineOutbox\DoctrineTransactionalMessageRepository;
+use EventSauce\MessageOutbox\InMemoryOutboxRepository;
 use EventSauce\MessageRepository\DoctrineMessageRepository\DoctrineUuidV4MessageRepository;
 use LogicException;
 use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
@@ -120,6 +124,121 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
+    public function should_register_doctrine_outbox_aggregate_repository(): void
+    {
+        $this->load([
+            'message' => [
+                'dispatcher' => [
+                    'messenger' => [
+                        'mode' => 'event',
+                    ],
+                    'chain' => [
+                        'fooBus' => 'barBus',
+                    ],
+                ],
+            ],
+            'outbox' => [
+                'enabled' => true,
+                'repository' => [
+                    'doctrine' => [
+                        'enabled' => true,
+                    ],
+                ],
+            ],
+            'aggregates' => [
+                'bar' => [
+                    'class' => DummyFooAggregate::class,
+                    'dispatchers' => ['fooBus'],
+                    'outbox' => true,
+                ],
+            ],
+        ]);
+
+        $this->assertContainerBuilderHasService('andreo.event_sauce.message_repository.bar');
+        $aggregateRepositoryDefinition = $this->container->getDefinition('andreo.event_sauce.message_repository.bar');
+        /** @var Definition $outboxRepositoryDef */
+        $outboxRepositoryDef = $this->container->getDefinition($aggregateRepositoryDefinition->getArgument(2)->__toString());
+        $this->assertEquals(DoctrineOutboxRepository::class, $outboxRepositoryDef->getClass());
+    }
+
+    /**
+     * @test
+     */
+    public function should_register_doctrine_outbox_aggregate_repository_as_default(): void
+    {
+        $this->load([
+            'message' => [
+                'dispatcher' => [
+                    'messenger' => [
+                        'mode' => 'event',
+                    ],
+                    'chain' => [
+                        'fooBus' => 'barBus',
+                    ],
+                ],
+            ],
+            'outbox' => [
+                'enabled' => true,
+            ],
+            'aggregates' => [
+                'bar' => [
+                    'class' => DummyFooAggregate::class,
+                    'dispatchers' => ['fooBus'],
+                    'outbox' => true,
+                ],
+            ],
+        ]);
+
+        $this->assertContainerBuilderHasService('andreo.event_sauce.message_repository.bar');
+        $aggregateRepositoryDefinition = $this->container->getDefinition('andreo.event_sauce.message_repository.bar');
+        /** @var Definition $outboxRepositoryDef */
+        $outboxRepositoryDef = $this->container->getDefinition($aggregateRepositoryDefinition->getArgument(2)->__toString());
+        $this->assertEquals(DoctrineOutboxRepository::class, $outboxRepositoryDef->getClass());
+    }
+
+    /**
+     * @test
+     */
+    public function should_register_memory_outbox_aggregate_repository(): void
+    {
+        $this->load([
+            'message' => [
+                'dispatcher' => [
+                    'messenger' => [
+                        'mode' => 'event',
+                    ],
+                    'chain' => [
+                        'fooBus' => 'barBus',
+                    ],
+                ],
+            ],
+            'outbox' => [
+                'enabled' => true,
+                'repository' => [
+                    'memory' => [
+                        'enabled' => true,
+                    ],
+                ],
+            ],
+            'aggregates' => [
+                'bar' => [
+                    'class' => DummyFooAggregate::class,
+                    'dispatchers' => ['fooBus'],
+                    'outbox' => true,
+                ],
+            ],
+        ]);
+
+        $this->assertContainerBuilderHasService('andreo.event_sauce.message_repository.bar');
+        $aggregateRepositoryDefinition = $this->container->getDefinition('andreo.event_sauce.message_repository.bar');
+        /** @var Definition $outboxRepositoryDef */
+        $outboxRepositoryDef = $this->container->getDefinition($aggregateRepositoryDefinition->getArgument(2)->__toString());
+        $this->assertEquals(InMemoryOutboxRepository::class, $outboxRepositoryDef->getClass());
+    }
+
+    /**
+     * @test
+     */
     public function should_throw_exception_if_aggregate_outbox_is_enabled_but_root_outbox_option_is_disabled(): void
     {
         $this->expectException(LogicException::class);
@@ -177,6 +296,121 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
         $this->assertContainerBuilderHasAlias('bazRepository');
         $repositoryDef = $this->container->getDefinition('andreo.event_sauce.aggregate_repository.baz');
         $this->assertEquals(ConstructingAggregateRootRepositoryWithSnapshotting::class, $repositoryDef->getClass());
+    }
+
+    /**
+     * @test
+     */
+    public function should_register_memory_snapshot_aggregate_repository(): void
+    {
+        $this->load([
+            'snapshot' => [
+                'enabled' => true,
+                'repository' => [
+                    'memory' => [
+                        'enabled' => true,
+                    ],
+                ],
+            ],
+            'message' => [
+                'dispatcher' => [
+                    'messenger' => [
+                        'mode' => 'event',
+                    ],
+                    'chain' => [
+                        'fooBus' => 'barBus',
+                        'bazBus' => 'quxBus',
+                    ],
+                ],
+            ],
+            'aggregates' => [
+                'baz' => [
+                    'class' => DummyFooAggregateWithSnapshotting::class,
+                    'dispatchers' => ['fooBus'],
+                    'snapshot' => true,
+                ],
+            ],
+        ]);
+
+        $repositoryDef = $this->container->getDefinition('andreo.event_sauce.aggregate_repository.baz');
+        /** @var Definition $snapshotRepositoryDef */
+        $snapshotRepositoryDef = $repositoryDef->getArgument(2);
+        $this->assertEquals(InMemorySnapshotRepository::class, $snapshotRepositoryDef->getClass());
+    }
+
+    /**
+     * @test
+     */
+    public function should_register_memory_snapshot_aggregate_repository_as_default(): void
+    {
+        $this->load([
+            'snapshot' => [
+                'enabled' => true,
+            ],
+            'message' => [
+                'dispatcher' => [
+                    'messenger' => [
+                        'mode' => 'event',
+                    ],
+                    'chain' => [
+                        'fooBus' => 'barBus',
+                        'bazBus' => 'quxBus',
+                    ],
+                ],
+            ],
+            'aggregates' => [
+                'bar' => [
+                    'class' => DummyFooAggregateWithSnapshotting::class,
+                    'dispatchers' => ['fooBus'],
+                    'snapshot' => true,
+                ],
+            ],
+        ]);
+
+        $repositoryDef = $this->container->getDefinition('andreo.event_sauce.aggregate_repository.bar');
+        /** @var Definition $snapshotRepositoryDef */
+        $snapshotRepositoryDef = $repositoryDef->getArgument(2);
+        $this->assertEquals(InMemorySnapshotRepository::class, $snapshotRepositoryDef->getClass());
+    }
+
+    /**
+     * @test
+     */
+    public function should_register_doctrine_snapshot_aggregate_repository(): void
+    {
+        $this->load([
+            'snapshot' => [
+                'enabled' => true,
+                'repository' => [
+                    'doctrine' => [
+                        'enabled' => true,
+                    ],
+                ],
+            ],
+            'message' => [
+                'dispatcher' => [
+                    'messenger' => [
+                        'mode' => 'event',
+                    ],
+                    'chain' => [
+                        'fooBus' => 'barBus',
+                        'bazBus' => 'quxBus',
+                    ],
+                ],
+            ],
+            'aggregates' => [
+                'foo' => [
+                    'class' => DummyFooAggregateWithSnapshotting::class,
+                    'dispatchers' => ['fooBus'],
+                    'snapshot' => true,
+                ],
+            ],
+        ]);
+
+        $repositoryDef = $this->container->getDefinition('andreo.event_sauce.aggregate_repository.foo');
+        /** @var Definition $snapshotRepositoryDef */
+        $snapshotRepositoryDef = $repositoryDef->getArgument(2);
+        $this->assertEquals(DoctrineSnapshotRepository::class, $snapshotRepositoryDef->getClass());
     }
 
     /**
