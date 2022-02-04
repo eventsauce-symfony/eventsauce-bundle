@@ -201,7 +201,7 @@ final class AndreoEventSauceExtension extends Extension
 
         if ($messengerEnabled) {
             if (!class_exists(MessengerMessageDispatcher::class)) {
-                throw new LogicException('Messenger message dispatcher is not installed. Try running "composer require andreo/eventsauce-snapshotting".');
+                throw new LogicException('Messenger message dispatcher is not installed. Try running "composer require andreo/eventsauce-messenger".');
             }
             foreach ($chainConfig as $dispatcherAlias => $busAlias) {
                 if ('event' === $mode) {
