@@ -162,6 +162,13 @@ final class FooHandler {
 
 [About Outbox](https://eventsauce.io/docs/message-outbox/)
 
+If you want to use the message outbox for doctrine message repository,
+you need to install the package
+
+```bash
+composer require andreo/eventsauce-outbox
+```
+
 ```yaml
 
 andreo_event_sauce:
@@ -179,7 +186,20 @@ andreo_event_sauce:
             outbox: true # register doctrine transactional repository and outbox relay per aggregate
 ```
 
-Process outbox messages
+By default, Outbox messages are stored in a database. 
+If you want to store them in a memory, please add a following configuration
+
+```yaml
+
+andreo_event_sauce:
+    outbox:
+        enabled: true
+        repository: 
+            memory: # default is doctrine
+                enabled: true
+```
+
+Outbox messages dispatching
 
 ```bash
 php bin/console andreo:event-sauce:outbox-process-messages
@@ -218,4 +238,23 @@ final class FooHandler {
         #[Target('barRepository')] private AggregateRootRepositoryWithSnapshotting $barRepository
     ){}
 }
+```
+
+By default, Snapshots are stored in a memory.
+If you want to store them in a database with Doctrine, you need to install the package
+
+```bash
+composer require andreo/eventsauce-snapshotting
+```
+
+and add the following configuration
+
+```yaml
+
+andreo_event_sauce:
+    snapshot:
+        enabled: true
+        repository:
+            doctrine: # default is memory
+                enabled: true
 ```
