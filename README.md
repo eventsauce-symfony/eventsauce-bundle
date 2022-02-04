@@ -73,7 +73,7 @@ Defining the consumer is as follows
 use EventSauce\EventSourcing\MessageConsumer;
 use Andreo\EventSauceBundle\Attribute\AsMessageConsumer;
 
-#[AsMessageConsumer(dispatcher: eventBus)]
+#[AsMessageConsumer(dispatcher: fooBus)]
 final class FooConsumer implements MessageConsumer {
 
 }
@@ -176,7 +176,7 @@ andreo_event_sauce:
             class: App\Domain\Foo
             dispatchers:
                 - fooBus
-            outbox: true # register doctrine transactional repository and outbox relay
+            outbox: true # register doctrine transactional repository and outbox relay per aggregate
 ```
 
 Process outbox messages
@@ -203,7 +203,7 @@ andreo_event_sauce:
             class: App\Domain\Foo
             dispatchers:
                 - fooBus
-            snapshot: true # register snapshot repository
+            snapshot: true # register snapshot repository per aggregate
 ```
 
 Then you can inject the repository based on the alias and dedicated interface
@@ -215,7 +215,7 @@ use EventSauce\EventSourcing\Snapshotting\AggregateRootRepositoryWithSnapshottin
 final class FooHandler {
 
    public function __construct(
-        #[Target('barRepository')] private AggregateRootRepositoryWithSnapshotting $fooRepository
+        #[Target('barRepository')] private AggregateRootRepositoryWithSnapshotting $barRepository
     ){}
 }
 ```
