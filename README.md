@@ -54,6 +54,7 @@ andreo_event_sauce:
 ```
 
 ### Message dispatching
+
 Defaults EventSauce to dispatch events use [SynchronousMessageDispatcher](https://eventsauce.io/docs/reacting-to-events/setup-consumers/#synchronous-message-dispatcher).
 An example configuration for this case is as follows
 
@@ -81,7 +82,7 @@ final class FooConsumer implements MessageConsumer {
 
 ### Message dispatching with symfony messenger
 
-Require [package](https://github.com/andrew-pakula/eventsauce-messenger).
+You need install the [package](https://github.com/andrew-pakula/eventsauce-messenger).
 
 
 ```bash
@@ -162,7 +163,7 @@ final class FooHandler {
 
 [About the Outbox](https://eventsauce.io/docs/message-outbox/)
 
-Require [package](https://github.com/andrew-pakula/eventsauce-outbox)
+You need install the [package](https://github.com/andrew-pakula/eventsauce-outbox)
 
 ```bash
 composer require andreo/eventsauce-outbox
@@ -244,7 +245,7 @@ final class FooHandler {
 
 ### Snapshotting additional features
 
-Require [package](https://github.com/andrew-pakula/eventsauce-snapshotting).
+You need install the [package](https://github.com/andrew-pakula/eventsauce-snapshotting).
 I recommend reading the documentation
 
 ```bash
@@ -265,6 +266,10 @@ andreo_event_sauce:
         repository:
             doctrine: # default is memory
                 enabled: true
+    aggregates:
+        foo:
+            class: App\Domain\Foo
+            snapshot: true
 ```
 
 #### Snapshot versioning
@@ -274,6 +279,10 @@ andreo_event_sauce:
 andreo_event_sauce:
     snapshot:
         versioned: true # default is false
+    aggregates:
+        foo:
+            class: App\Domain\Foo
+            snapshot: true
 ```
 
 #### Snapshot store strategy
@@ -286,8 +295,87 @@ andreo_event_sauce:
             every_n_event: # Store snapshot every n event
                 number: 200
             custom: # Or you can set your own strategy
+    aggregates:
+        foo:
+            class: App\Domain\Foo
+            snapshot: true
 ```
 
-### Event Upcasting
+### Upcasting
+
+```yaml
+
+andreo_event_sauce:
+    upcast:
+        enabled: true # enable upcast and register its services
+    aggregates:
+        foo:
+            class: App\Domain\Foo
+            upcast: true # register  upcaster chain per aggregate
+```
+
+Defining the upcaster is as follows
+
+```php
 
 
+use Andreo\EventSauceBundle\Attribute\AsUpcaster;
+use EventSauce\EventSourcing\Upcasting\Upcaster;
+
+#[AsUpcaster(aggregate: 'foo', version: 2)]
+final class EventV2Upcaster implements Upcaster {
+
+    public function upcast(array $message): array
+    {
+        $message['payload']['foo'] = 'foo';
+
+        return $message;
+    }
+}
+```
+
+### Upcasting additional features
+
+You need install the [package](https://github.com/andrew-pakula/eventsauce-upcasting).
+I recommend reading the documentation
+
+```bash
+composer require andreo/eventsauce-upcasting
+```
+
+#### Message upcasting
+
+By default, upcasting works before deserializing the message. If you want to work on the message object, 
+use the following configuration.
+
+```yaml
+
+andreo_event_sauce:
+    upcast:
+        context: message # default is payload
+    aggregates:
+        foo:
+            class: App\Domain\Foo
+            upcast: true
+```
+
+Defining the upcaster is as follows
+
+```php
+
+use Andreo\EventSauce\Upcasting\Event;
+use Andreo\EventSauce\Upcasting\MessageUpcaster;
+use EventSauce\EventSourcing\Message;
+
+#[AsUpcaster(aggregate: 'foo', version: 2)]
+final class EventV2Upcaster implements MessageUpcaster {
+
+    #[Event(event: EventV1::class)]
+    public function upcast(Message $message): Message
+    {
+        $event = $message->event();
+
+        return new Message(new EventV2());
+    }
+}
+```
