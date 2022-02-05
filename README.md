@@ -34,8 +34,7 @@ Before using it, I strongly recommend that you read the official [documentation]
 composer require andreo/event-sauce-bundle
 ```
 
-After completing the installation process, verify that 
-the bundle has been added the `config/bundles.php` file
+Verify that the bundle has been added the `config/bundles.php` file
 
 ```php
 return [
@@ -82,8 +81,8 @@ final class FooConsumer implements MessageConsumer {
 
 ### Message dispatching with symfony messenger
 
-If you want to use the symfony messenger component for dispatch messages, 
-you need to install this [package](https://github.com/andrew-pakula/eventsauce-messenger)
+Require [package](https://github.com/andrew-pakula/eventsauce-messenger).
+
 
 ```bash
 composer require andreo/eventsauce-messenger
@@ -161,10 +160,9 @@ final class FooHandler {
 
 ### Outbox
 
-[About Outbox](https://eventsauce.io/docs/message-outbox/)
+[About the Outbox](https://eventsauce.io/docs/message-outbox/)
 
-If you want to use the message outbox for doctrine message repository,
-you need to install this [package](https://github.com/andrew-pakula/eventsauce-outbox)
+Require [package](https://github.com/andrew-pakula/eventsauce-outbox)
 
 ```bash
 composer require andreo/eventsauce-outbox
@@ -190,7 +188,7 @@ andreo_event_sauce:
 #### Outbox repository
 
 By default, outbox messages are stored in a database. 
-If you want to store them in a memory, please add a following configuration
+If you want to store them in a memory, please add the following configuration
 
 ```yaml
 
@@ -242,17 +240,22 @@ final class FooHandler {
     ){}
 }
 ```
-#### Snapshot repository
 
-By default, snapshots are stored in a memory.
-If you want to store them in a database with Doctrine, you need to install
-this [package](https://github.com/andrew-pakula/eventsauce-snapshotting)
+
+### Snapshotting additional features
+
+Require [package](https://github.com/andrew-pakula/eventsauce-snapshotting).
+I recommend reading the documentation
 
 ```bash
 composer require andreo/eventsauce-snapshotting
 ```
 
-and add the following configuration
+#### Snapshot Doctrine repository
+
+By default, outbox messages are stored in a memory.
+If you want to store them in a database with doctrine, 
+please add the following configuration
 
 ```yaml
 
@@ -266,15 +269,6 @@ andreo_event_sauce:
 
 #### Snapshot versioning
 
-If you want to use the snapshot versioning, you need to install 
-this [package](https://github.com/andrew-pakula/eventsauce-snapshotting)
-
-```bash
-composer require andreo/eventsauce-snapshotting
-```
-
-and add the following configuration
-
 ```yaml
 
 andreo_event_sauce:
@@ -283,3 +277,17 @@ andreo_event_sauce:
 ```
 
 #### Snapshot store strategy
+
+```yaml
+
+andreo_event_sauce:
+    snapshot:
+        store_strategy:
+            every_n_event: # Store snapshot every n event
+                number: 200
+            custom: # Or you can set your own strategy
+```
+
+### Event Upcasting
+
+
