@@ -407,3 +407,23 @@ More information in the documentation
 ```bash
 composer require andreo/eventsauce-generate-migration
 ```
+
+For example, to generate migrations for the following configuration
+
+```yaml
+
+andreo_event_sauce:
+    outbox:
+        enabled: true
+    aggregates:
+        foo:
+            class: App\Domain\Foo
+            outbox: true
+```
+
+Must execute a command
+
+```bash
+php bin/console andreo:event-sauce:doctrine:migration:generate foo --schemas=event --schemas=outbox 
+```
+
