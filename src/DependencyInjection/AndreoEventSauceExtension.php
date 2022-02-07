@@ -524,6 +524,7 @@ final class AndreoEventSauceExtension extends Extension
         $aggregateDispatchers = $aggregateConfig['dispatchers'];
 
         $messageDispatcherRefers = [];
+        $aggregateDispatchers = empty($aggregateDispatchers) ? $dispatcherChain : $aggregateDispatchers;
         foreach ($aggregateDispatchers as $aggregateDispatcherAlias) {
             if (!in_array($aggregateDispatcherAlias, $dispatcherChain, true)) {
                 throw new LogicException(sprintf('Dispatcher with name "%s" is not configured. Configure it in the message section.', $aggregateDispatcherAlias));

@@ -96,16 +96,17 @@ An example configuration for this case is as follows
 andreo_event_sauce:
     message:
         dispatcher:
-            messenger:
-                mode: event
             chain:
                 fooBus: barBus # message bus alias from messenger config
+                bazBus: quxBus
 
 ```
 
+#### Mode message dispatching 
+
 The mode option is a way of dispatch messages. Available values:
 
-`event`
+`event (default)`
 
 - Event is only send to the handler that supports the  event type 
 - Doesn't send headers
@@ -119,6 +120,18 @@ The mode option is a way of dispatch messages. Available values:
 
 - Message is send to the any handler that supports the Message type. You have to manually check event type
 - Message object includes the event and headers
+
+Changing the default "event" mode
+
+```yaml
+
+andreo_event_sauce:
+    message:
+        dispatcher:
+            mode: event_with_headers
+            chain:
+                fooBus: barBus
+```
 
 ### Aggregates
 
@@ -135,17 +148,13 @@ andreo_event_sauce:
     aggregates:
         foo:
             class: App\Domain\Foo
-            repository_alias: # default is created automatically by convention "${name}Repository"
-            dispatchers:
-                - fooBus
-                - barBus
         bar:
             class: App\Domain\Bar
-            dispatchers:
-                - barBus
 ```
 
-Then you can inject the repository based on the alias and dedicated interface
+Then you can inject the repository based on the alias and dedicated 
+interface. By default, alias is created automatically 
+by convention "${name}Repository"
 
 ```php
 use EventSauce\EventSourcing\AggregateRootRepository;
@@ -157,6 +166,26 @@ final class FooHandler {
         #[Target('fooRepository')] private AggregateRootRepository $fooRepository
     ){}
 }
+```
+
+#### Message dispatching
+
+By default, messages are sent by all dispatchers, 
+but you can specify them per aggregate.
+
+```yaml
+
+andreo_event_sauce:
+    message:
+        dispatcher:
+            chain:
+                - fooBus
+                - barBus
+    aggregates:
+        foo:
+            class: App\Domain\Foo
+            dispatchers:
+                - barBus # dispatch only by barBas
 ```
 
 ### Outbox
@@ -172,24 +201,18 @@ composer require andreo/eventsauce-outbox
 ```yaml
 
 andreo_event_sauce:
-    message:
-        dispatcher:
-            chain:
-                - fooBus
     outbox: # enable outbox and register its services
         enabled: true
     aggregates:
         foo:
             class: App\Domain\Foo
-            dispatchers:
-                - fooBus
             outbox: true # register doctrine transactional repository and outbox relay per aggregate
 ```
 
 #### Outbox repository
 
 By default, outbox messages are stored in a database. 
-If you want to store them in a memory, please add the following configuration
+If you want to store them in a memory, add the following configuration
 
 ```yaml
 
@@ -214,17 +237,11 @@ php bin/console andreo:event-sauce:outbox-process-messages
 ```yaml
 
 andreo_event_sauce:
-    message:
-        dispatcher:
-            chain:
-                - fooBus
     snapshot: # enable snapshot and register its services
         enabled: true
     aggregates:
         bar:
             class: App\Domain\Bar
-            dispatchers:
-                - fooBus
             snapshot: true # register snapshot repository per aggregate
 ```
 
@@ -254,9 +271,9 @@ composer require andreo/eventsauce-snapshotting
 
 #### Snapshot Doctrine repository
 
-By default, outbox messages are stored in a memory.
+By default, snapshots are stored in a memory.
 If you want to store them in a database with doctrine, 
-please add the following configuration
+add the following configuration
 
 ```yaml
 

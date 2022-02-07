@@ -79,6 +79,36 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
+    public function should_register_default_aggregate_repository_with_empty_dispatchers(): void
+    {
+        $this->load([
+            'message' => [
+                'dispatcher' => [
+                    'messenger' => [
+                        'mode' => 'event',
+                    ],
+                    'chain' => [
+                        'fooBus' => 'barBus',
+                        'bazBus' => 'quxBus',
+                    ],
+                ],
+            ],
+            'aggregates' => [
+                'baz' => [
+                    'class' => DummyFooAggregate::class,
+                ],
+            ],
+        ]);
+
+        $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher_chain.baz');
+        $dispatcherChainDef = $this->container->getDefinition('andreo.event_sauce.message_dispatcher_chain.baz');
+        $this->assertInstanceOf(IteratorArgument::class, $argument = $dispatcherChainDef->getArgument(0));
+        $this->assertCount(2, $argument->getValues());
+    }
+
+    /**
+     * @test
+     */
     public function should_register_outbox_aggregate_repository(): void
     {
         $this->load([
