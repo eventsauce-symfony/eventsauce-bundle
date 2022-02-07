@@ -77,6 +77,9 @@ use Andreo\EventSauceBundle\Attribute\AsMessageConsumer;
 #[AsMessageConsumer(dispatcher: fooBus)]
 final class FooConsumer implements MessageConsumer {
 
+    public function handle(Message $message): void {
+        // do something
+    }
 }
 ```
 
@@ -106,7 +109,7 @@ andreo_event_sauce:
 
 The mode option is a way of dispatch messages. Available values:
 
-`event (default)`
+`event` (default)
 
 - Event is only send to the handler that supports the  event type 
 - Doesn't send headers
@@ -121,7 +124,7 @@ The mode option is a way of dispatch messages. Available values:
 - Message is send to the any handler that supports the Message type. You have to manually check event type
 - Message object includes the event and headers
 
-Changing the default "event" mode
+Changing the default **event** mode
 
 ```yaml
 
@@ -140,11 +143,6 @@ An example configuration for two aggregates is as follows
 ```yaml
 
 andreo_event_sauce:
-    message:
-        dispatcher:
-            chain:
-                - fooBus
-                - barBus
     aggregates:
         foo:
             class: App\Domain\Foo
@@ -340,13 +338,11 @@ use Andreo\EventSauceBundle\Attribute\AsUpcaster;
 use EventSauce\EventSourcing\Upcasting\Upcaster;
 
 #[AsUpcaster(aggregate: 'foo', version: 2)]
-final class EventV2Upcaster implements Upcaster {
+final class SomeEventV2Upcaster implements Upcaster {
 
     public function upcast(array $message): array
     {
-        $message['payload']['foo'] = 'foo';
-
-        return $message;
+        // do something
     }
 }
 ```
@@ -385,14 +381,12 @@ use Andreo\EventSauce\Upcasting\MessageUpcaster;
 use EventSauce\EventSourcing\Message;
 
 #[AsUpcaster(aggregate: 'foo', version: 2)]
-final class EventV2Upcaster implements MessageUpcaster {
+final class SomeEventV2Upcaster implements MessageUpcaster {
 
-    #[Event(event: EventV1::class)]
+    #[Event(event: SomeEvent::class)]
     public function upcast(Message $message): Message
     {
-        $event = $message->event();
-
-        return new Message(new EventV2());
+        // do something
     }
 }
 ```
