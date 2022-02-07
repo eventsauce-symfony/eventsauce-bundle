@@ -65,6 +65,7 @@ andreo_event_sauce:
         dispatcher:
             chain:
                 - fooBus
+                - barBus
 ```
 
 Defining the consumer is as follows
@@ -389,4 +390,20 @@ final class SomeEventV2Upcaster implements MessageUpcaster {
         // do something
     }
 }
+```
+
+### Database Structure
+
+[About Database Structure](https://eventsauce.io/docs/advanced/database-structure/)
+
+This bundle uses the **all events in table per aggregate** approach.
+Event messages, outbox messages, and snapshots are stored in a separate table per aggregate type
+
+To simplify the creation of migrations, 
+I have created a [package](https://github.com/andrew-pakula/eventsauce-generate-migration) that allows you to automatically 
+generate migrations based on the name of the aggregate.
+More information in the documentation
+
+```bash
+composer require andreo/eventsauce-generate-migration
 ```
