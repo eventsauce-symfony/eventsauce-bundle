@@ -168,7 +168,6 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
                 ],
             ],
             'outbox' => [
-                'enabled' => true,
                 'repository' => [
                     'doctrine' => [
                         'enabled' => true,
@@ -207,9 +206,7 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
                     ],
                 ],
             ],
-            'outbox' => [
-                'enabled' => true,
-            ],
+            'outbox' => true,
             'aggregates' => [
                 'bar' => [
                     'class' => DummyFooAggregate::class,
@@ -243,7 +240,6 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
                 ],
             ],
             'outbox' => [
-                'enabled' => true,
                 'repository' => [
                     'memory' => true,
                 ],
@@ -271,9 +267,7 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
     {
         $this->expectException(LogicException::class);
         $this->load([
-            'outbox' => [
-                'enabled' => false,
-            ],
+            'outbox' => false,
             'aggregates' => [
                 'qux' => [
                     'class' => DummyFooAggregate::class,
@@ -333,11 +327,8 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
     {
         $this->load([
             'snapshot' => [
-                'enabled' => true,
                 'repository' => [
-                    'memory' => [
-                        'enabled' => true,
-                    ],
+                    'memory' => true,
                 ],
             ],
             'message' => [
@@ -372,9 +363,7 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
     public function should_register_memory_snapshot_aggregate_repository_as_default(): void
     {
         $this->load([
-            'snapshot' => [
-                'enabled' => true,
-            ],
+            'snapshot' => true,
             'message' => [
                 'dispatcher' => [
                     'messenger' => [
