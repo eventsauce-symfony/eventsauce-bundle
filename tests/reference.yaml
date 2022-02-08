@@ -1,16 +1,16 @@
 andreo_event_sauce:
     time:
-        recording_timezone: Europe/Warsaw
-        clock: EventSauce\Clock\Clock
+        recording_timezone: UTC
+        clock: EventSauce\Clock\Clock # or your custom clock
     message:
         repository:
             json_encode_options:
                 - !php/const JSON_PRETTY_PRINT
                 - !php/const JSON_PRESERVE_ZERO_FRACTION
             doctrine:
-                connection: doctrine.dbal.default_connection
-                table_schema: EventSauce\MessageRepository\TableSchema\TableSchema
-                table_name: event_message # suffix
+                connection: doctrine.dbal.default_connection # or your custom doctrine dbal connection
+                table_schema: EventSauce\MessageRepository\TableSchema\TableSchema # or your custom event message schema
+                table_name: event_message # suffix event message table. Convention ${aggregate_name}_suffix
         serializer: EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer
         decorator: true
         dispatcher:
@@ -20,7 +20,6 @@ andreo_event_sauce:
             chain:
                 fooBus: barBus
     outbox:
-        enabled: true
         logger: outboxLogger
         back_off:
             exponential:
@@ -44,7 +43,6 @@ andreo_event_sauce:
             mark_consumed:
                 enabled: true
     snapshot:
-        enabled: true
         versioned: true
         store_strategy:
             every_n_event:
@@ -53,8 +51,7 @@ andreo_event_sauce:
             doctrine: true
         serializer: Andreo\EventSauceBundle\Snapshotting\SnapshotStateSerializer
     upcast:
-        enabled: true
-        context: payload | message
+        context: payload # enum of payload, message
     payload_serializer: Andreo\EventSauceBundle\Serialization\SymfonyPayloadSerializer
     uuid_encoder: EventSauce\UuidEncoding\UuidEncoder
     class_name_inflector: EventSauce\EventSourcing\ClassNameInflector
@@ -62,11 +59,11 @@ andreo_event_sauce:
         foo:
             class: App\Domain\Foo
             repository_alias: fooRepository
-            outbox: false
+            outbox: true
             dispatchers:
-                - event_bus
+                - fooBus
             upcast: true
-            snapshot: false
+            snapshot: true
         bar:
             class: App\Domain\Bar
             repository_alias: barRepository

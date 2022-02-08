@@ -100,7 +100,7 @@ final class Configuration implements ConfigurationInterface
                         ))
                 ->end()
                 ?->append($this->getDispatcherSection())
-                ?->booleanNode('decorator')->defaultTrue()->end()
+                ?->arrayNode('decorator')->canBeDisabled()->end()
             ?->end();
 
         return $node;
@@ -175,7 +175,7 @@ final class Configuration implements ConfigurationInterface
                         ->end()
                     ?->end()
                 ->end()
-                ->booleanNode('event_dispatcher')->defaultFalse()->end()
+                ->arrayNode('event_dispatcher')->canBeEnabled()->end()
                 ?->arrayNode('chain')
                     ->normalizeKeys(false)
                     ->scalarPrototype()->end()

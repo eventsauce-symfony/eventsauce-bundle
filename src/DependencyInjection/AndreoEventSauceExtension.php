@@ -46,6 +46,7 @@ use EventSauce\EventSourcing\EventDispatcher;
 use EventSauce\EventSourcing\EventSourcedAggregateRootRepository;
 use EventSauce\EventSourcing\MessageDecorator;
 use EventSauce\EventSourcing\MessageDecoratorChain;
+use EventSauce\EventSourcing\MessageDispatcher;
 use EventSauce\EventSourcing\MessageDispatcherChain;
 use EventSauce\EventSourcing\MessageDispatchingEventDispatcher;
 use EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer;
@@ -95,7 +96,7 @@ final class AndreoEventSauceExtension extends Extension
         $this->loadTime($container, $config);
         $this->loadMessageRepository($container, $config);
         $this->loadMessageDecorator($container, $config);
-        $this->loadDispatcher($container, $config);
+        $this->loadDispatchers($container, $config);
         $this->loadOutbox($container, $loader, $config);
         $this->loadSnapshot($container, $loader, $config);
         $this->loadUpcast($container, $config);
@@ -149,7 +150,7 @@ final class AndreoEventSauceExtension extends Extension
         $messageDispatcherConfig = $messageConfig['dispatcher'];
         $eventDispatcherEnabled = $messageDispatcherConfig['event_dispatcher'];
 
-        if ($messageConfig['decorator']) {
+        if ($this->isConfigEnabled($container, $messageConfig['decorator'])) {
             $container->registerAttributeForAutoconfiguration(
                 AsMessageDecorator::class,
                 static function (ChildDefinition $definition, AsMessageDecorator $attribute) use ($eventDispatcherEnabled): void {
@@ -189,11 +190,11 @@ final class AndreoEventSauceExtension extends Extension
         }
     }
 
-    private function loadDispatcher(ContainerBuilder $container, array $config): void
+    private function loadDispatchers(ContainerBuilder $container, array $config): void
     {
         $messageConfig = $config['message'];
         $messageDispatcherConfig = $messageConfig['dispatcher'];
-        $eventDispatcherEnabled = $messageDispatcherConfig['event_dispatcher'];
+        $eventDispatcherEnabled = $this->isConfigEnabled($container, $messageDispatcherConfig['event_dispatcher']);
         $messengerConfig = $messageDispatcherConfig['messenger'];
         $messengerEnabled = $this->isConfigEnabled($container, $messengerConfig);
         $mode = $messengerConfig['mode'];
@@ -226,6 +227,9 @@ final class AndreoEventSauceExtension extends Extension
                 }
                 if ($eventDispatcherEnabled) {
                     $this->registerEventDispatcher($container, $dispatcherAlias);
+                } else {
+                    $container->setAlias($dispatcherAlias, "andreo.event_sauce.message_dispatcher.$dispatcherAlias");
+                    $container->registerAliasForArgument($dispatcherAlias, MessageDispatcher::class);
                 }
             }
         } else {
@@ -246,6 +250,9 @@ final class AndreoEventSauceExtension extends Extension
                 ;
                 if ($eventDispatcherEnabled) {
                     $this->registerEventDispatcher($container, $dispatcherAlias);
+                } else {
+                    $container->setAlias($dispatcherAlias, "andreo.event_sauce.message_dispatcher.$dispatcherAlias");
+                    $container->registerAliasForArgument($dispatcherAlias, MessageDispatcher::class);
                 }
             }
         }
