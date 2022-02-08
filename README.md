@@ -168,6 +168,8 @@ final class Handler {
 
 ### Aggregates
 
+[About Aggregates](https://eventsauce.io/docs/event-sourcing/create-an-aggregate-root/)
+
 An example configuration for two aggregates is as follows
 
 ```yaml
