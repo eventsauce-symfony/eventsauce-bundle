@@ -44,13 +44,13 @@ return [
 
 ### Timezone
 
-You probably want to set your time zone. Default value is UTC
+You probably want to set your time zone. 
 
 ```yaml
 
 andreo_event_sauce:
     time:
-        recording_timezone: Europe/Warsaw 
+        recording_timezone: Europe/Warsaw # default is UTC
 ```
 
 ### Message dispatching

@@ -10,13 +10,12 @@ andreo_event_sauce:
             doctrine:
                 connection: doctrine.dbal.default_connection
                 table_schema: EventSauce\MessageRepository\TableSchema\TableSchema
-                table_name: event_message
+                table_name: event_message # suffix
         serializer: EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer
         decorator: true
         dispatcher:
             messenger:
-                enabled: true
-                mode: event | event_with_headers | message
+                mode: event # enum of event, event_with_headers, message
             event_dispatcher: true
             chain:
                 fooBus: barBus
@@ -71,7 +70,5 @@ andreo_event_sauce:
         bar:
             class: App\Domain\Bar
             repository_alias: barRepository
-            dispatchers:
-                - event_bus
             upcast: true
             snapshot: true
