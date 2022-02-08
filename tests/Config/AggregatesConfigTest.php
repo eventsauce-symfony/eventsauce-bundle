@@ -245,9 +245,7 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
             'outbox' => [
                 'enabled' => true,
                 'repository' => [
-                    'memory' => [
-                        'enabled' => true,
-                    ],
+                    'memory' => true,
                 ],
             ],
             'aggregates' => [

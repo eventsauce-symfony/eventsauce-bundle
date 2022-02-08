@@ -486,7 +486,7 @@ final class AndreoEventSauceExtension extends Extension
                 $upcastConfig
             );
 
-            if (!$aggregateConfig['outbox']) {
+            if (!$this->isConfigEnabled($container, $aggregateConfig['outbox'])) {
                 $this->loadAggregateRepository(
                     $container,
                     $aggregateName,
@@ -501,7 +501,7 @@ final class AndreoEventSauceExtension extends Extension
                 );
             }
 
-            if ($aggregateConfig['snapshot']) {
+            if ($this->isConfigEnabled($container, $aggregateConfig['snapshot'])) {
                 $this->loadAggregateSnapshotRepository(
                     $container,
                     $aggregateName,
@@ -550,13 +550,12 @@ final class AndreoEventSauceExtension extends Extension
         array $messageConfig,
         array $upcastConfig
     ): void {
-        $upcastEnabled = $aggregateConfig['upcast'];
         $messageRepositoryConfig = $messageConfig['repository'];
         $messageRepositoryDoctrineConfig = $messageRepositoryConfig['doctrine'];
         $jsonEncodeOptions = $messageRepositoryConfig['json_encode_options'];
         $messageTableName = $messageRepositoryDoctrineConfig['table_name'];
 
-        if ($upcastEnabled) {
+        if ($this->isConfigEnabled($container, $aggregateConfig['upcast'])) {
             if (!$this->isConfigEnabled($container, $upcastConfig)) {
                 throw new LogicException('Upcast config is disabled. If you want to use it, enable and configure it .');
             }

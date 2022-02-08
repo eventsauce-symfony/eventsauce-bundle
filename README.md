@@ -56,7 +56,7 @@ andreo_event_sauce:
 ### Message dispatching
 
 Defaults EventSauce to dispatch events use [SynchronousMessageDispatcher](https://eventsauce.io/docs/reacting-to-events/setup-consumers/#synchronous-message-dispatcher).
-An example configuration for this case is as follows
+An example configuration is as follows
 
 ```yaml
 
@@ -93,7 +93,7 @@ You need install the [package](https://github.com/andrew-pakula/eventsauce-messe
 composer require andreo/eventsauce-messenger
 ```
 
-An example configuration for this case is as follows
+An example configuration is as follows
 
 ```yaml
 
@@ -125,7 +125,7 @@ The mode option is a way of dispatch messages. Available values:
 - Message is send to the any handler that supports the Message type. You have to manually check event type
 - Message object includes the event and headers
 
-Changing the default **event** mode
+Change the default **event** mode
 
 ```yaml
 
@@ -200,12 +200,41 @@ composer require andreo/eventsauce-outbox
 ```yaml
 
 andreo_event_sauce:
-    outbox: # enable outbox and register its services
-        enabled: true
+    outbox: true # enable outbox and register its services
     aggregates:
         foo:
             class: App\Domain\Foo
             outbox: true # register doctrine transactional repository and outbox relay per aggregate
+```
+
+#### Outbox Back-off Strategy
+
+About the [Back-off Strategy](https://github.com/EventSaucePHP/BackOff)
+
+By default, this bundle uses [ExponentialBackOffStrategy](https://github.com/EventSaucePHP/BackOff#exponential-back-off).
+You can change it. An example configuration is as follows
+
+```yaml
+
+andreo_event_sauce:
+    outbox:
+        back_off:
+            fibonacci: # default is exponential. More data in config reference
+                initial_delay_ms: 100000
+                max_tries: 10
+```
+
+#### Outbox Commit Strategy
+
+By default, this bundle uses **MarkMessagesConsumedOnCommit** strategy
+You can change it. An example configuration is as follows
+
+```yaml
+
+andreo_event_sauce:
+    outbox:
+        relay_commit:
+            delete: true # default is mark_consumed
 ```
 
 #### Outbox repository
@@ -217,10 +246,8 @@ If you want to store them in a memory, add the following configuration
 
 andreo_event_sauce:
     outbox:
-        enabled: true
         repository: 
-            memory: # default is doctrine
-                enabled: true
+            memory: true # default is doctrine
 ```
 
 Outbox messages dispatching command
@@ -236,8 +263,7 @@ php bin/console andreo:event-sauce:outbox-process-messages
 ```yaml
 
 andreo_event_sauce:
-    snapshot: # enable snapshot and register its services
-        enabled: true
+    snapshot: true # enable snapshot and register its services
     aggregates:
         bar:
             class: App\Domain\Bar
@@ -278,10 +304,8 @@ add the following configuration
 
 andreo_event_sauce:
     snapshot:
-        enabled: true
         repository:
-            doctrine: # default is memory
-                enabled: true
+            doctrine: true # default is memory
     aggregates:
         foo:
             class: App\Domain\Foo
@@ -322,8 +346,7 @@ andreo_event_sauce:
 ```yaml
 
 andreo_event_sauce:
-    upcast:
-        enabled: true # enable upcast and register its services
+    upcast: true # enable upcast and register its services
     aggregates:
         foo:
             class: App\Domain\Foo
@@ -413,8 +436,7 @@ For example, to generate migrations for the following configuration
 ```yaml
 
 andreo_event_sauce:
-    outbox:
-        enabled: true
+    outbox: true
     aggregates:
         foo:
             class: App\Domain\Foo
@@ -427,3 +449,23 @@ Must execute a command
 php bin/console andreo:event-sauce:doctrine:migration:generate foo --schemas=event --schemas=outbox 
 ```
 
+### Payload serialization
+
+The default serializer is [ConstructingPayloadSerializer](https://eventsauce.io/docs/event-sourcing/create-events-and-commands/#to-and-from-payload)
+ 
+If you don't want to build payload yourself, you can use the symfony serializer
+
+You need install the [package](https://github.com/andrew-pakula/eventsauce-symfony-serializer).
+
+```bash
+composer require andreo/eventsauce-symfony-serializer
+```
+
+and add the following configuration
+
+```yaml
+
+andreo_event_sauce:
+    message:        # or your custom serializer
+        serializer: Andreo\EventSauce\Serialization\SymfonyPayloadSerializer
+```
