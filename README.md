@@ -514,7 +514,13 @@ andreo_event_sauce:
 Execute the following command
 
 ```bash
-php bin/console andreo:event-sauce:doctrine:migration:generate foo --schemas=event --schemas=outbox 
+php bin/console andreo:event-sauce:doctrine:migration:generate foo --schema=event --schema=outbox 
+```
+
+and default doctrine migration command
+
+```bash
+php bin/console d:m:m
 ```
 
 ### Payload serialization
