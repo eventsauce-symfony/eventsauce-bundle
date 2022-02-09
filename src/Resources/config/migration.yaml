@@ -6,10 +6,13 @@ services:
     Andreo\EventSauce\Doctrine\Migration\DefaultEventMessageSchemaBuilder:
         arguments:
             $tableSchema: '@EventSauce\MessageRepository\TableSchema\TableSchema'
+        lazy: true
 
     Andreo\EventSauce\Doctrine\Migration\DefaultOutboxMessageSchemaBuilder:
+        lazy: true
 
     Andreo\EventSauce\Doctrine\Migration\DefaultSnapshotSchemaBuilder:
+        lazy: true
 
     Andreo\EventSauce\Doctrine\Migration\GenerateAggregateMigrationCommand:
         arguments:
