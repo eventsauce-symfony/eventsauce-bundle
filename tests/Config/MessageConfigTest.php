@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Config;
 
-use Andreo\EventSauce\Messenger\MessengerEventWithHeadersDispatcher;
+use Andreo\EventSauce\Messenger\MessengerEventAndHeadersDispatcher;
+use Andreo\EventSauce\Messenger\MessengerEventDispatcher;
 use Andreo\EventSauce\Messenger\MessengerMessageDispatcher;
-use Andreo\EventSauce\Messenger\MessengerMessageEventDispatcher;
 use Andreo\EventSauceBundle\Attribute\AsMessageDecorator;
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
 use EventSauce\EventSourcing\MessageDispatchingEventDispatcher;
@@ -61,13 +61,13 @@ final class MessageConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function should_register_message_dispatcher_with_event_with_headers_mode(): void
+    public function should_register_message_dispatcher_with_event_and_headers_mode(): void
     {
         $this->load([
             'message' => [
                 'dispatcher' => [
                     'messenger' => [
-                        'mode' => 'event_with_headers',
+                        'mode' => 'event_and_headers',
                     ],
                     'chain' => [
                         'fooBus' => 'barBus',
@@ -79,24 +79,24 @@ final class MessageConfigTest extends AbstractExtensionTestCase
 
         $this->assertContainerBuilderHasServiceDefinitionWithTag(
             'andreo.event_sauce.message_dispatcher.fooBus',
-            'andreo.event_sauce.event_with_headers_dispatcher',
+            'andreo.event_sauce.event_and_headers_dispatcher',
             [
                 'bus' => 'barBus',
             ]
         );
         $busDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.fooBus');
-        $this->assertEquals(MessengerEventWithHeadersDispatcher::class, $busDefinition->getClass());
+        $this->assertEquals(MessengerEventAndHeadersDispatcher::class, $busDefinition->getClass());
         $this->assertEquals($busDefinition->getArgument(0), new Reference('barBus'));
 
         $this->assertContainerBuilderHasServiceDefinitionWithTag(
             'andreo.event_sauce.message_dispatcher.bazBus',
-            'andreo.event_sauce.event_with_headers_dispatcher',
+            'andreo.event_sauce.event_and_headers_dispatcher',
             [
                 'bus' => 'quxBus',
             ]
         );
         $busDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.bazBus');
-        $this->assertEquals(MessengerEventWithHeadersDispatcher::class, $busDefinition->getClass());
+        $this->assertEquals(MessengerEventAndHeadersDispatcher::class, $busDefinition->getClass());
         $this->assertEquals($busDefinition->getArgument(0), new Reference('quxBus'));
 
         $this->assertContainerBuilderHasAlias('fooBus');
@@ -104,7 +104,7 @@ final class MessageConfigTest extends AbstractExtensionTestCase
         /** @var Alias $bazBusAlias */
         $bazBusAlias = $this->container->getAlias('bazBus');
         $bazBusDef = $this->container->getDefinition($bazBusAlias->__toString());
-        $this->assertEquals(MessengerEventWithHeadersDispatcher::class, $bazBusDef->getClass());
+        $this->assertEquals(MessengerEventAndHeadersDispatcher::class, $bazBusDef->getClass());
     }
 
     /**
@@ -127,7 +127,7 @@ final class MessageConfigTest extends AbstractExtensionTestCase
 
         $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher.fooBus', );
         $busDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.fooBus');
-        $this->assertEquals(MessengerMessageEventDispatcher::class, $busDefinition->getClass());
+        $this->assertEquals(MessengerEventDispatcher::class, $busDefinition->getClass());
         $this->assertEquals($busDefinition->getArgument(0), new Reference('barBus'));
 
         $this->assertContainerBuilderHasAlias('fooBus');

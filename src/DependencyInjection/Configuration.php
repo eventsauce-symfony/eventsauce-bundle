@@ -170,7 +170,7 @@ final class Configuration implements ConfigurationInterface
                     ->children()
                         ->enumNode('mode')
                             ->info('What is to be sent from an aggregate.')
-                            ->values(['event', 'message', 'event_with_headers'])
+                            ->values(['event', 'message', 'event_and_headers'])
                             ->defaultValue('event')
                         ->end()
                     ?->end()

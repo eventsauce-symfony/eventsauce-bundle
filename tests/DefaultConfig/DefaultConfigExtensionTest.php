@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\DefaultConfig;
 
 use Andreo\EventSauce\Doctrine\Migration\TableNameSuffix;
-use Andreo\EventSauce\Messenger\MessengerMessageEventDispatcher;
+use Andreo\EventSauce\Messenger\MessengerEventDispatcher;
 use Andreo\EventSauce\Snapshotting\SnapshotStateSerializer;
 use Andreo\EventSauceBundle\Attribute\AsMessageConsumer;
 use Andreo\EventSauceBundle\Attribute\AsMessageDecorator;
@@ -78,7 +78,7 @@ final class DefaultConfigExtensionTest extends AbstractExtensionTestCase
     {
         $this->load();
 
-        $this->assertContainerBuilderNotHasService(MessengerMessageEventDispatcher::class);
+        $this->assertContainerBuilderNotHasService(MessengerEventDispatcher::class);
 
         $this->assertContainerBuilderNotHasService(BackOffStrategy::class);
         $this->assertContainerBuilderNotHasService(RelayCommitStrategy::class);

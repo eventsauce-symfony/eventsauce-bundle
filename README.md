@@ -109,12 +109,12 @@ The mode option is a way of dispatch messages. Available values:
 
 `event` (default)
 
-- Event is only send to the handler that supports the event type 
+- Event is only dispatch to the handler that supports the event type 
 - Doesn't dispatch headers
 
-`event_with_headers`
+`event_and_headers`
 
-- Event is dispatch send to the handler that supports the event type
+- Event is dispatch to the handler that supports the event type
 - Receive of message headers in the second handler argument
 
 `message`
@@ -129,7 +129,7 @@ andreo_event_sauce:
     message:
         dispatcher:
             messenger:
-                mode: event_with_headers # default is event
+                mode: event_and_headers # default is event
             chain:
                 fooBus: barBus
 ```

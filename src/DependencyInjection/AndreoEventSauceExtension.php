@@ -6,9 +6,9 @@ namespace Andreo\EventSauceBundle\DependencyInjection;
 
 use Andreo\EventSauce\Doctrine\Migration\GenerateAggregateMigrationCommand;
 use Andreo\EventSauce\Doctrine\Migration\TableNameSuffix;
-use Andreo\EventSauce\Messenger\MessengerEventWithHeadersDispatcher;
+use Andreo\EventSauce\Messenger\MessengerEventAndHeadersDispatcher;
+use Andreo\EventSauce\Messenger\MessengerEventDispatcher;
 use Andreo\EventSauce\Messenger\MessengerMessageDispatcher;
-use Andreo\EventSauce\Messenger\MessengerMessageEventDispatcher;
 use Andreo\EventSauce\Outbox\AggregateRootRepositoryWithoutDispatchMessage;
 use Andreo\EventSauce\Outbox\ForwardingMessageConsumer;
 use Andreo\EventSauce\Outbox\OutboxProcessMessagesCommand;
@@ -208,15 +208,15 @@ final class AndreoEventSauceExtension extends Extension
             foreach ($chainConfig as $dispatcherAlias => $busAlias) {
                 if ('event' === $mode) {
                     $container
-                        ->register("andreo.event_sauce.message_dispatcher.$dispatcherAlias", MessengerMessageEventDispatcher::class)
+                        ->register("andreo.event_sauce.message_dispatcher.$dispatcherAlias", MessengerEventDispatcher::class)
                         ->addArgument(new Reference($busAlias))
                         ->setPublic(false);
-                } elseif ('event_with_headers' === $mode) {
+                } elseif ('event_and_headers' === $mode) {
                     $container
-                        ->register("andreo.event_sauce.message_dispatcher.$dispatcherAlias", MessengerEventWithHeadersDispatcher::class)
+                        ->register("andreo.event_sauce.message_dispatcher.$dispatcherAlias", MessengerEventAndHeadersDispatcher::class)
                         ->addArgument(new Reference($busAlias))
                         ->setPublic(false)
-                        ->addTag('andreo.event_sauce.event_with_headers_dispatcher', [
+                        ->addTag('andreo.event_sauce.event_and_headers_dispatcher', [
                             'bus' => $busAlias,
                         ]);
                 } else {

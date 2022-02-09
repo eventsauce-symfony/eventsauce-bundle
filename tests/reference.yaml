@@ -15,7 +15,7 @@ andreo_event_sauce:
         decorator: true
         dispatcher:
             messenger:
-                mode: event # enum of event, event_with_headers, message
+                mode: event # enum of event, event_and_headers, message
             event_dispatcher: true
             chain:
                 fooBus: barBus
