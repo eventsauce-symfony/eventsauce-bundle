@@ -95,8 +95,8 @@ An example configuration is as follows
 ```yaml
 andreo_event_sauce:
     message:
-        messenger: true
         dispatcher:
+            messenger: true
             chain:
                 fooBus: barBus # message bus alias from messenger config
                 bazBus: quxBus
