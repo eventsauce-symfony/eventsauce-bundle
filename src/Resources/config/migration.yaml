@@ -1,13 +1,22 @@
 services:
+    Andreo\EventSauce\Doctrine\Migration\EventMessageSchemaBuilder: '@Andreo\EventSauce\Doctrine\Migration\DefaultEventMessageSchemaBuilder'
+    Andreo\EventSauce\Doctrine\Migration\OutboxMessageSchemaBuilder: '@Andreo\EventSauce\Doctrine\Migration\DefaultOutboxMessageSchemaBuilder'
+    Andreo\EventSauce\Doctrine\Migration\SnapshotSchemaBuilder: '@Andreo\EventSauce\Doctrine\Migration\DefaultSnapshotSchemaBuilder'
+
+    Andreo\EventSauce\Doctrine\Migration\DefaultEventMessageSchemaBuilder:
+        arguments:
+            $tableSchema: '@EventSauce\MessageRepository\TableSchema\TableSchema'
+
+    Andreo\EventSauce\Doctrine\Migration\DefaultOutboxMessageSchemaBuilder:
+
+    Andreo\EventSauce\Doctrine\Migration\DefaultSnapshotSchemaBuilder:
+
     Andreo\EventSauce\Doctrine\Migration\GenerateAggregateMigrationCommand:
         arguments:
             - '@doctrine.migrations.dependency_factory'
             - '@Andreo\EventSauce\Doctrine\Migration\TableNameSuffix'
-            - !service
-                class: Andreo\EventSauce\Doctrine\Migration\EventMessageSchemaBuilder
-            - !service
-                class: Andreo\EventSauce\Doctrine\Migration\OutboxMessageSchemaBuilder
-            - !service
-                class: Andreo\EventSauce\Doctrine\Migration\SnapshotSchemaBuilder
+            - '@Andreo\EventSauce\Doctrine\Migration\EventMessageSchemaBuilder'
+            - '@Andreo\EventSauce\Doctrine\Migration\OutboxMessageSchemaBuilder'
+            - '@Andreo\EventSauce\Doctrine\Migration\SnapshotSchemaBuilder'
         tags:
             - { name: console.command, command: andreo:event-sauce:doctrine:migration:generate }

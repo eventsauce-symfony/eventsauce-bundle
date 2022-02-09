@@ -31,6 +31,7 @@ use Andreo\EventSauceBundle\MessageDecoratorChainFactory;
 use Andreo\EventSauceBundle\MessageDispatcherChainFactory;
 use Andreo\EventSauceBundle\SynchronousMessageDispatcherFactory;
 use DateTimeZone;
+use Doctrine\Bundle\MigrationsBundle\DoctrineMigrationsBundle;
 use EventSauce\BackOff\BackOffStrategy;
 use EventSauce\BackOff\ExponentialBackOffStrategy;
 use EventSauce\BackOff\FibonacciBackOffStrategy;
@@ -445,6 +446,9 @@ final class AndreoEventSauceExtension extends Extension
     {
         if (!class_exists(GenerateAggregateMigrationCommand::class)) {
             return;
+        }
+        if (!class_exists(DoctrineMigrationsBundle::class)) {
+            throw new LogicException('Generate migration library require doctrine migration bundle. Try running "composer require doctrine/doctrine-migrations-bundle".');
         }
 
         $messageDoctrineConfig = $config['message']['repository']['doctrine'];

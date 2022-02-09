@@ -511,7 +511,7 @@ andreo_event_sauce:
             outbox: true
 ```
 
-Must execute a command
+Execute the following command
 
 ```bash
 php bin/console andreo:event-sauce:doctrine:migration:generate foo --schemas=event --schemas=outbox 
