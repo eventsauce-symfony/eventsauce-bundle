@@ -9,7 +9,7 @@ use Andreo\EventSauce\Doctrine\Migration\TableNameSuffix;
 use Andreo\EventSauce\Messenger\MessengerEventAndHeadersDispatcher;
 use Andreo\EventSauce\Messenger\MessengerEventDispatcher;
 use Andreo\EventSauce\Messenger\MessengerMessageDispatcher;
-use Andreo\EventSauce\Outbox\AggregateRootRepositoryWithoutDispatchMessage;
+use Andreo\EventSauce\Outbox\EventSourcedAggregateRootRepositoryForOutbox;
 use Andreo\EventSauce\Outbox\ForwardingMessageConsumer;
 use Andreo\EventSauce\Outbox\OutboxProcessMessagesCommand;
 use Andreo\EventSauce\Serialization\SymfonyPayloadSerializer;
@@ -278,7 +278,7 @@ final class AndreoEventSauceExtension extends Extension
         if (!$this->isConfigEnabled($container, $outboxConfig)) {
             return;
         }
-        if (!class_exists(AggregateRootRepositoryWithoutDispatchMessage::class)) {
+        if (!class_exists(EventSourcedAggregateRootRepositoryForOutbox::class)) {
             throw new LogicException('Message outbox is not available. Try running "composer require andreo/eventsauce-outbox".');
         }
 
@@ -497,13 +497,13 @@ final class AndreoEventSauceExtension extends Extension
                 $upcastConfig
             );
 
-            if (!$this->isConfigEnabled($container, $aggregateConfig['outbox'])) {
-                $this->loadAggregateRepository(
-                    $container,
-                    $aggregateName,
-                    $aggregateConfig
-                );
-            } else {
+            $this->loadAggregateRepository(
+                $container,
+                $aggregateName,
+                $aggregateConfig
+            );
+
+            if ($this->isConfigEnabled($container, $aggregateConfig['outbox'])) {
                 $this->loadAggregateOutboxRepository(
                     $container,
                     $aggregateName,
@@ -687,11 +687,13 @@ final class AndreoEventSauceExtension extends Extension
             ->setPublic(false)
         ;
 
+        $regularAggregateRepositoryDef = $container->getDefinition("andreo.event_sauce.aggregate_repository.$aggregateName");
         $container
-            ->register("andreo.event_sauce.aggregate_repository.$aggregateName", AggregateRootRepositoryWithoutDispatchMessage::class)
+            ->register("andreo.event_sauce.aggregate_repository.$aggregateName", EventSourcedAggregateRootRepositoryForOutbox::class)
             ->setArguments([
                 $aggregateClass,
                 new Reference("andreo.event_sauce.message_repository.$aggregateName"),
+                $regularAggregateRepositoryDef,
                 new Reference('andreo.event_sauce.aggregate_message_decorator_chain'),
                 new Reference(ClassNameInflector::class),
             ])

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Config;
 
-use Andreo\EventSauce\Outbox\AggregateRootRepositoryWithoutDispatchMessage;
+use Andreo\EventSauce\Outbox\EventSourcedAggregateRootRepositoryForOutbox;
 use Andreo\EventSauce\Snapshotting\AggregateRootRepositoryWithSnapshottingAndStoreStrategy;
 use Andreo\EventSauce\Snapshotting\AggregateRootRepositoryWithVersionedSnapshotting;
 use Andreo\EventSauce\Snapshotting\DoctrineSnapshotRepository;
@@ -145,7 +145,7 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
 
         $this->assertContainerBuilderHasAlias('barRepository');
         $repositoryDef = $this->container->getDefinition('andreo.event_sauce.aggregate_repository.bar');
-        $this->assertEquals(AggregateRootRepositoryWithoutDispatchMessage::class, $repositoryDef->getClass());
+        $this->assertEquals(EventSourcedAggregateRootRepositoryForOutbox::class, $repositoryDef->getClass());
 
         $outboxProcessMessagesCommand = $this->container->findTaggedServiceIds('andreo.event_sauce.outbox_relay');
         $this->assertArrayHasKey('andreo.event_sauce.outbox_relay.bar', $outboxProcessMessagesCommand);
