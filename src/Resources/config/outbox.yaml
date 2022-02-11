@@ -53,6 +53,7 @@ services:
         lazy: true
 
     Andreo\EventSauce\Outbox\OutboxProcessMessagesCommand:
+        public: false
         arguments:
             - !tagged_iterator { tag: 'andreo.event_sauce.outbox_relay', index_by: 'name' }
             - !service

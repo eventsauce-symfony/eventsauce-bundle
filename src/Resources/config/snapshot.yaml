@@ -3,6 +3,7 @@ services:
 
     Andreo\EventSauce\Snapshotting\ConstructingSnapshotStateSerializer:
         class: Andreo\EventSauce\Snapshotting\ConstructingSnapshotStateSerializer
+        public: false
         arguments:
             - '@EventSauce\EventSourcing\Serialization\PayloadSerializer'
             - '@EventSauce\Clock\Clock'
