@@ -66,14 +66,14 @@ andreo_event_sauce:
                 - barBus
 ```
 
-Defining the message consumer is as follows
+Defining the example message consumer is as follows
 
 ```php
 use EventSauce\EventSourcing\MessageConsumer;
 use Andreo\EventSauceBundle\Attribute\AsMessageConsumer;
 
 #[AsMessageConsumer(dispatcher: fooBus)]
-final class FooConsumer implements MessageConsumer {
+final class SomeProjection implements MessageConsumer {
 
     public function handle(Message $message): void {
         // do something
@@ -158,7 +158,7 @@ interface
 use EventSauce\EventSourcing\EventDispatcher;
 use Symfony\Component\DependencyInjection\Attribute\Target;
 
-final class Handler {
+final class SomeContext {
 
    public function __construct(
         #[Target('fooBus')] private EventDispatcher $fooBus
@@ -190,7 +190,7 @@ by convention "${name}Repository"
 use EventSauce\EventSourcing\AggregateRootRepository;
 use Symfony\Component\DependencyInjection\Attribute\Target;
 
-final class Handler {
+final class SomeHandler {
 
    public function __construct(
         #[Target('fooRepository')] private AggregateRootRepository $fooRepository
@@ -301,7 +301,7 @@ Then you can inject the repository based on the alias and dedicated interface
 use Symfony\Component\DependencyInjection\Attribute\Target;
 use EventSauce\EventSourcing\Snapshotting\AggregateRootRepositoryWithSnapshotting;
 
-final class Handler {
+final class SomeHandler {
 
    public function __construct(
         #[Target('barRepository')] private AggregateRootRepositoryWithSnapshotting $barRepository
@@ -444,7 +444,7 @@ use EventSauce\EventSourcing\Message;
 use EventSauce\EventSourcing\MessageDecorator;
 
 #[AsMessageDecorator]
-final class FooDecorator implements MessageDecorator
+final class SomeDecorator implements MessageDecorator
 {
     public function decorate(Message $message): Message
     {
@@ -475,7 +475,7 @@ use EventSauce\EventSourcing\MessageDecorator;
 use Andreo\EventSauceBundle\Attribute\MessageContext;
 
 #[AsMessageDecorator(context: MessageContext::EVENT_DISPATCHER)]
-final class FooDecorator implements MessageDecorator
+final class SomeDecorator implements MessageDecorator
 {
     public function decorate(Message $message): Message
     {
