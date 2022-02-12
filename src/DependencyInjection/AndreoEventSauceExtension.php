@@ -27,9 +27,11 @@ use Andreo\EventSauceBundle\Attribute\AsMessageConsumer;
 use Andreo\EventSauceBundle\Attribute\AsMessageDecorator;
 use Andreo\EventSauceBundle\Attribute\AsUpcaster;
 use Andreo\EventSauceBundle\Attribute\MessageContext;
-use Andreo\EventSauceBundle\MessageDecoratorChainFactory;
-use Andreo\EventSauceBundle\MessageDispatcherChainFactory;
-use Andreo\EventSauceBundle\SynchronousMessageDispatcherFactory;
+use Andreo\EventSauceBundle\Factory\MessageDecoratorChainFactory;
+use Andreo\EventSauceBundle\Factory\MessageDispatcherChainFactory;
+use Andreo\EventSauceBundle\Factory\MessageUpcasterChainFactory;
+use Andreo\EventSauceBundle\Factory\SynchronousMessageDispatcherFactory;
+use Andreo\EventSauceBundle\Factory\UpcasterChainFactory;
 use DateTimeZone;
 use Doctrine\Bundle\MigrationsBundle\DoctrineMigrationsBundle;
 use EventSauce\BackOff\BackOffStrategy;
@@ -574,10 +576,9 @@ final class AndreoEventSauceExtension extends Extension
             $context = $upcastConfig['context'];
             if ('payload' === $context) {
                 if (!class_exists(UpcasterChainWithEventGuessing::class)) {
-                    $upcasterChainDef = new Definition(UpcasterChain::class, [
+                    $upcasterChainDef = (new Definition(UpcasterChain::class, [
                         new TaggedIteratorArgument("andreo.event_sauce.upcaster.$aggregateName"),
-                        new Reference(ClassNameInflector::class),
-                    ]);
+                    ]))->setFactory([UpcasterChainFactory::class, '__invoke']);
                 } else {
                     $upcasterChainDef = new Definition(UpcasterChainWithEventGuessing::class, [
                         new TaggedIteratorArgument("andreo.event_sauce.upcaster.$aggregateName"),
@@ -590,9 +591,10 @@ final class AndreoEventSauceExtension extends Extension
                     $upcasterChainDef,
                 ]);
             } else {
-                $upcasterChainDef = new Definition(MessageUpcasterChain::class, [
+                $upcasterChainDef = (new Definition(MessageUpcasterChain::class, [
                     new TaggedIteratorArgument("andreo.event_sauce.upcaster.$aggregateName"),
-                ]);
+                ]))->setFactory([MessageUpcasterChainFactory::class, '__invoke']);
+
                 $messageSerializerArgument = new Definition(UpcastingMessageObjectSerializer::class, [
                     new Reference(MessageSerializer::class),
                     $upcasterChainDef,

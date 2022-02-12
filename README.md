@@ -365,6 +365,8 @@ andreo_event_sauce:
 
 ### Upcasting
 
+[About Upcasting](https://eventsauce.io/docs/advanced/upcasting/#main-article)
+
 ```yaml
 andreo_event_sauce:
     upcast: true # enable upcast and register its services
@@ -401,8 +403,8 @@ composer require andreo/eventsauce-upcasting
 
 #### Message upcasting
 
-By default, upcasting works before deserializing the message. If you want to work on the message object, 
-use the following configuration.
+By default, upcasting works before deserializing the message. 
+If you want to work on the message object, use the following configuration.
 
 ```yaml
 andreo_event_sauce:

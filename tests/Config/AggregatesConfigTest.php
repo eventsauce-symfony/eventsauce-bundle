@@ -57,7 +57,6 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
             'aggregates' => [
                 'foo' => [
                     'class' => DummyFooAggregate::class,
-                    'dispatchers' => ['fooBus', 'bazBus'],
                 ],
             ],
         ]);

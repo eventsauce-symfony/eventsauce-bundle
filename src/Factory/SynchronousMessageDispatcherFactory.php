@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Andreo\EventSauceBundle;
+namespace Andreo\EventSauceBundle\Factory;
 
 use EventSauce\EventSourcing\MessageConsumer;
 use EventSauce\EventSourcing\SynchronousMessageDispatcher;

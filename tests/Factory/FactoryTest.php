@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Factory;
 
-use Andreo\EventSauceBundle\MessageDecoratorChainFactory;
-use Andreo\EventSauceBundle\MessageDispatcherChainFactory;
-use Andreo\EventSauceBundle\SynchronousMessageDispatcherFactory;
+use Andreo\EventSauceBundle\Factory\MessageDecoratorChainFactory;
+use Andreo\EventSauceBundle\Factory\MessageDispatcherChainFactory;
+use Andreo\EventSauceBundle\Factory\SynchronousMessageDispatcherFactory;
 use EventSauce\EventSourcing\MessageDecoratorChain;
 use EventSauce\EventSourcing\MessageDispatcherChain;
 use EventSauce\EventSourcing\SynchronousMessageDispatcher;
