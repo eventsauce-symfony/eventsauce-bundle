@@ -83,7 +83,7 @@ final class SomeProjection implements MessageConsumer {
 
 ### Message dispatching with symfony messenger
 
-You need install the [package](https://github.com/andrew-pakula/eventsauce-messenger).
+You need install the [package](https://github.com/andrew-pakula/eventsauce-messenger) (recommend reading doc).
 
 
 ```bash
@@ -221,7 +221,7 @@ andreo_event_sauce:
 
 [About the Outbox](https://eventsauce.io/docs/message-outbox/)
 
-You need install the [package](https://github.com/andrew-pakula/eventsauce-outbox)
+You need install the [package](https://github.com/andrew-pakula/eventsauce-outbox) (recommend reading doc).
 
 ```bash
 composer require andreo/eventsauce-outbox
@@ -312,8 +312,8 @@ final class SomeHandler {
 
 ### Snapshotting extended components
 
-You need install the [package](https://github.com/andrew-pakula/eventsauce-snapshotting).
-I recommend reading the documentation
+You need install the [package](https://github.com/andrew-pakula/eventsauce-snapshotting)
+(recommend reading doc).
 
 ```bash
 composer require andreo/eventsauce-snapshotting
@@ -396,7 +396,7 @@ final class SomeEventV2Upcaster implements Upcaster {
 
 By default, this library uses the payload context according to the EventSauce implementation.
 If you want to upcasting on the message object context,
-you need install the [package](https://github.com/andrew-pakula/eventsauce-upcasting).
+you need install the [package](https://github.com/andrew-pakula/eventsauce-upcasting) (recommend reading doc).
 
 ```bash
 composer require andreo/eventsauce-upcasting
