@@ -2,10 +2,10 @@
     "name": "andreo/event-sauce-bundle",
     "description": "Symfony bundle for EventSauce.",
     "keywords": [
-        "EventSauce",
-        "Event sourcing",
-        "Symfony",
-        "Bundle"
+        "eventsauce",
+        "event sourcing",
+        "symfony",
+        "bundle"
     ],
     "type": "symfony-bundle",
     "license": "MIT",
