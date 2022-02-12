@@ -9,10 +9,13 @@ use Andreo\EventSauce\Snapshotting\AggregateRootRepositoryWithSnapshottingAndSto
 use Andreo\EventSauce\Snapshotting\AggregateRootRepositoryWithVersionedSnapshotting;
 use Andreo\EventSauce\Snapshotting\DoctrineSnapshotRepository;
 use Andreo\EventSauce\Snapshotting\EveryNEventCanStoreSnapshotStrategy;
+use Andreo\EventSauce\Upcasting\UpcastingMessageObjectSerializer;
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
 use EventSauce\EventSourcing\EventSourcedAggregateRootRepository;
+use EventSauce\EventSourcing\Serialization\MessageSerializer;
 use EventSauce\EventSourcing\Snapshotting\ConstructingAggregateRootRepositoryWithSnapshotting;
 use EventSauce\EventSourcing\Snapshotting\InMemorySnapshotRepository;
+use EventSauce\EventSourcing\Upcasting\UpcastingMessageSerializer;
 use EventSauce\MessageOutbox\DoctrineOutbox\DoctrineOutboxRepository;
 use EventSauce\MessageOutbox\DoctrineOutbox\DoctrineTransactionalMessageRepository;
 use EventSauce\MessageOutbox\InMemoryOutboxRepository;
@@ -548,6 +551,75 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
         /** @var Reference $canStoreDef */
         $canStoreDef = $repositoryDef->getArgument(1);
         $this->assertEquals(DummyCustomStoreStrategy::class, $canStoreDef->__toString());
+    }
+
+    /**
+     * @test
+     */
+    public function should_register_message_repository_with_upcaster_payload_context(): void
+    {
+        $this->load([
+            'upcast' => [
+                'context' => 'payload',
+            ],
+            'aggregates' => [
+                'foo' => [
+                    'class' => DummyFooAggregate::class,
+                    'upcast' => true,
+                ],
+            ],
+        ]);
+
+        $this->assertContainerBuilderHasService('andreo.event_sauce.message_repository.foo');
+        $messageRepositoryDef = $this->container->getDefinition('andreo.event_sauce.message_repository.foo');
+        /** @var Definition $messageSerializerArgument */
+        $messageSerializerArgument = $messageRepositoryDef->getArgument(2);
+        $this->assertEquals(UpcastingMessageSerializer::class, $messageSerializerArgument->getClass());
+    }
+
+    /**
+     * @test
+     */
+    public function should_register_message_repository_with_upcaster_message_context(): void
+    {
+        $this->load([
+            'upcast' => [
+                'context' => 'message',
+            ],
+            'aggregates' => [
+                'bar' => [
+                    'class' => DummyFooAggregate::class,
+                    'upcast' => true,
+                ],
+            ],
+        ]);
+
+        $this->assertContainerBuilderHasService('andreo.event_sauce.message_repository.bar');
+        $messageRepositoryDef = $this->container->getDefinition('andreo.event_sauce.message_repository.bar');
+        /** @var Definition $messageSerializerArgument */
+        $messageSerializerArgument = $messageRepositoryDef->getArgument(2);
+        $this->assertEquals(UpcastingMessageObjectSerializer::class, $messageSerializerArgument->getClass());
+    }
+
+    /**
+     * @test
+     */
+    public function should_register_default_serializer_if_upcaster_is_disabled(): void
+    {
+        $this->load([
+            'upcast' => false,
+            'aggregates' => [
+                'baz' => [
+                    'class' => DummyFooAggregate::class,
+                ],
+            ],
+        ]);
+
+        $this->assertContainerBuilderHasService('andreo.event_sauce.message_repository.baz');
+        $messageRepositoryDef = $this->container->getDefinition('andreo.event_sauce.message_repository.baz');
+        /** @var Reference $messageSerializerArgument */
+        $messageSerializerArgument = $messageRepositoryDef->getArgument(2);
+        $this->assertEquals(MessageSerializer::class, $messageSerializerArgument->__toString());
     }
 
     /**
