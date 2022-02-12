@@ -12,6 +12,7 @@ use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
 use EventSauce\EventSourcing\MessageDispatchingEventDispatcher;
 use EventSauce\EventSourcing\Serialization\MessageSerializer;
 use EventSauce\EventSourcing\SynchronousMessageDispatcher;
+use EventSauce\MessageRepository\TableSchema\TableSchema;
 use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\Alias;
@@ -54,6 +55,10 @@ final class MessageConfigTest extends AbstractExtensionTestCase
         $this->assertContainerBuilderHasAlias(MessageSerializer::class);
         $serializerAlias = $this->container->getAlias(MessageSerializer::class);
         $this->assertEquals(DummyCustomMessageSerializer::class, $serializerAlias->__toString());
+
+        $this->assertContainerBuilderHasAlias(TableSchema::class);
+        $tableSchemaAlias = $this->container->getAlias(TableSchema::class);
+        $this->assertEquals(DummyCustomTableSchema::class, $tableSchemaAlias->__toString());
 
         $this->assertArrayNotHasKey(AsMessageDecorator::class, $this->container->getAutoconfiguredAttributes());
     }

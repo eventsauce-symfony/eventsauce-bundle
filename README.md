@@ -525,7 +525,9 @@ and default doctrine migration command
 php bin/console d:m:m
 ```
 
-### Payload serialization
+### Serialization
+
+#### Symfony payload serializer
 
 The default serializer is [ConstructingPayloadSerializer](https://eventsauce.io/docs/event-sourcing/create-events-and-commands/#to-and-from-payload)
  
@@ -541,6 +543,13 @@ and add the following configuration
 
 ```yaml
 andreo_event_sauce:
-    message:        # or your custom serializer
-        serializer: Andreo\EventSauce\Serialization\SymfonyPayloadSerializer
+    payload_serializer: Andreo\EventSauce\Serialization\SymfonyPayloadSerializer # or your custom serializer
+```
+
+#### Message serializer  for MySQL8
+
+```yaml
+andreo_event_sauce:
+    message:
+        serializer: EventSauce\EventSourcing\Serialization\MySQL8DateFormatting # or your custom serializer
 ```
