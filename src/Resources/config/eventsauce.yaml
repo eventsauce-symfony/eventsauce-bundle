@@ -28,6 +28,12 @@ services:
             - '@EventSauce\EventSourcing\ClassNameInflector'
             - '@EventSauce\EventSourcing\Serialization\PayloadSerializer'
 
+    EventSauce\EventSourcing\Serialization\MySQL8DateFormatting:
+        class: EventSauce\EventSourcing\Serialization\MySQL8DateFormatting
+        public: false
+        arguments:
+            - '@EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer'
+
     EventSauce\UuidEncoding\BinaryUuidEncoder:
         class: EventSauce\UuidEncoding\BinaryUuidEncoder
         public: false

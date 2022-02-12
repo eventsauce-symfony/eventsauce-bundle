@@ -419,7 +419,7 @@ final class AndreoEventSauceExtension extends Extension
                 throw new LogicException('Symfony payload serializer is not available. Try running "composer require andreo/eventsauce-symfony-serializer".');
             }
 
-            $loader->load('serialization.yaml');
+            $loader->load('symfony_serializer.yaml');
         }
 
         $payloadSerializerServiceId = $config['payload_serializer'];
