@@ -310,7 +310,7 @@ final class SomeHandler {
 ```
 
 
-### Snapshotting additional features
+### Snapshotting extended components
 
 You need install the [package](https://github.com/andrew-pakula/eventsauce-snapshotting).
 I recommend reading the documentation
@@ -392,19 +392,17 @@ final class SomeEventV2Upcaster implements Upcaster {
 }
 ```
 
-### Upcasting additional features
+### Upcaster context
 
-You need install the [package](https://github.com/andrew-pakula/eventsauce-upcasting).
-I recommend reading the documentation
+By default, this library uses the payload context according to the EventSauce implementation.
+If you want to upcasting on the message object context,
+you need install the [package](https://github.com/andrew-pakula/eventsauce-upcasting).
 
 ```bash
 composer require andreo/eventsauce-upcasting
 ```
 
-#### Message upcasting
-
-By default, upcasting works before deserializing the message. 
-If you want to work on the message object, use the following configuration.
+and use the following configuration.
 
 ```yaml
 andreo_event_sauce:
@@ -426,7 +424,7 @@ use EventSauce\EventSourcing\Message;
 #[AsUpcaster(aggregate: 'foo', version: 2)]
 final class SomeEventV2Upcaster implements MessageUpcaster {
 
-    #[Event(event: SomeEvent::class)]
+    #[Event(event: SomeEvent::class)] // guess event
     public function upcast(Message $message): Message
     {
         // do something
