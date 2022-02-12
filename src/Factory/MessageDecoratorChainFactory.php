@@ -12,7 +12,7 @@ final class MessageDecoratorChainFactory
     /**
      * @param iterable<MessageDecorator> $decorators
      */
-    public function __invoke(iterable $decorators): MessageDecoratorChain
+    public function __invoke(iterable $decorators): MessageDecorator
     {
         return new MessageDecoratorChain(...$decorators);
     }
