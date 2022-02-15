@@ -229,6 +229,46 @@ final class MessageConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
+    public function should_throw_exception_if_dispatcher_alias_is_some_as_messenger_alias(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->load([
+            'message' => [
+                'dispatcher' => [
+                    'messenger' => [
+                        'mode' => 'message',
+                    ],
+                    'chain' => [
+                        'fooBus' => 'fooBus',
+                    ],
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * @test
+     */
+    public function should_throw_exception_if_dispatcher_alias_is_numeric(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->load([
+            'message' => [
+                'dispatcher' => [
+                    'messenger' => [
+                        'mode' => 'message',
+                    ],
+                    'chain' => [
+                        '1' => 'fooBus',
+                    ],
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * @test
+     */
     public function should_register_standard_event_dispatcher(): void
     {
         $this->load([

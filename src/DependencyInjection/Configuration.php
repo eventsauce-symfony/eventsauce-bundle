@@ -18,6 +18,7 @@ use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\ScalarNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 
 final class Configuration implements ConfigurationInterface
 {
@@ -151,18 +152,24 @@ final class Configuration implements ConfigurationInterface
         $node
             ->addDefaultsIfNotSet()
             ->validate()
-                ->ifTrue(static function (array $values) {
+                ->always(static function (array $values): array {
                     $messenger = $values['messenger'];
-                    $dispatchers = $values['chain'];
-                    foreach ($dispatchers as $busId) {
-                        if ($messenger['enabled'] && empty($busId)) {
-                            return true;
+                    if ($messenger['enabled']) {
+                        foreach ($values['chain'] as $alias => $busAlias) {
+                            if (empty($busAlias)) {
+                                throw new InvalidConfigurationException('If you use symfony messenger you must specify your message bus alias.');
+                            }
+                            if ($alias === $busAlias) {
+                                throw new InvalidConfigurationException('Dispatcher alias must by different than messenger bus alias.');
+                            }
+                            if (is_numeric($alias)) {
+                                throw new InvalidConfigurationException('Dispatcher alias must by string.');
+                            }
                         }
                     }
 
-                    return false;
+                    return $values;
                 })
-                ->thenInvalid('If you use symfony messenger you must specify your message bus alias.')
             ->end()
             ->children()
                 ->arrayNode('messenger')
