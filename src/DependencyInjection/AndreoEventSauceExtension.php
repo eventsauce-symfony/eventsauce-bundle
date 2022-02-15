@@ -20,6 +20,7 @@ use Andreo\EventSauce\Snapshotting\ConstructingSnapshotStateSerializer;
 use Andreo\EventSauce\Snapshotting\DoctrineSnapshotRepository;
 use Andreo\EventSauce\Snapshotting\EveryNEventCanStoreSnapshotStrategy;
 use Andreo\EventSauce\Snapshotting\SnapshotStateSerializer;
+use Andreo\EventSauce\Upcasting\MessageUpcaster;
 use Andreo\EventSauce\Upcasting\MessageUpcasterChain;
 use Andreo\EventSauce\Upcasting\UpcasterChainWithEventGuessing;
 use Andreo\EventSauce\Upcasting\UpcastingMessageObjectSerializer;
@@ -400,6 +401,9 @@ final class AndreoEventSauceExtension extends Extension
         $upcastConfig = $config['upcast'];
         if (!$this->isConfigEnabled($container, $upcastConfig)) {
             return;
+        }
+        if ('message' === $upcastConfig['context'] && !interface_exists(MessageUpcaster::class)) {
+            throw new LogicException('Message upcaster is not available. Try running "composer require andreo/eventsauce-upcasting".');
         }
 
         $container->registerAttributeForAutoconfiguration(
