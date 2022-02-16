@@ -52,6 +52,31 @@ andreo_event_sauce:
         recording_timezone: Europe/Warsaw # default is UTC
 ```
 
+### Doctrine connection
+
+Perhaps you want to set doctrine dbal connection. 
+Default value is **doctrine.dbal.main_connection**
+If you don't have doctrine dbal config, try install
+
+```bash
+composer require doctrine/doctrine-bundle
+```
+
+or, if you will be using migration and orm for projection
+
+```bash
+composer require symfony/orm-pack
+```
+
+```yaml
+andreo_event_sauce:
+    message:
+        repository:
+            doctrine:
+                # default is doctrine.dbal.default_connection
+                connection:  doctrine.dbal.main_connection 
+```
+
 ### Message dispatching
 
 Defaults EventSauce to dispatch events use [SynchronousMessageDispatcher](https://eventsauce.io/docs/reacting-to-events/setup-consumers/#synchronous-message-dispatcher).
@@ -101,6 +126,12 @@ andreo_event_sauce:
                 fooBus: barBus # message bus alias from messenger config
                 bazBus: quxBus
 
+```
+
+If you don't have messenger config, try install
+
+```bash
+composer require symfony/messenger
 ```
 
 #### Message dispatching mode
