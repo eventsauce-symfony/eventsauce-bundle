@@ -175,7 +175,7 @@ final class AndreoEventSauceExtension extends Extension
             $container
                 ->register('andreo.event_sauce.aggregate_message_decorator_chain', MessageDecoratorChain::class)
                 ->addArgument(new TaggedIteratorArgument('andreo.event_sauce.aggregate_message_decorator'))
-                ->setFactory(new Reference(MessageDecoratorChainFactory::class))
+                ->setFactory([MessageDecoratorChainFactory::class, '__invoke'])
                 ->setPublic(false)
             ;
 
@@ -183,7 +183,7 @@ final class AndreoEventSauceExtension extends Extension
                 $container
                     ->register('andreo.event_sauce.event_dispatcher_message_decorator_chain', MessageDecoratorChain::class)
                     ->addArgument(new TaggedIteratorArgument('andreo.event_sauce.event_dispatcher_message_decorator'))
-                    ->setFactory(new Reference(MessageDecoratorChainFactory::class))
+                    ->setFactory([MessageDecoratorChainFactory::class, '__invoke'])
                     ->setPublic(false)
                 ;
             }
@@ -191,7 +191,7 @@ final class AndreoEventSauceExtension extends Extension
             $container
                 ->register('andreo.event_sauce.aggregate_message_decorator_chain', MessageDecoratorChain::class)
                 ->addArgument([])
-                ->setFactory(new Reference(MessageDecoratorChainFactory::class))
+                ->setFactory([MessageDecoratorChainFactory::class, '__invoke'])
                 ->setPublic(false)
             ;
         }
@@ -251,7 +251,7 @@ final class AndreoEventSauceExtension extends Extension
             foreach ($chainConfig as $dispatcherAlias) {
                 $container
                     ->register("andreo.event_sauce.message_dispatcher.$dispatcherAlias", SynchronousMessageDispatcher::class)
-                    ->setFactory(new Reference(SynchronousMessageDispatcherFactory::class))
+                    ->setFactory([SynchronousMessageDispatcherFactory::class, '__invoke'])
                     ->addArgument(new TaggedIteratorArgument("andreo.event_sauce.message_consumer.$dispatcherAlias"))
                     ->setPublic(false)
                 ;
@@ -558,7 +558,7 @@ final class AndreoEventSauceExtension extends Extension
             "andreo.event_sauce.message_dispatcher_chain.$aggregateName",
                 MessageDispatcherChain::class
         )
-            ->setFactory(new Reference(MessageDispatcherChainFactory::class))
+            ->setFactory([MessageDispatcherChainFactory::class, '__invoke'])
             ->addArgument(new IteratorArgument($messageDispatcherRefers))
             ->setPublic(false)
         ;
@@ -586,7 +586,7 @@ final class AndreoEventSauceExtension extends Extension
                 if (!class_exists(UpcasterChainWithEventGuessing::class)) {
                     $upcasterChainDef = (new Definition(UpcasterChain::class, [
                         new TaggedIteratorArgument("andreo.event_sauce.upcaster.$aggregateName"),
-                    ]))->setFactory(new Reference(UpcasterChainFactory::class));
+                    ]))->setFactory([UpcasterChainFactory::class, '__invoke']);
                 } else {
                     $upcasterChainDef = new Definition(UpcasterChainWithEventGuessing::class, [
                         new TaggedIteratorArgument("andreo.event_sauce.upcaster.$aggregateName"),
@@ -601,7 +601,7 @@ final class AndreoEventSauceExtension extends Extension
             } else {
                 $upcasterChainDef = (new Definition(MessageUpcasterChain::class, [
                     new TaggedIteratorArgument("andreo.event_sauce.upcaster.$aggregateName"),
-                ]))->setFactory(new Reference(MessageUpcasterChainFactory::class));
+                ]))->setFactory([MessageUpcasterChainFactory::class, '__invoke']);
 
                 $messageSerializerArgument = new Definition(UpcastingMessageObjectSerializer::class, [
                     new Reference(MessageSerializer::class),
