@@ -176,6 +176,7 @@ final class AndreoEventSauceExtension extends Extension
                 ->register('andreo.event_sauce.aggregate_message_decorator_chain', MessageDecoratorChain::class)
                 ->addArgument(new TaggedIteratorArgument('andreo.event_sauce.aggregate_message_decorator'))
                 ->setFactory([MessageDecoratorChainFactory::class, '__invoke'])
+                ->setPublic(false)
             ;
 
             if ($eventDispatcherEnabled) {
@@ -183,6 +184,7 @@ final class AndreoEventSauceExtension extends Extension
                     ->register('andreo.event_sauce.event_dispatcher_message_decorator_chain', MessageDecoratorChain::class)
                     ->addArgument(new TaggedIteratorArgument('andreo.event_sauce.event_dispatcher_message_decorator'))
                     ->setFactory([MessageDecoratorChainFactory::class, '__invoke'])
+                    ->setPublic(false)
                 ;
             }
         } else {
@@ -190,6 +192,7 @@ final class AndreoEventSauceExtension extends Extension
                 ->register('andreo.event_sauce.aggregate_message_decorator_chain', MessageDecoratorChain::class)
                 ->addArgument([])
                 ->setFactory([MessageDecoratorChainFactory::class, '__invoke'])
+                ->setPublic(false)
             ;
         }
     }
@@ -270,6 +273,7 @@ final class AndreoEventSauceExtension extends Extension
                 new Reference("andreo.event_sauce.message_dispatcher.$dispatcherAlias"),
                 new Reference('andreo.event_sauce.event_dispatcher_message_decorator_chain'),
             ])
+            ->setPublic(false)
         ;
         $container->setAlias($dispatcherAlias, "andreo.event_sauce.event_dispatcher.$dispatcherAlias");
         $container->registerAliasForArgument($dispatcherAlias, EventDispatcher::class);
@@ -724,6 +728,7 @@ final class AndreoEventSauceExtension extends Extension
             ->addTag('andreo.event_sauce.outbox_relay', [
                 'name' => "outbox_relay_$aggregateName",
             ])
+            ->setPublic(false)
         ;
     }
 
