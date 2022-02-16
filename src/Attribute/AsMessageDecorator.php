@@ -10,8 +10,8 @@ use Attribute;
 final class AsMessageDecorator
 {
     public function __construct(
-        public int $order = 0,
-        public MessageContext $context = MessageContext::ALL,
+        public readonly int $order = 0,
+        public readonly MessageContext $context = MessageContext::ALL,
     ) {
     }
 }

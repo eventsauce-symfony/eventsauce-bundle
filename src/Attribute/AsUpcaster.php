@@ -10,8 +10,8 @@ use Attribute;
 final class AsUpcaster
 {
     public function __construct(
-        public string $aggregate,
-        public int $version
+        public readonly string $aggregate,
+        public readonly int $version
     ) {
     }
 }

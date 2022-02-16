@@ -10,7 +10,7 @@ use Attribute;
 final class AsMessageConsumer
 {
     public function __construct(
-        public string $dispatcher,
+        public readonly string $dispatcher,
     ) {
     }
 }
