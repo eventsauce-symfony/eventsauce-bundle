@@ -474,8 +474,8 @@ final class AndreoEventSauceExtension extends Extension
             ->register(TableNameSuffix::class, TableNameSuffix::class)
             ->setArguments([
                 $eventTableName,
-                $snapshotTableName,
                 $outboxTableName,
+                $snapshotTableName,
             ])
             ->setPublic(false)
         ;
