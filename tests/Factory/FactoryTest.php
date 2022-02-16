@@ -28,8 +28,7 @@ final class FactoryTest extends TestCase
      */
     public function should_create_message_decorator_chain(): void
     {
-        $factory = new MessageDecoratorChainFactory();
-        $chain = $factory([new DummyMessageDecorator(), new DummyMessageDecorator()]);
+        $chain = MessageDecoratorChainFactory::create([new DummyMessageDecorator(), new DummyMessageDecorator()]);
         $this->assertInstanceOf(MessageDecoratorChain::class, $chain);
     }
 
@@ -38,8 +37,7 @@ final class FactoryTest extends TestCase
      */
     public function should_create_message_dispatcher_chain(): void
     {
-        $factory = new MessageDispatcherChainFactory();
-        $chain = $factory([new DummyMessageDispatcher(), new DummyMessageDispatcher()]);
+        $chain = MessageDispatcherChainFactory::create([new DummyMessageDispatcher(), new DummyMessageDispatcher()]);
         $this->assertInstanceOf(MessageDispatcherChain::class, $chain);
     }
 
@@ -48,8 +46,7 @@ final class FactoryTest extends TestCase
      */
     public function should_create_synchronous_message_dispatcher_chain(): void
     {
-        $factory = new SynchronousMessageDispatcherFactory();
-        $dispatcher = $factory([new DummyMessageConsumer(), new DummyMessageConsumer()]);
+        $dispatcher = SynchronousMessageDispatcherFactory::create([new DummyMessageConsumer(), new DummyMessageConsumer()]);
         $this->assertInstanceOf(SynchronousMessageDispatcher::class, $dispatcher);
     }
 
@@ -58,8 +55,7 @@ final class FactoryTest extends TestCase
      */
     public function should_create_upcaster_chain(): void
     {
-        $factory = new UpcasterChainFactory();
-        $chain = $factory([new DummyUpcaster(), new DummyUpcaster()]);
+        $chain = UpcasterChainFactory::create([new DummyUpcaster(), new DummyUpcaster()]);
         $this->assertInstanceOf(Upcaster::class, $chain);
     }
 
@@ -68,8 +64,7 @@ final class FactoryTest extends TestCase
      */
     public function should_create_message_upcaster_chain(): void
     {
-        $factory = new MessageUpcasterChainFactory();
-        $chain = $factory([new DummyMessageUpcaster(), new DummyMessageUpcaster()]);
+        $chain = MessageUpcasterChainFactory::create([new DummyMessageUpcaster(), new DummyMessageUpcaster()]);
         $this->assertInstanceOf(MessageUpcaster::class, $chain);
     }
 }

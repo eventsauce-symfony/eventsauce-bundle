@@ -12,7 +12,7 @@ final class MessageUpcasterChainFactory
     /**
      * @param iterable<MessageUpcaster> $upcasters
      */
-    public function __invoke(iterable $upcasters): MessageUpcaster
+    public static function create(iterable $upcasters): MessageUpcaster
     {
         return new MessageUpcasterChain(...$upcasters);
     }

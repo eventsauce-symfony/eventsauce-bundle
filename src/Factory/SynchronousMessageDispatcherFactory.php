@@ -13,7 +13,7 @@ final class SynchronousMessageDispatcherFactory
     /**
      * @param iterable<MessageConsumer> $consumers
      */
-    public function __invoke(iterable $consumers): MessageDispatcher
+    public static function create(iterable $consumers): MessageDispatcher
     {
         return new SynchronousMessageDispatcher(...$consumers);
     }

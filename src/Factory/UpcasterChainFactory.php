@@ -12,7 +12,7 @@ final class UpcasterChainFactory
     /**
      * @param iterable<Upcaster> $upcasters
      */
-    public function __invoke(iterable $upcasters): Upcaster
+    public static function create(iterable $upcasters): Upcaster
     {
         return new UpcasterChain(...$upcasters);
     }
