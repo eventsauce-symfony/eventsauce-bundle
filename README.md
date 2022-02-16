@@ -115,6 +115,12 @@ You need install the [package](https://github.com/andrew-pakula/eventsauce-messe
 composer require andreo/eventsauce-messenger
 ```
 
+If you don't have messenger config, try install
+
+```bash
+composer require symfony/messenger
+```
+
 An example configuration is as follows
 
 ```yaml
@@ -126,12 +132,6 @@ andreo_event_sauce:
                 fooBus: barBus # message bus alias from messenger config
                 bazBus: quxBus
 
-```
-
-If you don't have messenger config, try install
-
-```bash
-composer require symfony/messenger
 ```
 
 #### Message dispatching mode
