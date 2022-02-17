@@ -31,7 +31,7 @@ Before using it, I strongly recommend that you read the official [documentation]
 ### Installation
 
 ```bash
-composer require andreo/event-sauce-bundle
+composer require andreo/eventsauce-bundle
 ```
 
 Verify that the bundle has been added the `config/bundles.php` file
