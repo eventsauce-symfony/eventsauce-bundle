@@ -1,5 +1,5 @@
 {
-    "name": "andreo/event-sauce-bundle",
+    "name": "andreo/eventsauce-bundle",
     "description": "Symfony bundle for EventSauce.",
     "keywords": [
         "eventsauce",
