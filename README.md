@@ -55,7 +55,7 @@ andreo_event_sauce:
 ### Doctrine connection
 
 Perhaps you want to set doctrine dbal connection. 
-Default value is **doctrine.dbal.default_connection**
+Default value is **doctrine.dbal.default_connection**.
 If you don't have doctrine dbal config, try install
 
 ```bash
