@@ -4,7 +4,7 @@
     </a>
 </p>
 
-# EventSauceBundle (WIP)
+# EventSauceBundle (BETA)
 
 This bundle provides the basic and extended container configuration of 
 symfony for the [EventSauce](https://eventsauce.io/) library.
