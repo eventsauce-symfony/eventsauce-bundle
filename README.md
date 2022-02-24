@@ -580,7 +580,7 @@ andreo_event_sauce:
 ```yaml
 andreo_event_sauce:
     message:
-        serializer: EventSauce\EventSourcing\Serialization\MySQL8DateFormatting # or your custom serializer
+        serializer: EventSauce\EventSourcing\Serialization\MySQL8DateFormatting
 ```
 
 #### Custom normalizers
