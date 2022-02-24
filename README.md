@@ -575,6 +575,14 @@ andreo_event_sauce:
     payload_serializer: Andreo\EventSauce\Serialization\SymfonyPayloadSerializer # or your custom serializer
 ```
 
+#### Message serializer  for MySQL8
+
+```yaml
+andreo_event_sauce:
+    message:
+        serializer: EventSauce\EventSourcing\Serialization\MySQL8DateFormatting # or your custom serializer
+```
+
 #### Custom normalizers
 
 If you want to use custom normalizers you have to 
@@ -589,13 +597,4 @@ services:
             - 
                 - '@serializer.normalizer.property' # if you want to serialize objects with private constructors
                 - '@serializer.normalizer.datetime' # if you want to serialize DataTimeInterface objects
-```
-
-
-#### Message serializer  for MySQL8
-
-```yaml
-andreo_event_sauce:
-    message:
-        serializer: EventSauce\EventSourcing\Serialization\MySQL8DateFormatting # or your custom serializer
 ```
