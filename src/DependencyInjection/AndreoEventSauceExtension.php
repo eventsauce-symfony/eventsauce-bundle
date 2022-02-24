@@ -796,7 +796,7 @@ final class AndreoEventSauceExtension extends Extension
             ->setPublic(false)
         ;
 
-        $container->setAlias($repositoryAlias, "andreo.event_sauce.aggregate_snapshotting_repository.$aggregateName");
+        $container->setAlias($repositoryAlias, "andreo.event_sauce.aggregate_repository.$aggregateName");
         $container->registerAliasForArgument($repositoryAlias, AggregateRootRepositoryWithSnapshotting::class);
     }
 }
