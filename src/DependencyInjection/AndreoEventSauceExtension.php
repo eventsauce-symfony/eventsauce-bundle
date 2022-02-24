@@ -175,7 +175,7 @@ final class AndreoEventSauceExtension extends Extension
             $container
                 ->register('andreo.event_sauce.aggregate_message_decorator_chain', MessageDecoratorChain::class)
                 ->addArgument(new TaggedIteratorArgument('andreo.event_sauce.aggregate_message_decorator'))
-                ->setFactory([MessageDecoratorChainFactory::class, '__invoke'])
+                ->setFactory([MessageDecoratorChainFactory::class, 'create'])
                 ->setPublic(false)
             ;
 
