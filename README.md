@@ -586,8 +586,9 @@ services:
         class: Symfony\Component\Serializer\SerializerInterface
         factory: [!service { class: Andreo\EventSauce\Serialization\SymfonySerializerFactory }, 'create' ]
         arguments:
-            - '@serializer.normalizer.property' # if you want to serialize objects with private constructors
-            - '@serializer.normalizer.datetime' # if you want to serialize DataTimeInterface objects
+            - 
+                - '@serializer.normalizer.property' # if you want to serialize objects with private constructors
+                - '@serializer.normalizer.datetime' # if you want to serialize DataTimeInterface objects
 ```
 
 
