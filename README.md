@@ -554,7 +554,7 @@ and default doctrine migration command
 php bin/console d:m:m
 ```
 
-### Serialization
+### Payload serialization
 
 #### Symfony payload serializer
 
@@ -575,24 +575,57 @@ andreo_event_sauce:
     payload_serializer: Andreo\EventSauce\Serialization\SymfonyPayloadSerializer # or your custom serializer
 ```
 
-#### Custom normalizers
+If you are using symfony/framework-bundle,
+I recommend disable a default 
+serializer configuration and configuring it as needed
 
-If you want to use custom normalizers you have to 
-overwrite the default serializer alias. For example
+```yaml
+framework:
+    # ...
+    serializer: false
+```
+
+#### Normalizers
+
+Registered by default:
+
+- Symfony\Component\Serializer\Normalizer\PropertyNormalizer // serialize objects with private constructor
+- Symfony\Component\Serializer\Normalizer\DateTimeNormalizer
+- Symfony\Component\Serializer\Normalizer\ArrayDenormalizer
+- Symfony\Component\Serializer\Normalizer\ObjectNormalizer // works with nested objects
+
+If you can add normalizer, you have to configure it 
 
 ```yaml
 services:
-    andreo.event_sauce.symfony_serializer:
-        class: Symfony\Component\Serializer\SerializerInterface
-        factory: [!service { class: Andreo\EventSauce\Serialization\SymfonySerializerFactory }, 'create' ]
-        arguments:
-            - 
-                - '@serializer.normalizer.property' # if you want to serialize objects with private constructors
-                - '@serializer.normalizer.datetime' # if you want to serialize DataTimeInterface objects
+    App\Serializer\Normalizer\CustomNormalizer:
+        public: false
+        lazy: true
+        tags:
+            - { name: andreo.event_sauce.symfony_serializer.normalizer, priority: 70}
+
 ```
 
+#### Encoders
 
-#### Message serializer  for MySQL8
+Registered by default:
+
+- Symfony\Component\Serializer\Encoder\JsonEncoder
+
+If you can add encoder, you have to configure it
+
+```yaml
+services:
+    App\Serializer\Encoder\CustomEncoder:
+        public: false
+        tags:
+            - { name: andreo.event_sauce.symfony_serializer.encoder }
+
+```
+
+### Message serialization
+
+#### Message serializer if you use MySQL8
 
 ```yaml
 andreo_event_sauce:

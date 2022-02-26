@@ -15,7 +15,7 @@ services:
     Symfony\Component\Serializer\Encoder\JsonEncoder:
         public: false
         tags:
-            - { name: andreo.event_sauce.symfony_serializer.encoder, priority: 100 }
+            - { name: andreo.event_sauce.symfony_serializer.encoder }
 
     Symfony\Component\Serializer\Normalizer\PropertyNormalizer:
         public: false
