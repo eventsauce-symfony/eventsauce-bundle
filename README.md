@@ -558,7 +558,7 @@ php bin/console d:m:m
 
 #### Symfony payload serializer
 
-The default serializer is [ConstructingPayloadSerializer](https://eventsauce.io/docs/event-sourcing/create-events-and-commands/#to-and-from-payload)
+Default payload serializer is [ConstructingPayloadSerializer](https://eventsauce.io/docs/event-sourcing/create-events-and-commands/#to-and-from-payload)
 
 If you don't want to build payload yourself, you can use the symfony serializer
 
