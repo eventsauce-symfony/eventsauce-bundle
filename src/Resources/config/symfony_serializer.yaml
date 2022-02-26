@@ -4,7 +4,7 @@ services:
     andreo.event_sauce.symfony_serializer:
         class: Symfony\Component\Serializer\SerializerInterface
         public: false
-        factory: [!service { class: Andreo\EventSauce\Serialization\SymfonySerializerFactory }, 'create' ]
+        factory: ['@Andreo\EventSauce\Serialization\SymfonySerializerFactory', 'create']
         arguments:
             - !tagged_iterator andreo.event_sauce.symfony_serializer.normalizer
             - !tagged_iterator andreo.event_sauce.symfony_serializer.encoder
