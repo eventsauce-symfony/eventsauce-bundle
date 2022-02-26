@@ -21,7 +21,6 @@
         "andreo/eventsauce-generate-migration": "Command that generates doctrine migrations per aggregate of the EventSauce",
         "andreo/eventsauce-messenger": "Integration symfony messenger with the EventSauce",
         "andreo/eventsauce-outbox": "Extended message outbox components of the EventSauce",
-        "andreo/eventsauce-symfony-serializer": "Custom symfony payload serializer of the EventSauce",
         "andreo/eventsauce-upcasting": "Extended upcasting components of the EventSauce"
     },
     "require": {
@@ -38,7 +37,6 @@
         "andreo/eventsauce-messenger": "dev-main",
         "andreo/eventsauce-outbox": "dev-main",
         "andreo/eventsauce-snapshotting": "dev-main",
-        "andreo/eventsauce-symfony-serializer": "dev-main",
         "andreo/eventsauce-upcasting": "dev-main",
         "doctrine/doctrine-migrations-bundle": "^3.0",
         "matthiasnoback/symfony-dependency-injection-test": "^4.3",

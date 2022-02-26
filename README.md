@@ -554,78 +554,9 @@ and default doctrine migration command
 php bin/console d:m:m
 ```
 
-### Payload serialization
+### Serialization
 
-#### Symfony payload serializer
-
-Default payload serializer is [ConstructingPayloadSerializer](https://eventsauce.io/docs/event-sourcing/create-events-and-commands/#to-and-from-payload)
-
-If you don't want to build payload yourself, you can use the symfony serializer
-
-You need install the [package](https://github.com/andrew-pakula/eventsauce-symfony-serializer).
-
-```bash
-composer require andreo/eventsauce-symfony-serializer
-```
-
-and add the following configuration
-
-```yaml
-andreo_event_sauce:
-    payload_serializer: Andreo\EventSauce\Serialization\SymfonyPayloadSerializer # or your custom serializer
-```
-
-If you are using symfony/framework-bundle,
-I recommend disable a default
-serializer configuration and configuring it as needed
-
-```yaml
-framework:
-    # ...
-    serializer: false
-```
-
-#### Normalizers
-
-Registered by default:
-
-- Symfony\Component\Serializer\Normalizer\PropertyNormalizer // serialize objects with private constructor
-- Symfony\Component\Serializer\Normalizer\DateTimeNormalizer
-- Symfony\Component\Serializer\Normalizer\ArrayDenormalizer
-- Symfony\Component\Serializer\Normalizer\ObjectNormalizer // works with nested objects
-
-If you can add normalizer, you have to configure it
-
-```yaml
-services:
-    App\Serializer\Normalizer\CustomNormalizer:
-        public: false
-        lazy: true
-        tags:
-            - { name: andreo.event_sauce.symfony_serializer.normalizer, priority: 70}
-
-```
-
-#### Encoders
-
-Registered by default:
-
-- Symfony\Component\Serializer\Encoder\JsonEncoder
-
-If you can add encoder, you have to configure it
-
-```yaml
-services:
-    App\Serializer\Encoder\CustomEncoder:
-        public: false
-        tags:
-            - { name: andreo.event_sauce.symfony_serializer.encoder }
-
-```
-
-### Message serialization
-
-#### Message serializer if you use MySQL8
+#### Message serializer for MySQL8
 
 ```yaml
 andreo_event_sauce:

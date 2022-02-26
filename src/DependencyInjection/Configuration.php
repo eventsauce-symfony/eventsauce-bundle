@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Andreo\EventSauceBundle\DependencyInjection;
 
-use Andreo\EventSauce\Serialization\SymfonyPayloadSerializer;
 use Andreo\EventSauce\Snapshotting\ConstructingSnapshotStateSerializer;
 use EventSauce\Clock\SystemClock;
 use EventSauce\EventSourcing\DotSeparatedSnakeCaseInflector;
@@ -411,8 +410,7 @@ final class Configuration implements ConfigurationInterface
         ->defaultNull()
         ->info(
             sprintf(
-                'You can set a custom serializer here, or choose from one of the existing: %s. Default is: %s',
-                $this->implode([ConstructingPayloadSerializer::class, SymfonyPayloadSerializer::class]),
+                'You can set a custom serializer here. Default is: %s',
                 ConstructingPayloadSerializer::class
             ))
         ->end();

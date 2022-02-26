@@ -12,7 +12,6 @@ use Andreo\EventSauce\Messenger\MessengerMessageDispatcher;
 use Andreo\EventSauce\Outbox\EventSourcedAggregateRootRepositoryForOutbox;
 use Andreo\EventSauce\Outbox\ForwardingMessageConsumer;
 use Andreo\EventSauce\Outbox\OutboxProcessMessagesCommand;
-use Andreo\EventSauce\Serialization\SymfonyPayloadSerializer;
 use Andreo\EventSauce\Snapshotting\AggregateRootRepositoryWithSnapshottingAndStoreStrategy;
 use Andreo\EventSauce\Snapshotting\AggregateRootRepositoryWithVersionedSnapshotting;
 use Andreo\EventSauce\Snapshotting\CanStoreSnapshotStrategy;
@@ -421,15 +420,6 @@ final class AndreoEventSauceExtension extends Extension
 
     private function loadPayloadSerializer(ContainerBuilder $container, YamlFileLoader $loader, array $config): void
     {
-        $payloadSerializer = $config['payload_serializer'];
-        if (SymfonyPayloadSerializer::class === $payloadSerializer) {
-            if (!class_exists(SymfonyPayloadSerializer::class)) {
-                throw new LogicException('Symfony payload serializer is not available. Try running "composer require andreo/eventsauce-symfony-serializer".');
-            }
-
-            $loader->load('symfony_serializer.yaml');
-        }
-
         $payloadSerializerServiceId = $config['payload_serializer'];
         if (!in_array($payloadSerializerServiceId, [null, PayloadSerializer::class, ConstructingPayloadSerializer::class], true)) {
             $container->setAlias(PayloadSerializer::class, $payloadSerializerServiceId);
