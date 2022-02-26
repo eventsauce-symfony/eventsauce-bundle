@@ -47,14 +47,18 @@ services:
     Symfony\Component\PropertyInfo\PropertyInfoExtractor:
         public: false
         arguments:
-            $typeExtractors:
+            - []
+            -
                 - '@Symfony\Component\PropertyInfo\Extractor\ConstructorExtractor'
                 - '@Symfony\Component\PropertyInfo\Extractor\PhpDocExtractor'
 
     Symfony\Component\Serializer\Normalizer\ObjectNormalizer:
         public: false
         arguments:
-            $propertyTypeExtractor: '@Symfony\Component\PropertyInfo\PropertyInfoExtractor'
+            - null
+            - null
+            - null
+            - '@Symfony\Component\PropertyInfo\PropertyInfoExtractor'
         tags:
             - { name: andreo.event_sauce.symfony_serializer.normalizer, priority: 0 }
 
