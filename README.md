@@ -6,7 +6,7 @@
 
 # EventSauceBundle (BETA)
 
-This bundle provides the basic and extended container configuration of 
+This bundle provides the basic and extended container configuration of
 symfony for the [EventSauce](https://eventsauce.io/) library.
 Before using it, I strongly recommend that you read the official [documentation](https://eventsauce.io/docs/).
 
@@ -44,7 +44,7 @@ return [
 
 ### Timezone
 
-You probably want to set your time zone. 
+You probably want to set your time zone.
 
 ```yaml
 andreo_event_sauce:
@@ -54,7 +54,7 @@ andreo_event_sauce:
 
 ### Doctrine connection
 
-Perhaps you want to set doctrine dbal connection. 
+Perhaps you want to set doctrine dbal connection.
 Default value is **doctrine.dbal.default_connection**.
 If you don't have doctrine dbal config, try install
 
@@ -140,7 +140,7 @@ The mode option is a way of dispatch messages. Available values:
 
 `event` (default)
 
-- Event is only dispatch to the handler that supports the event type 
+- Event is only dispatch to the handler that supports the event type
 - Doesn't dispatch headers
 
 `event_and_headers`
@@ -167,8 +167,8 @@ andreo_event_sauce:
 
 #### Event Dispatcher
 
-Sometimes you may want to use dispatch messages in a 
-context other than aggregate. You can do this with the 
+Sometimes you may want to use dispatch messages in a
+context other than aggregate. You can do this with the
 [Event Dispatcher](https://eventsauce.io/docs/utilities/event-dispatcher/#main-article)
 
 To enable it use this configuration
@@ -213,8 +213,8 @@ andreo_event_sauce:
             class: App\Domain\Bar
 ```
 
-Then you can inject the repository based on the alias and dedicated 
-interface. By default, alias is created automatically 
+Then you can inject the repository based on the alias and dedicated
+interface. By default, alias is created automatically
 by convention "${name}Repository"
 
 ```php
@@ -231,7 +231,7 @@ final class SomeHandler {
 
 #### Message dispatching
 
-By default, messages are dispatch by all dispatchers, 
+By default, messages are dispatch by all dispatchers,
 but you can specify them per aggregate.
 
 ```yaml
@@ -297,13 +297,13 @@ andreo_event_sauce:
 
 #### Outbox repository
 
-By default, outbox messages are stored in a database. 
+By default, outbox messages are stored in a database.
 If you want to store them in a memory, add the following configuration
 
 ```yaml
 andreo_event_sauce:
     outbox:
-        repository: 
+        repository:
             memory: true # default is doctrine
 ```
 
@@ -353,7 +353,7 @@ composer require andreo/eventsauce-snapshotting
 #### Snapshot Doctrine repository
 
 By default, snapshots are stored in a memory.
-If you want to store them in a database with doctrine, 
+If you want to store them in a database with doctrine,
 add the following configuration
 
 ```yaml
@@ -494,7 +494,7 @@ andreo_event_sauce:
 
 #### Message decorating context
 
-In this bundle, messages can be decorated at the aggregate level, 
+In this bundle, messages can be decorated at the aggregate level,
 or at a completely different level of the event dispatcher.
 You can specify the context in which the decorator is to be used
 
@@ -522,8 +522,8 @@ final class SomeDecorator implements MessageDecorator
 This bundle uses the **all events in table per aggregate** approach.
 Event messages, outbox messages, and snapshots are stored in a separate table per aggregate type
 
-To simplify the creation of migrations, 
-I have created a [package](https://github.com/andrew-pakula/eventsauce-generate-migration) that allows you to automatically 
+To simplify the creation of migrations,
+I have created a [package](https://github.com/andrew-pakula/eventsauce-generate-migration) that allows you to automatically
 generate migrations based on the name of the aggregate.
 More information in the documentation
 
@@ -559,7 +559,7 @@ php bin/console d:m:m
 #### Symfony payload serializer
 
 The default serializer is [ConstructingPayloadSerializer](https://eventsauce.io/docs/event-sourcing/create-events-and-commands/#to-and-from-payload)
- 
+
 If you don't want to build payload yourself, you can use the symfony serializer
 
 You need install the [package](https://github.com/andrew-pakula/eventsauce-symfony-serializer).
@@ -576,7 +576,7 @@ andreo_event_sauce:
 ```
 
 If you are using symfony/framework-bundle,
-I recommend disable a default 
+I recommend disable a default
 serializer configuration and configuring it as needed
 
 ```yaml
@@ -594,7 +594,7 @@ Registered by default:
 - Symfony\Component\Serializer\Normalizer\ArrayDenormalizer
 - Symfony\Component\Serializer\Normalizer\ObjectNormalizer // works with nested objects
 
-If you can add normalizer, you have to configure it 
+If you can add normalizer, you have to configure it
 
 ```yaml
 services:
