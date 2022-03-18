@@ -5,19 +5,18 @@ declare(strict_types=1);
 namespace Andreo\EventSauceBundle\DependencyInjection;
 
 use Andreo\EventSauce\Snapshotting\ConstructingSnapshotStateSerializer;
+use Doctrine\Bundle\MigrationsBundle\DoctrineMigrationsBundle;
 use EventSauce\Clock\SystemClock;
 use EventSauce\EventSourcing\DotSeparatedSnakeCaseInflector;
 use EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer;
 use EventSauce\EventSourcing\Serialization\ConstructingPayloadSerializer;
 use EventSauce\MessageRepository\TableSchema\DefaultTableSchema;
 use EventSauce\UuidEncoding\BinaryUuidEncoder;
-use EventSauce\UuidEncoding\StringUuidEncoder;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\ScalarNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
-use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 
 final class Configuration implements ConfigurationInterface
 {
@@ -41,21 +40,27 @@ final class Configuration implements ConfigurationInterface
 
     public function getConfigTreeBuilder(): TreeBuilder
     {
-        $treeBuilder = new TreeBuilder('andreo_event_sauce');
+        $treeBuilder = new TreeBuilder('andreo_eventsauce');
         /** @var ArrayNodeDefinition $rootNode */
         $rootNode = $treeBuilder->getRootNode();
 
         $rootNode
             ->children()
                 ->append($this->getTimeSection())
-                ->append($this->getMessageSection())
+                ->append($this->getMessageStorageSection())
+                ->append($this->getMessengerMessageDispatcherSection())
+                ->append($this->getAclSection())
+                ->append($this->getMessageDecoratorSection())
+                ->append($this->getSynchronousMessageDispatcherSection())
+                ->append($this->getEventDispatcherSection())
                 ->append($this->getOutboxSection())
                 ->append($this->getSnapshotSection())
-                ->append($this->getUpcastSection())
+                ->append($this->getUpcasterSection())
                 ->append($this->getAggregatesSection())
-                ->append($this->getPayloadSerializerSection())
+                ->append($this->getSerializerSection())
                 ->append($this->getClassNameInflectorSection())
                 ->append($this->getUuidEncoderSection())
+                ->append($this->getMigrationGeneratorSection())
             ->end();
 
         return $treeBuilder;
@@ -67,7 +72,7 @@ final class Configuration implements ConfigurationInterface
         $node
             ->addDefaultsIfNotSet()
             ->children()
-                ->scalarNode('recording_timezone')
+                ->scalarNode('timezone')
                     ->cannotBeEmpty()
                     ->defaultValue('UTC')
                 ->end()
@@ -75,7 +80,7 @@ final class Configuration implements ConfigurationInterface
                     ->defaultNull()
                     ->info(
                         sprintf(
-                            'You can set a custom clock here. Default is: %s',
+                            'Clock implementation. Default is: %s',
                             SystemClock::class
                         ))
                 ->end()
@@ -84,109 +89,236 @@ final class Configuration implements ConfigurationInterface
         return $node;
     }
 
-    private function getMessageSection(): NodeDefinition
+    private function getMessageStorageSection(): NodeDefinition
     {
-        $node = new ArrayNodeDefinition('message');
+        $node = new ArrayNodeDefinition('event_store');
         $node
             ->addDefaultsIfNotSet()
             ->children()
-                ->append($this->getMessageRepositorySection())
-                ->scalarNode('serializer')
-                    ->defaultNull()
-                    ->info(
-                        sprintf(
-                            'You can set a custom message serializer here. Default is: %s',
-                            ConstructingMessageSerializer::class
-                        ))
+                ->arrayNode('repository')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->arrayNode('json_encode_options')
+                            ->normalizeKeys(false)
+                            ->scalarPrototype()
+                                ->validate()
+                                    ->ifNotInArray(self::JSON_OPTIONS)
+                                    ->thenInvalid('Invalid JSON options.')
+                                ->end()
+                            ->end()
+                        ?->end()
+                        ->arrayNode('doctrine')
+                            ->addDefaultsIfNotSet()
+                            ->children()
+                                ->scalarNode('connection')
+                                    ->cannotBeEmpty()
+                                    ->defaultValue('doctrine.dbal.default_connection')
+                                ->end()
+                                ?->scalarNode('table_schema')
+                                    ->defaultNull()
+                                    ->info(
+                                        sprintf(
+                                            'TableSchema implementation. Default is: %s',
+                                            DefaultTableSchema::class
+                                        )
+                                    )
+                                ->end()
+                                ?->scalarNode('table_name')
+                                    ->info('Table name suffix.')
+                                    ->cannotBeEmpty()
+                                    ->defaultValue('event_store')
+                                ->end()
+                            ?->end()
+                        ->end()
+                    ->end()
                 ->end()
-                ?->append($this->getDispatcherSection())
-                ?->arrayNode('decorator')->canBeDisabled()->end()
             ?->end();
 
         return $node;
     }
 
-    private function getMessageRepositorySection(): NodeDefinition
+    private function getMigrationGeneratorSection(): NodeDefinition
     {
-        $node = new ArrayNodeDefinition('repository');
+        $node = new ArrayNodeDefinition('migration_generator');
+
         $node
+            ->canBeEnabled()
+            ->children()
+                ->scalarNode('dependency_factory')
+                    ->defaultValue(class_exists(DoctrineMigrationsBundle::class) ? 'doctrine.migrations.dependency_factory' : null)
+                    ->cannotBeEmpty()
+                ->end()
+            ?->end();
+
+        return $node;
+    }
+
+    private function getAclSection(): NodeDefinition
+    {
+        $node = new ArrayNodeDefinition('acl');
+        $node
+            ->canBeEnabled()
             ->addDefaultsIfNotSet()
             ->children()
-                ->arrayNode('json_encode_options')
-                    ->normalizeKeys(false)
-                    ->scalarPrototype()
-                        ->validate()
-                            ->ifNotInArray(self::JSON_OPTIONS)
-                            ->thenInvalid('Invalid JSON options.')
-                        ->end()
-                    ->end()
-                ?->end()
-                ->arrayNode('doctrine')
+                ->arrayNode('outbound')
+                    ->canBeDisabled()
                     ->addDefaultsIfNotSet()
                     ->children()
-                        ->scalarNode('connection')->cannotBeEmpty()->defaultValue('doctrine.dbal.default_connection')->end()
-                        ?->scalarNode('table_schema')
-                            ->defaultNull()
-                            ->info(
-                                sprintf(
-                                    'You can set a custom message table schema here. Default is: %s',
-                                    DefaultTableSchema::class
-                                ))
-                        ->end()
-                        ?->scalarNode('table_name')
-                            ->info('Table name suffix.')
-                            ->cannotBeEmpty()
-                            ->defaultValue('event_message')
+                        ->arrayNode('filter_chain')
+                            ->addDefaultsIfNotSet()
+                            ->children()
+                                ->enumNode('before_translate')
+                                    ->values(['match_all', 'match_any'])
+                                    ->cannotBeEmpty()
+                                    ->defaultValue('match_all')
+                                ->end()
+                                ?->enumNode('after_translate')
+                                    ->values(['match_all', 'match_any'])
+                                    ->cannotBeEmpty()
+                                    ->defaultValue('match_all')
+                                ->end()
+                            ?->end()
                         ->end()
                     ?->end()
                 ->end()
+                ?->arrayNode('inbound')
+                    ->canBeDisabled()
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->arrayNode('filter_chain')
+                            ->children()
+                                ->enumNode('before_translate')
+                                    ->values(['match_all', 'match_any'])
+                                    ->cannotBeEmpty()
+                                    ->defaultValue('match_all')
+                                ->end()
+                                ?->enumNode('after_translate')
+                                    ->values(['match_all', 'match_any'])
+                                    ->cannotBeEmpty()
+                                    ->defaultValue('match_all')
+                                ->end()
+                            ?->end()
+                        ->end()
+                    ?->end()
+                ->end()
+            ?->end();
+
+        return $node;
+    }
+
+    private function getMessageDecoratorSection(): NodeDefinition
+    {
+        $node = new ArrayNodeDefinition('message_decorator');
+        $node
+            ->canBeDisabled()
             ->end();
 
         return $node;
     }
 
-    private function getDispatcherSection(): NodeDefinition
+    private function getSynchronousMessageDispatcherSection(): NodeDefinition
     {
-        $node = new ArrayNodeDefinition('dispatcher');
+        $node = new ArrayNodeDefinition('synchronous_message_dispatcher');
         $node
+            ->canBeEnabled()
             ->addDefaultsIfNotSet()
-            ->validate()
-                ->always(static function (array $values): array {
-                    $messenger = $values['messenger'];
-                    if ($messenger['enabled']) {
-                        foreach ($values['chain'] as $alias => $busAlias) {
-                            if (empty($busAlias)) {
-                                throw new InvalidConfigurationException('If you use symfony messenger you must specify your message bus alias.');
-                            }
-                            if ($alias === $busAlias) {
-                                throw new InvalidConfigurationException('Dispatcher alias must by different than messenger bus alias.');
-                            }
-                            if (is_numeric($alias)) {
-                                throw new InvalidConfigurationException('Dispatcher alias must by string.');
-                            }
-                        }
-                    }
-
-                    return $values;
-                })
-            ->end()
             ->children()
-                ->arrayNode('messenger')
-                    ->canBeEnabled()
-                    ->children()
-                        ->enumNode('mode')
-                            ->info('What is to be sent from an aggregate.')
-                            ->values(['event', 'message', 'event_and_headers'])
-                            ->defaultValue('event')
-                        ->end()
-                    ?->end()
-                ->end()
-                ->arrayNode('event_dispatcher')->canBeEnabled()->end()
-                ?->arrayNode('chain')
+                ->arrayNode('chain')
                     ->normalizeKeys(false)
-                    ->scalarPrototype()->end()
+                    ->validate()
+                        ->ifTrue(static function (array $config) {
+                            foreach (array_keys($config) as $key) {
+                                if (is_numeric($key)) {
+                                    return true;
+                                }
+                            }
+
+                            return false;
+                        })
+                        ->thenInvalid('Dispatcher alias must be string')
+                    ->end()
+                    ->arrayPrototype()
+                        ->children()
+                            ?->arrayNode('acl')->canBeEnabled()->end()
+                        ?->end()
+                    ->end()
                 ?->end()
             ->end();
+
+        return $node;
+    }
+
+    private function getMessengerMessageDispatcherSection(): NodeDefinition
+    {
+        $node = new ArrayNodeDefinition('messenger_message_dispatcher');
+        $node
+            ->canBeEnabled()
+            ->addDefaultsIfNotSet()
+            ->children()
+                ->arrayNode('chain')
+                    ->normalizeKeys(false)
+                    ->validate()
+                        ->ifTrue(static function (array $config) {
+                            foreach (array_keys($config) as $key) {
+                                if (is_numeric($key)) {
+                                    return true;
+                                }
+                            }
+
+                            return false;
+                        })
+                        ->thenInvalid('Dispatcher alias must be string')
+                    ->end()
+                    ->arrayPrototype()
+                        ->children()
+                            ?->scalarNode('bus')->cannotBeEmpty()->isRequired()->end()
+                            ?->arrayNode('acl')->canBeEnabled()->end()
+                        ?->end()
+                    ->end()
+                ?->end()
+            ->end();
+
+        return $node;
+    }
+
+    private function getEventDispatcherSection(): NodeDefinition
+    {
+        $node = new ArrayNodeDefinition('event_dispatcher');
+        $node
+            ->canBeEnabled()
+            ->addDefaultsIfNotSet()
+            ->children()
+                ->arrayNode('outbox')
+                    ->canBeEnabled()
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->arrayNode('repository')
+                            ->info('Repository type.')
+                            ->addDefaultsIfNotSet()
+                            ->validate()
+                                ->ifTrue(static fn (array $config) => $config['memory']['enabled'] && $config['doctrine']['enabled'])
+                                ->thenInvalid('Only one type of event outbox repository can be set: memory or doctrine')
+                            ->end()
+                            ->children()
+                                ->arrayNode('memory')
+                                    ->canBeEnabled()
+                                ->end()
+                                ?->arrayNode('doctrine')
+                                    ->canBeEnabled()
+                                    ->addDefaultsIfNotSet()
+                                    ->children()
+                                        ->scalarNode('table_name')
+                                            ->info('Table name suffix.')
+                                            ->cannotBeEmpty()
+                                            ->defaultValue('_outbox_message')
+                                        ->end()
+                                    ?->end()
+                                ->end()
+                            ->end()
+                        ->end()
+                    ->end()
+                ->end()
+            ?->end();
 
         return $node;
     }
@@ -291,7 +423,7 @@ final class Configuration implements ConfigurationInterface
                     ?->end()
                 ->end()
                 ->arrayNode('repository')
-                    ->info('Only one type of repository can be selected.')
+                    ->info('Repository type.')
                     ->addDefaultsIfNotSet()
                     ->validate()
                         ->ifTrue(static fn (array $config) => $config['memory']['enabled'] && $config['doctrine']['enabled'])
@@ -327,7 +459,7 @@ final class Configuration implements ConfigurationInterface
             ->addDefaultsIfNotSet()
             ->children()
                 ->arrayNode('repository')
-                    ->info('Only one type of repository can be selected.')
+                    ->info('Repository type.')
                     ->addDefaultsIfNotSet()
                     ->validate()
                         ->ifTrue(static fn (array $config) => $config['memory']['enabled'] && $config['doctrine']['enabled'])
@@ -377,43 +509,56 @@ final class Configuration implements ConfigurationInterface
                         ->end()
                     ?->end()
                 ->end()
-                ->scalarNode('serializer')
-                    ->defaultNull()
-                    ->info(
-                        sprintf(
-                            'You can set a custom snapshot state serializer here. Default is: %s',
-                            ConstructingSnapshotStateSerializer::class
-                        ))
-                ->end()
             ?->end();
 
         return $node;
     }
 
-    private function getUpcastSection(): NodeDefinition
+    private function getUpcasterSection(): NodeDefinition
     {
-        $node = new ArrayNodeDefinition('upcast');
+        $node = new ArrayNodeDefinition('upcaster');
         $node
             ->canBeEnabled()
             ->addDefaultsIfNotSet()
             ->children()
-                ->enumNode('context')->values(['payload', 'message'])->defaultValue('payload')->end()
+                ->enumNode('argument')->values(['payload', 'message'])->defaultValue('payload')->end()
             ?->end();
 
         return $node;
     }
 
-    public function getPayloadSerializerSection(): NodeDefinition
+    public function getSerializerSection(): NodeDefinition
     {
-        $node = new ScalarNodeDefinition('payload_serializer');
+        $node = new ArrayNodeDefinition('serializer');
         $node
-        ->defaultNull()
-        ->info(
-            sprintf(
-                'You can set a custom serializer here. Default is: %s',
-                ConstructingPayloadSerializer::class
-            ))
-        ->end();
+            ->addDefaultsIfNotSet()
+            ->children()
+                ->scalarNode('payload')
+                    ->info(
+                        sprintf(
+                            'PayloadSerializer implementation. Default is: %s',
+                            ConstructingPayloadSerializer::class
+                        ))
+                    ->defaultNull()
+                ->end()
+                ?->scalarNode('message')
+                    ->info(
+                        sprintf(
+                            'MessageSerializer implementation. Default is: %s',
+                            ConstructingMessageSerializer::class
+                        ))
+                    ->defaultNull()
+                ->end()
+                ?->scalarNode('snapshot')
+                    ->defaultNull()
+                    ->info(
+                        sprintf(
+                            'SnapshotStateSerializer implementation. Default is: %s',
+                            ConstructingSnapshotStateSerializer::class
+                        )
+                    )
+                ->end()
+            ?->end();
 
         return $node;
     }
@@ -425,7 +570,7 @@ final class Configuration implements ConfigurationInterface
             ->defaultNull()
             ->info(
                 sprintf(
-                    'You can set a custom class name inflector here. Default is: %s',
+                    'ClassNameInflector implementation. Default is: %s',
                     DotSeparatedSnakeCaseInflector::class
                 ))
             ->end();
@@ -440,8 +585,7 @@ final class Configuration implements ConfigurationInterface
             ->defaultNull()
             ->info(
                 sprintf(
-                    'You can set a custom uuid encoder here, or choose from one of the existing: %s. Default is: %s',
-                    $this->implode([BinaryUuidEncoder::class, StringUuidEncoder::class]),
+                    'UuidEncoder implementation. Default is: %s',
                     BinaryUuidEncoder::class
                 ))
             ->end()

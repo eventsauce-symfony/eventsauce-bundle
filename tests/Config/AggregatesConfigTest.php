@@ -64,17 +64,17 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
             ],
         ]);
 
-        $this->assertContainerBuilderHasService('andreo.event_sauce.message_repository.foo');
-        $definition = $this->container->getDefinition('andreo.event_sauce.message_repository.foo');
+        $this->assertContainerBuilderHasService('andreo.eventsauce.message_repository.foo');
+        $definition = $this->container->getDefinition('andreo.eventsauce.message_repository.foo');
         $this->assertEquals(DoctrineUuidV4MessageRepository::class, $definition->getClass());
 
-        $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher_chain.foo');
-        $dispatcherChainDef = $this->container->getDefinition('andreo.event_sauce.message_dispatcher_chain.foo');
+        $this->assertContainerBuilderHasService('andreo.eventsauce.message_dispatcher_chain.foo');
+        $dispatcherChainDef = $this->container->getDefinition('andreo.eventsauce.message_dispatcher_chain.foo');
         $this->assertInstanceOf(IteratorArgument::class, $argument = $dispatcherChainDef->getArgument(0));
         $this->assertCount(2, $argument->getValues());
 
         $this->assertContainerBuilderHasAlias('fooRepository');
-        $repositoryDef = $this->container->getDefinition('andreo.event_sauce.aggregate_repository.foo');
+        $repositoryDef = $this->container->getDefinition('andreo.eventsauce.aggregate_repository.foo');
         $this->assertEquals(EventSourcedAggregateRootRepository::class, $repositoryDef->getClass());
     }
 
@@ -102,8 +102,8 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
             ],
         ]);
 
-        $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher_chain.baz');
-        $dispatcherChainDef = $this->container->getDefinition('andreo.event_sauce.message_dispatcher_chain.baz');
+        $this->assertContainerBuilderHasService('andreo.eventsauce.message_dispatcher_chain.baz');
+        $dispatcherChainDef = $this->container->getDefinition('andreo.eventsauce.message_dispatcher_chain.baz');
         $this->assertInstanceOf(IteratorArgument::class, $argument = $dispatcherChainDef->getArgument(0));
         $this->assertCount(2, $argument->getValues());
     }
@@ -136,21 +136,21 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
             ],
         ]);
 
-        $this->assertContainerBuilderHasService('andreo.event_sauce.message_repository.bar');
-        $definition = $this->container->getDefinition('andreo.event_sauce.message_repository.bar');
+        $this->assertContainerBuilderHasService('andreo.eventsauce.message_repository.bar');
+        $definition = $this->container->getDefinition('andreo.eventsauce.message_repository.bar');
         $this->assertEquals(DoctrineTransactionalMessageRepository::class, $definition->getClass());
 
-        $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher_chain.bar');
-        $dispatcherChainDef = $this->container->getDefinition('andreo.event_sauce.message_dispatcher_chain.bar');
+        $this->assertContainerBuilderHasService('andreo.eventsauce.message_dispatcher_chain.bar');
+        $dispatcherChainDef = $this->container->getDefinition('andreo.eventsauce.message_dispatcher_chain.bar');
         $this->assertInstanceOf(IteratorArgument::class, $argument = $dispatcherChainDef->getArgument(0));
         $this->assertCount(1, $argument->getValues());
 
         $this->assertContainerBuilderHasAlias('barRepository');
-        $repositoryDef = $this->container->getDefinition('andreo.event_sauce.aggregate_repository.bar');
+        $repositoryDef = $this->container->getDefinition('andreo.eventsauce.aggregate_repository.bar');
         $this->assertEquals(EventSourcedAggregateRootRepositoryForOutbox::class, $repositoryDef->getClass());
 
-        $outboxProcessMessagesCommand = $this->container->findTaggedServiceIds('andreo.event_sauce.outbox_relay');
-        $this->assertArrayHasKey('andreo.event_sauce.outbox_relay.bar', $outboxProcessMessagesCommand);
+        $outboxProcessMessagesCommand = $this->container->findTaggedServiceIds('andreo.eventsauce.outbox_relay');
+        $this->assertArrayHasKey('andreo.eventsauce.outbox_relay.bar', $outboxProcessMessagesCommand);
     }
 
     /**
@@ -185,8 +185,8 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
             ],
         ]);
 
-        $this->assertContainerBuilderHasService('andreo.event_sauce.message_repository.bar');
-        $aggregateRepositoryDefinition = $this->container->getDefinition('andreo.event_sauce.message_repository.bar');
+        $this->assertContainerBuilderHasService('andreo.eventsauce.message_repository.bar');
+        $aggregateRepositoryDefinition = $this->container->getDefinition('andreo.eventsauce.message_repository.bar');
         /** @var Definition $outboxRepositoryDef */
         $outboxRepositoryDef = $this->container->getDefinition($aggregateRepositoryDefinition->getArgument(2)->__toString());
         $this->assertEquals(DoctrineOutboxRepository::class, $outboxRepositoryDef->getClass());
@@ -218,8 +218,8 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
             ],
         ]);
 
-        $this->assertContainerBuilderHasService('andreo.event_sauce.message_repository.bar');
-        $aggregateRepositoryDefinition = $this->container->getDefinition('andreo.event_sauce.message_repository.bar');
+        $this->assertContainerBuilderHasService('andreo.eventsauce.message_repository.bar');
+        $aggregateRepositoryDefinition = $this->container->getDefinition('andreo.eventsauce.message_repository.bar');
         /** @var Definition $outboxRepositoryDef */
         $outboxRepositoryDef = $this->container->getDefinition($aggregateRepositoryDefinition->getArgument(2)->__toString());
         $this->assertEquals(DoctrineOutboxRepository::class, $outboxRepositoryDef->getClass());
@@ -255,8 +255,8 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
             ],
         ]);
 
-        $this->assertContainerBuilderHasService('andreo.event_sauce.message_repository.bar');
-        $aggregateRepositoryDefinition = $this->container->getDefinition('andreo.event_sauce.message_repository.bar');
+        $this->assertContainerBuilderHasService('andreo.eventsauce.message_repository.bar');
+        $aggregateRepositoryDefinition = $this->container->getDefinition('andreo.eventsauce.message_repository.bar');
         /** @var Definition $outboxRepositoryDef */
         $outboxRepositoryDef = $this->container->getDefinition($aggregateRepositoryDefinition->getArgument(2)->__toString());
         $this->assertEquals(InMemoryOutboxRepository::class, $outboxRepositoryDef->getClass());
@@ -308,17 +308,17 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
             ],
         ]);
 
-        $this->assertContainerBuilderHasService('andreo.event_sauce.message_repository.baz');
-        $definition = $this->container->getDefinition('andreo.event_sauce.message_repository.baz');
+        $this->assertContainerBuilderHasService('andreo.eventsauce.message_repository.baz');
+        $definition = $this->container->getDefinition('andreo.eventsauce.message_repository.baz');
         $this->assertEquals(DoctrineUuidV4MessageRepository::class, $definition->getClass());
 
-        $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher_chain.baz');
-        $dispatcherChainDef = $this->container->getDefinition('andreo.event_sauce.message_dispatcher_chain.baz');
+        $this->assertContainerBuilderHasService('andreo.eventsauce.message_dispatcher_chain.baz');
+        $dispatcherChainDef = $this->container->getDefinition('andreo.eventsauce.message_dispatcher_chain.baz');
         $this->assertInstanceOf(IteratorArgument::class, $argument = $dispatcherChainDef->getArgument(0));
         $this->assertCount(1, $argument->getValues());
 
         $this->assertContainerBuilderHasAlias('bazRepository');
-        $repositoryDef = $this->container->getDefinition('andreo.event_sauce.aggregate_repository.baz');
+        $repositoryDef = $this->container->getDefinition('andreo.eventsauce.aggregate_repository.baz');
         $this->assertEquals(ConstructingAggregateRootRepositoryWithSnapshotting::class, $repositoryDef->getClass());
     }
 
@@ -353,7 +353,7 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
             ],
         ]);
 
-        $repositoryDef = $this->container->getDefinition('andreo.event_sauce.aggregate_repository.baz');
+        $repositoryDef = $this->container->getDefinition('andreo.eventsauce.aggregate_repository.baz');
         /** @var Definition $snapshotRepositoryDef */
         $snapshotRepositoryDef = $repositoryDef->getArgument(2);
         $this->assertEquals(InMemorySnapshotRepository::class, $snapshotRepositoryDef->getClass());
@@ -386,7 +386,7 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
             ],
         ]);
 
-        $repositoryDef = $this->container->getDefinition('andreo.event_sauce.aggregate_repository.bar');
+        $repositoryDef = $this->container->getDefinition('andreo.eventsauce.aggregate_repository.bar');
         /** @var Definition $snapshotRepositoryDef */
         $snapshotRepositoryDef = $repositoryDef->getArgument(2);
         $this->assertEquals(InMemorySnapshotRepository::class, $snapshotRepositoryDef->getClass());
@@ -426,7 +426,7 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
             ],
         ]);
 
-        $repositoryDef = $this->container->getDefinition('andreo.event_sauce.aggregate_repository.foo');
+        $repositoryDef = $this->container->getDefinition('andreo.eventsauce.aggregate_repository.foo');
         /** @var Definition $snapshotRepositoryDef */
         $snapshotRepositoryDef = $repositoryDef->getArgument(2);
         $this->assertEquals(DoctrineSnapshotRepository::class, $snapshotRepositoryDef->getClass());
@@ -481,17 +481,17 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
             ],
         ]);
 
-        $this->assertContainerBuilderHasService('andreo.event_sauce.message_repository.foo');
-        $definition = $this->container->getDefinition('andreo.event_sauce.message_repository.foo');
+        $this->assertContainerBuilderHasService('andreo.eventsauce.message_repository.foo');
+        $definition = $this->container->getDefinition('andreo.eventsauce.message_repository.foo');
         $this->assertEquals(DoctrineUuidV4MessageRepository::class, $definition->getClass());
 
-        $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher_chain.foo');
-        $dispatcherChainDef = $this->container->getDefinition('andreo.event_sauce.message_dispatcher_chain.foo');
+        $this->assertContainerBuilderHasService('andreo.eventsauce.message_dispatcher_chain.foo');
+        $dispatcherChainDef = $this->container->getDefinition('andreo.eventsauce.message_dispatcher_chain.foo');
         $this->assertInstanceOf(IteratorArgument::class, $argument = $dispatcherChainDef->getArgument(0));
         $this->assertCount(2, $argument->getValues());
 
         $this->assertContainerBuilderHasAlias('customNameRepository');
-        $repositoryDef = $this->container->getDefinition('andreo.event_sauce.aggregate_repository.foo');
+        $repositoryDef = $this->container->getDefinition('andreo.eventsauce.aggregate_repository.foo');
         $this->assertEquals(AggregateRootRepositoryWithVersionedSnapshotting::class, $repositoryDef->getClass());
     }
 
@@ -517,7 +517,7 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
         ]);
 
         $this->assertContainerBuilderHasAlias('barRepository');
-        $repositoryDef = $this->container->getDefinition('andreo.event_sauce.aggregate_repository.bar');
+        $repositoryDef = $this->container->getDefinition('andreo.eventsauce.aggregate_repository.bar');
         $this->assertEquals(AggregateRootRepositoryWithSnapshottingAndStoreStrategy::class, $repositoryDef->getClass());
         /** @var Definition $canStoreDef */
         $canStoreDef = $repositoryDef->getArgument(1);
@@ -546,7 +546,7 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
         ]);
 
         $this->assertContainerBuilderHasAlias('bazRepository');
-        $repositoryDef = $this->container->getDefinition('andreo.event_sauce.aggregate_repository.baz');
+        $repositoryDef = $this->container->getDefinition('andreo.eventsauce.aggregate_repository.baz');
         $this->assertEquals(AggregateRootRepositoryWithSnapshottingAndStoreStrategy::class, $repositoryDef->getClass());
         /** @var Reference $canStoreDef */
         $canStoreDef = $repositoryDef->getArgument(1);
@@ -570,8 +570,8 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
             ],
         ]);
 
-        $this->assertContainerBuilderHasService('andreo.event_sauce.message_repository.foo');
-        $messageRepositoryDef = $this->container->getDefinition('andreo.event_sauce.message_repository.foo');
+        $this->assertContainerBuilderHasService('andreo.eventsauce.message_repository.foo');
+        $messageRepositoryDef = $this->container->getDefinition('andreo.eventsauce.message_repository.foo');
         /** @var Definition $messageSerializerArgument */
         $messageSerializerArgument = $messageRepositoryDef->getArgument(2);
         $this->assertEquals(UpcastingMessageSerializer::class, $messageSerializerArgument->getClass());
@@ -594,8 +594,8 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
             ],
         ]);
 
-        $this->assertContainerBuilderHasService('andreo.event_sauce.message_repository.bar');
-        $messageRepositoryDef = $this->container->getDefinition('andreo.event_sauce.message_repository.bar');
+        $this->assertContainerBuilderHasService('andreo.eventsauce.message_repository.bar');
+        $messageRepositoryDef = $this->container->getDefinition('andreo.eventsauce.message_repository.bar');
         /** @var Definition $messageSerializerArgument */
         $messageSerializerArgument = $messageRepositoryDef->getArgument(2);
         $this->assertEquals(UpcastingMessageObjectSerializer::class, $messageSerializerArgument->getClass());
@@ -615,8 +615,8 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
             ],
         ]);
 
-        $this->assertContainerBuilderHasService('andreo.event_sauce.message_repository.baz');
-        $messageRepositoryDef = $this->container->getDefinition('andreo.event_sauce.message_repository.baz');
+        $this->assertContainerBuilderHasService('andreo.eventsauce.message_repository.baz');
+        $messageRepositoryDef = $this->container->getDefinition('andreo.eventsauce.message_repository.baz');
         /** @var Reference $messageSerializerArgument */
         $messageSerializerArgument = $messageRepositoryDef->getArgument(2);
         $this->assertEquals(MessageSerializer::class, $messageSerializerArgument->__toString());

@@ -7,9 +7,10 @@ namespace Andreo\EventSauceBundle\Attribute;
 use Attribute;
 
 #[Attribute(Attribute::TARGET_CLASS)]
-final class AsMessageDecorator
+final class AsSynchronousMessageConsumer
 {
     public function __construct(
+        public readonly string $dispatcher,
         public readonly int $priority = 0,
     ) {
     }

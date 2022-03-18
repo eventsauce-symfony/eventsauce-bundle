@@ -20,10 +20,12 @@ services:
     Andreo\EventSauce\Doctrine\Migration\GenerateAggregateMigrationCommand:
         public: false
         arguments:
-            - '@doctrine.migrations.dependency_factory'
+            - '@andreo.eventsauce.migration_generator.dependency_factory'
             - '@Andreo\EventSauce\Doctrine\Migration\TableNameSuffix'
             - '@Andreo\EventSauce\Doctrine\Migration\EventMessageSchemaBuilder'
             - '@Andreo\EventSauce\Doctrine\Migration\OutboxMessageSchemaBuilder'
             - '@Andreo\EventSauce\Doctrine\Migration\SnapshotSchemaBuilder'
         tags:
-            - { name: console.command, command: andreo:event-sauce:doctrine:migration:generate }
+            -
+                name: console.command
+                command: andreo:event-sauce:doctrine:migration:generate

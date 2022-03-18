@@ -1,26 +1,52 @@
-andreo_event_sauce:
+andreo_eventsauce:
     time:
-        recording_timezone: UTC
-        clock: EventSauce\Clock\Clock # or your custom clock
-    message:
+        timezone: UTC
+        clock: EventSauce\Clock\Clock
+
+    event_store:
         repository:
             json_encode_options:
                 - !php/const JSON_PRETTY_PRINT
                 - !php/const JSON_PRESERVE_ZERO_FRACTION
             doctrine:
-                connection: doctrine.dbal.default_connection # or your custom doctrine dbal connection
-                table_schema: EventSauce\MessageRepository\TableSchema\TableSchema # or your custom event message schema
-                table_name: event_message # suffix event message table. Convention ${aggregate_name}_suffix
-        serializer: EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer
-        decorator: true
-        dispatcher:
-            messenger:
-                mode: event # enum of event, event_and_headers, message
-            event_dispatcher: true
-            chain:
-                fooBus: barBus
+                connection: doctrine.dbal.default_connection
+                table_schema: EventSauce\MessageRepository\TableSchema\TableSchema
+                table_name: event_store
+    acl:
+        outbound:
+            filter_chain:
+                before_translate: match_any
+                after_translate: match_any
+        inbound:
+            filter_chain:
+                before_translate: match_any
+                after_translate: match_any
+
+    message_decorator: true
+
+    synchronous_message_dispatcher:
+        chain:
+            default:
+                acl: true
+
+    messenger_message_dispatcher:
+        chain:
+            default:
+                bus: eventBus
+            integrating:
+                bus: integratingBus
+                acl: true
+
+    event_dispatcher:
+        outbox:
+            repository:
+                memory: false
+                doctrine:
+                    table_name: _outbox_message
+    upcaster:
+        argument: payload # one of [payload, message]
+
     outbox:
-        logger: outboxLogger
         back_off:
             exponential:
                 initial_delay_ms: 100000
@@ -42,6 +68,14 @@ andreo_event_sauce:
                 enabled: true
             mark_consumed:
                 enabled: true
+        repository:
+            repository:
+                memory:
+                    enabled: false
+                doctrine:
+                    table_name: outbox_message
+        logger: outboxLogger
+
     snapshot:
         versioned: true
         store_strategy:
@@ -49,19 +83,25 @@ andreo_event_sauce:
                 number: 500
         repository:
             doctrine: true
-        serializer: Andreo\EventSauceBundle\Snapshotting\SnapshotStateSerializer
-    upcast:
-        context: payload # enum of payload, message
-    payload_serializer: Andreo\EventSauceBundle\Serialization\SymfonyPayloadSerializer
+
     uuid_encoder: EventSauce\UuidEncoding\UuidEncoder
     class_name_inflector: EventSauce\EventSourcing\ClassNameInflector
+
+    serializer:
+        payload: EventSauce\EventSourcing\Serialization\ConstructingPayloadSerializer
+        message: EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer
+        snapshot: Andreo\EventSauceBundle\Snapshotting\SnapshotStateSerializer
+
+    migration_generator:
+        dependency_factory: doctrine.migrations.dependency_factory
+
     aggregates:
         foo:
             class: App\Domain\Foo
             repository_alias: fooRepository
             outbox: true
-            dispatchers:
-                - fooBus
+            message_dispatchers:
+                - eventBus
             upcast: true
             snapshot: true
         bar:

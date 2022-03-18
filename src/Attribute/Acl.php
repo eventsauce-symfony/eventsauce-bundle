@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Andreo\EventSauceBundle\Attribute;
 
-enum MessageContext
+use Attribute;
+
+#[Attribute(Attribute::TARGET_CLASS)]
+final class Acl
 {
-    case AGGREGATE;
-    case EVENT_DISPATCHER;
-    case ALL;
 }

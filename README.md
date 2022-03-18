@@ -49,7 +49,7 @@ You probably want to set your time zone.
 ```yaml
 andreo_event_sauce:
     time:
-        recording_timezone: Europe/Warsaw # default is UTC
+        timezone: Europe/Warsaw # default is UTC
 ```
 
 ### Doctrine connection
@@ -95,9 +95,9 @@ Defining the example message consumer is as follows
 
 ```php
 use EventSauce\EventSourcing\MessageConsumer;
-use Andreo\EventSauceBundle\Attribute\AsMessageConsumer;
+use Andreo\EventSauceBundle\Attribute\AsSynchronousMessageConsumer;
 
-#[AsMessageConsumer(dispatcher: fooBus)]
+#[AsSynchronousMessageConsumer(dispatcher: fooBus)]
 final class SomeProjection implements MessageConsumer {
 
     public function handle(Message $message): void {
@@ -423,7 +423,7 @@ final class SomeEventV2Upcaster implements Upcaster {
 }
 ```
 
-### Upcaster context
+### Upcaster argument
 
 By default, this library uses the payload context according to the EventSauce implementation.
 If you want to upcasting on the message object context,
@@ -438,7 +438,7 @@ and use the following configuration.
 ```yaml
 andreo_event_sauce:
     upcast:
-        context: message # default is payload
+        argument: message # default is payload
     aggregates:
         foo:
             class: App\Domain\Foo

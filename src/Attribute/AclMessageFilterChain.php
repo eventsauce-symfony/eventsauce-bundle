@@ -7,10 +7,11 @@ namespace Andreo\EventSauceBundle\Attribute;
 use Attribute;
 
 #[Attribute(Attribute::TARGET_CLASS)]
-final class AsMessageDecorator
+final class AclMessageFilterChain
 {
     public function __construct(
-        public readonly int $priority = 0,
+        public readonly string $beforeTranslate = 'match_all',
+        public readonly string $afterTranslate = 'match_all',
     ) {
     }
 }

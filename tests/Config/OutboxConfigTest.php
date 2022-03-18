@@ -94,7 +94,7 @@ final class OutboxConfigTest extends AbstractExtensionTestCase
         $this->assertEquals(FibonacciBackOffStrategy::class, $backOffStrategyAlias->__toString());
         $fibonacciDefinition = $this->container->getDefinition(FibonacciBackOffStrategy::class);
         $this->assertEquals(
-            '%andreo.event_sauce.outbox.back_off.initial_delay_ms%',
+            '%andreo.eventsauce.outbox.back_off.initial_delay_ms%',
             $fibonacciDefinition->getArgument(0)
         );
         $this->assertEquals(30, $fibonacciDefinition->getArgument(1));
@@ -122,7 +122,7 @@ final class OutboxConfigTest extends AbstractExtensionTestCase
         $this->assertEquals(LinearBackOffStrategy::class, $backOffStrategyAlias->__toString());
         $linearDefinition = $this->container->getDefinition(LinearBackOffStrategy::class);
         $this->assertEquals(300000, $linearDefinition->getArgument(0));
-        $this->assertEquals('%andreo.event_sauce.outbox.back_off.max_tries%', $linearDefinition->getArgument(1));
+        $this->assertEquals('%andreo.eventsauce.outbox.back_off.max_tries%', $linearDefinition->getArgument(1));
     }
 
     /**

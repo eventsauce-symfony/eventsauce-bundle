@@ -48,8 +48,8 @@ final class MessageConfigTest extends AbstractExtensionTestCase
             ],
         ]);
 
-        $this->assertContainerBuilderHasAlias('andreo.event_sauce.doctrine.connection');
-        $connectionAlias = $this->container->getAlias('andreo.event_sauce.doctrine.connection');
+        $this->assertContainerBuilderHasAlias('andreo.eventsauce.doctrine.connection');
+        $connectionAlias = $this->container->getAlias('andreo.eventsauce.doctrine.connection');
         $this->assertEquals('doctrine.default_connection', $connectionAlias->__toString());
 
         $this->assertContainerBuilderHasAlias(MessageSerializer::class);
@@ -83,24 +83,24 @@ final class MessageConfigTest extends AbstractExtensionTestCase
         ]);
 
         $this->assertContainerBuilderHasServiceDefinitionWithTag(
-            'andreo.event_sauce.message_dispatcher.fooBus',
-            'andreo.event_sauce.event_and_headers_dispatcher',
+            'andreo.eventsauce.message_dispatcher.fooBus',
+            'andreo.eventsauce.event_and_headers_dispatcher',
             [
                 'bus' => 'barBus',
             ]
         );
-        $busDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.fooBus');
+        $busDefinition = $this->container->getDefinition('andreo.eventsauce.message_dispatcher.fooBus');
         $this->assertEquals(MessengerEventAndHeadersDispatcher::class, $busDefinition->getClass());
         $this->assertEquals($busDefinition->getArgument(0), new Reference('barBus'));
 
         $this->assertContainerBuilderHasServiceDefinitionWithTag(
-            'andreo.event_sauce.message_dispatcher.bazBus',
-            'andreo.event_sauce.event_and_headers_dispatcher',
+            'andreo.eventsauce.message_dispatcher.bazBus',
+            'andreo.eventsauce.event_and_headers_dispatcher',
             [
                 'bus' => 'quxBus',
             ]
         );
-        $busDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.bazBus');
+        $busDefinition = $this->container->getDefinition('andreo.eventsauce.message_dispatcher.bazBus');
         $this->assertEquals(MessengerEventAndHeadersDispatcher::class, $busDefinition->getClass());
         $this->assertEquals($busDefinition->getArgument(0), new Reference('quxBus'));
 
@@ -130,8 +130,8 @@ final class MessageConfigTest extends AbstractExtensionTestCase
             ],
         ]);
 
-        $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher.fooBus', );
-        $busDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.fooBus');
+        $this->assertContainerBuilderHasService('andreo.eventsauce.message_dispatcher.fooBus', );
+        $busDefinition = $this->container->getDefinition('andreo.eventsauce.message_dispatcher.fooBus');
         $this->assertEquals(MessengerEventDispatcher::class, $busDefinition->getClass());
         $this->assertEquals($busDefinition->getArgument(0), new Reference('barBus'));
 
@@ -156,8 +156,8 @@ final class MessageConfigTest extends AbstractExtensionTestCase
             ],
         ]);
 
-        $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher.fooBus', );
-        $busDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.fooBus');
+        $this->assertContainerBuilderHasService('andreo.eventsauce.message_dispatcher.fooBus', );
+        $busDefinition = $this->container->getDefinition('andreo.eventsauce.message_dispatcher.fooBus');
         $this->assertEquals(MessengerMessageDispatcher::class, $busDefinition->getClass());
         $this->assertEquals($busDefinition->getArgument(0), new Reference('bazBus'));
 
@@ -180,21 +180,21 @@ final class MessageConfigTest extends AbstractExtensionTestCase
             ],
         ]);
 
-        $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher.fooBus');
-        $dispatcherDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.fooBus');
+        $this->assertContainerBuilderHasService('andreo.eventsauce.message_dispatcher.fooBus');
+        $dispatcherDefinition = $this->container->getDefinition('andreo.eventsauce.message_dispatcher.fooBus');
         $this->assertEquals(SynchronousMessageDispatcher::class, $dispatcherDefinition->getClass());
 
         $this->assertEquals(
             $dispatcherDefinition->getArgument(0),
-            new TaggedIteratorArgument('andreo.event_sauce.message_consumer.fooBus')
+            new TaggedIteratorArgument('andreo.eventsauce.message_consumer.fooBus')
         );
 
-        $this->assertContainerBuilderHasService('andreo.event_sauce.message_dispatcher.barBus');
-        $dispatcherDefinition = $this->container->getDefinition('andreo.event_sauce.message_dispatcher.barBus');
+        $this->assertContainerBuilderHasService('andreo.eventsauce.message_dispatcher.barBus');
+        $dispatcherDefinition = $this->container->getDefinition('andreo.eventsauce.message_dispatcher.barBus');
         $this->assertEquals(SynchronousMessageDispatcher::class, $dispatcherDefinition->getClass());
         $this->assertEquals(
             $dispatcherDefinition->getArgument(0),
-            new TaggedIteratorArgument('andreo.event_sauce.message_consumer.barBus')
+            new TaggedIteratorArgument('andreo.eventsauce.message_consumer.barBus')
         );
 
         $this->assertContainerBuilderHasAlias('fooBus');

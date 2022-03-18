@@ -7,10 +7,9 @@ namespace Andreo\EventSauceBundle\Attribute;
 use Attribute;
 
 #[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
-final class AsMessageConsumer
+final class AclInboundTarget
 {
-    public function __construct(
-        public readonly string $dispatcher,
-    ) {
+    public function __construct(public readonly ?string $id = null)
+    {
     }
 }

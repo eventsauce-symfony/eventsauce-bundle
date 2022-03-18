@@ -11,7 +11,7 @@ services:
         class: EventSauce\Clock\SystemClock
         public: false
         arguments:
-            - '@andreo.event_sauce.recording_timezone'
+            - '@andreo.eventsauce.time.timezone'
 
     EventSauce\MessageRepository\TableSchema\DefaultTableSchema:
         class: EventSauce\MessageRepository\TableSchema\DefaultTableSchema

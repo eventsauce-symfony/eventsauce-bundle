@@ -1,6 +1,6 @@
 parameters:
-    andreo.event_sauce.outbox.back_off.initial_delay_ms: 100000
-    andreo.event_sauce.outbox.back_off.max_tries: 25
+    andreo.eventsauce.outbox.back_off.initial_delay_ms: 100000
+    andreo.eventsauce.outbox.back_off.max_tries: 25
 
 services:
     EventSauce\BackOff\BackOffStrategy: '@EventSauce\BackOff\ExponentialBackOffStrategy'
@@ -11,31 +11,31 @@ services:
         public: false
         lazy: true
         arguments:
-            - '%andreo.event_sauce.outbox.back_off.initial_delay_ms%'
-            - '%andreo.event_sauce.outbox.back_off.max_tries%'
+            - '%andreo.eventsauce.outbox.back_off.initial_delay_ms%'
+            - '%andreo.eventsauce.outbox.back_off.max_tries%'
 
     EventSauce\BackOff\FibonacciBackOffStrategy:
         class: EventSauce\BackOff\FibonacciBackOffStrategy
         public: false
         lazy: true
         arguments:
-            - '%andreo.event_sauce.outbox.back_off.initial_delay_ms%'
-            - '%andreo.event_sauce.outbox.back_off.max_tries%'
+            - '%andreo.eventsauce.outbox.back_off.initial_delay_ms%'
+            - '%andreo.eventsauce.outbox.back_off.max_tries%'
 
     EventSauce\BackOff\LinearBackOffStrategy:
         class: EventSauce\BackOff\LinearBackOffStrategy
         public: false
         lazy: true
         arguments:
-            - '%andreo.event_sauce.outbox.back_off.initial_delay_ms%'
-            - '%andreo.event_sauce.outbox.back_off.max_tries%'
+            - '%andreo.eventsauce.outbox.back_off.initial_delay_ms%'
+            - '%andreo.eventsauce.outbox.back_off.max_tries%'
 
     EventSauce\BackOff\NoWaitingBackOffStrategy:
         class: EventSauce\BackOff\NoWaitingBackOffStrategy
         public: false
         lazy: true
         arguments:
-            - '%andreo.event_sauce.outbox.back_off.max_tries%'
+            - '%andreo.eventsauce.outbox.back_off.max_tries%'
 
     EventSauce\BackOff\ImmediatelyFailingBackOffStrategy:
         class: EventSauce\BackOff\ImmediatelyFailingBackOffStrategy
@@ -55,8 +55,10 @@ services:
     Andreo\EventSauce\Outbox\OutboxProcessMessagesCommand:
         public: false
         arguments:
-            - !tagged_iterator { tag: 'andreo.event_sauce.outbox_relay', index_by: 'name' }
+            - !tagged_iterator { tag: 'andreo.eventsauce.outbox_relay', index_by: 'name' }
             - !service
                 class: Psr\Log\NullLogger
         tags:
-            - { name: console.command, command: andreo:event-sauce:outbox-process-messages }
+            -
+                name: console.command
+                command: andreo:event-sauce:outbox-process-messages

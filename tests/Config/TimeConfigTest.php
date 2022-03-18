@@ -25,13 +25,13 @@ final class TimeConfigTest extends AbstractExtensionTestCase
     {
         $this->load([
             'time' => [
-                'recording_timezone' => 'Europe/Warsaw',
+                'timezone' => 'Europe/Warsaw',
                 'clock' => DummyCustomClock::class,
             ],
         ]);
 
         $this->assertContainerBuilderHasServiceDefinitionWithArgument(
-            'andreo.event_sauce.recording_timezone',
+            'andreo.eventsauce.time.timezone',
             0,
             'Europe/Warsaw'
         );
