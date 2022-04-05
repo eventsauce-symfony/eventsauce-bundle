@@ -26,10 +26,10 @@ use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\Argument\IteratorArgument;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
-use Tests\Config\Dummy\DummyCustomStoreStrategy;
-use Tests\Config\Dummy\DummyFooAggregate;
-use Tests\Config\Dummy\DummyFooAggregateWithSnapshotting;
-use Tests\Config\Dummy\DummyFooAggregateWithVersionedSnapshotting;
+use Tests\Dummy\DummyCustomStoreStrategy;
+use Tests\Dummy\DummyFooAggregate;
+use Tests\Dummy\DummyFooAggregateWithSnapshotting;
+use Tests\Dummy\DummyFooAggregateWithVersionedSnapshotting;
 
 final class AggregatesConfigTest extends AbstractExtensionTestCase
 {

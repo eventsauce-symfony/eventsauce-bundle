@@ -15,11 +15,11 @@ use EventSauce\EventSourcing\MessageDispatcherChain;
 use EventSauce\EventSourcing\SynchronousMessageDispatcher;
 use EventSauce\EventSourcing\Upcasting\Upcaster;
 use PHPUnit\Framework\TestCase;
-use Tests\Factory\Dummy\DummyMessageConsumer;
-use Tests\Factory\Dummy\DummyMessageDecorator;
-use Tests\Factory\Dummy\DummyMessageDispatcher;
-use Tests\Factory\Dummy\DummyMessageUpcaster;
-use Tests\Factory\Dummy\DummyUpcaster;
+use Tests\Dummy\DummyMessageConsumer;
+use Tests\Dummy\DummyMessageDecorator;
+use Tests\Dummy\DummyMessageDispatcher;
+use Tests\Dummy\DummyMessageUpcaster;
+use Tests\Dummy\DummyUpcaster;
 
 final class FactoryTest extends TestCase
 {

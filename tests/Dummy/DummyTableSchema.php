@@ -1,12 +1,11 @@
 <?php
-
 declare(strict_types=1);
 
-namespace Tests\Config\Dummy;
+namespace Tests\Dummy;
 
 use EventSauce\MessageRepository\TableSchema\TableSchema;
 
-class DummyCustomTableSchema implements TableSchema
+class DummyTableSchema implements TableSchema
 {
     public function eventIdColumn(): string
     {

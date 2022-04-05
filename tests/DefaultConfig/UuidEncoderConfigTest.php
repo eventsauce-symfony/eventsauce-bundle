@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Tests\Config;
+namespace Tests\DefaultConfig;
 
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
 use EventSauce\UuidEncoding\UuidEncoder;
 use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
-use Tests\Config\Dummy\DummyUuidEncoder;
+use Tests\Dummy\DummyUuidEncoder;
 
 final class UuidEncoderConfigTest extends AbstractExtensionTestCase
 {
@@ -32,3 +32,4 @@ final class UuidEncoderConfigTest extends AbstractExtensionTestCase
         $this->assertEquals(DummyUuidEncoder::class, $uuidEncoderAlias->__toString());
     }
 }
+

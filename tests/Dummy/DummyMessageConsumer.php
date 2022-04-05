@@ -1,13 +1,12 @@
 <?php
-
 declare(strict_types=1);
 
-namespace Tests\Factory\Dummy;
+namespace Tests\Dummy;
 
 use EventSauce\EventSourcing\Message;
 use EventSauce\EventSourcing\MessageConsumer;
 
-final class DummyMessageConsumer implements MessageConsumer
+class DummyMessageConsumer implements MessageConsumer
 {
     public function handle(Message $message): void
     {

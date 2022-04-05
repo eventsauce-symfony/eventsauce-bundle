@@ -150,7 +150,7 @@ final class AggregatesLoader
                 throw new LogicException('Upcast config is disabled. If you want to use it, enable and configure it .');
             }
 
-            $context = $upcastConfig['context'];
+            $context = $upcastConfig['argument'];
             if ('payload' === $context) {
                 if (!class_exists(UpcasterChainWithEventGuessing::class)) {
                     $upcasterChainDef = (new Definition(UpcasterChain::class, [
@@ -209,7 +209,7 @@ final class AggregatesLoader
                 $aggregateClass,
                 new Reference("andreo.eventsauce.message_repository.$aggregateName"),
                 new Reference("andreo.eventsauce.message_dispatcher_chain.$aggregateName"),
-                new Reference('andreo.eventsauce.aggregate_message_decorator_chain'),
+                new Reference('andreo.eventsauce.message_decorator_chain'),
                 new Reference(ClassNameInflector::class),
             ])
             ->setPublic(false)
@@ -271,7 +271,7 @@ final class AggregatesLoader
                 $aggregateClass,
                 new Reference("andreo.eventsauce.message_repository.$aggregateName"),
                 $regularAggregateRepositoryDef,
-                new Reference('andreo.eventsauce.aggregate_message_decorator_chain'),
+                new Reference('andreo.eventsauce.message_decorator_chain'),
                 new Reference(ClassNameInflector::class),
             ])
             ->setPublic(false)

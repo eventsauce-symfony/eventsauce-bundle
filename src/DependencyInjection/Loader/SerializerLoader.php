@@ -6,6 +6,7 @@ namespace Andreo\EventSauceBundle\DependencyInjection\Loader;
 
 use Andreo\EventSauce\Snapshotting\ConstructingSnapshotStateSerializer;
 use Andreo\EventSauce\Snapshotting\SnapshotStateSerializer;
+use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
 use EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer;
 use EventSauce\EventSourcing\Serialization\ConstructingPayloadSerializer;
 use EventSauce\EventSourcing\Serialization\MessageSerializer;
@@ -15,7 +16,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 final class SerializerLoader
 {
-    public function __construct(private ContainerBuilder $container)
+    public function __construct(private AndreoEventSauceExtension $extension, private ContainerBuilder $container)
     {
     }
 
@@ -31,6 +32,13 @@ final class SerializerLoader
         $messageSerializerServiceId = $serializerConfig['message'];
         if (!in_array($messageSerializerServiceId, [null, MessageSerializer::class, ConstructingMessageSerializer::class], true)) {
             $this->container->setAlias(MessageSerializer::class, $messageSerializerServiceId);
+        }
+
+
+        $snapshotConfig = $config['snapshot'];
+        $snapshotRepositoryConfig = $snapshotConfig['repository'];
+        if (!$this->extension->isConfigEnabled($this->container, $snapshotRepositoryConfig['doctrine'])) {
+            return;
         }
 
         $snapshotSerializerId = $serializerConfig['snapshot'];

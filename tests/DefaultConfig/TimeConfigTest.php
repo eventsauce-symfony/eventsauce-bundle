@@ -2,12 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Tests\Config;
+namespace Tests\DefaultConfig;
 
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
 use EventSauce\Clock\Clock;
 use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
-use Tests\Config\Dummy\DummyCustomClock;
+use DateTimeImmutable;
+use DateTimeZone;
+use Tests\Dummy\DummyClock;
 
 final class TimeConfigTest extends AbstractExtensionTestCase
 {
@@ -21,12 +23,12 @@ final class TimeConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function should_register_time_components(): void
+    public function should_load_time(): void
     {
         $this->load([
             'time' => [
                 'timezone' => 'Europe/Warsaw',
-                'clock' => DummyCustomClock::class,
+                'clock' => DummyClock::class,
             ],
         ]);
 
@@ -38,6 +40,6 @@ final class TimeConfigTest extends AbstractExtensionTestCase
 
         $this->assertContainerBuilderHasAlias(Clock::class);
         $clockAlias = $this->container->getAlias(Clock::class);
-        $this->assertEquals(DummyCustomClock::class, $clockAlias->__toString());
+        $this->assertEquals(DummyClock::class, $clockAlias->__toString());
     }
 }

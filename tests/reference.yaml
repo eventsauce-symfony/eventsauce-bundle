@@ -90,7 +90,7 @@ andreo_eventsauce:
     serializer:
         payload: EventSauce\EventSourcing\Serialization\ConstructingPayloadSerializer
         message: EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer
-        snapshot: Andreo\EventSauceBundle\Snapshotting\SnapshotStateSerializer
+        snapshot: Andreo\EventSauce\Snapshotting\SnapshotStateSerializer
 
     migration_generator:
         dependency_factory: doctrine.migrations.dependency_factory

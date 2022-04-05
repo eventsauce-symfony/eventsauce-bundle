@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Config\Dummy;
+namespace Tests\Dummy;
 
 use Psr\Log\AbstractLogger;
 use Stringable;

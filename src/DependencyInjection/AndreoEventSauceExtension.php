@@ -46,7 +46,7 @@ final class AndreoEventSauceExtension extends Extension
         (new UpcasterLoader($this, $container))($config);
         (new OutboxLoader($this, $loader, $container))($config);
         (new SnapshotLoader($this, $loader, $container))($config);
-        (new SerializerLoader($container))($config);
+        (new SerializerLoader($this, $container))($config);
         (new MigrationGeneratorLoader($this, $loader, $container))($config);
         (new UuidEncoderLoader($container))($config);
         (new ClassNameInflectorLoader($container))($config);

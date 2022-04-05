@@ -36,14 +36,14 @@ final class MessageDecoratorLoader
                 ->addTag('andreo.eventsauce.aggregate_message_decorator', ['priority' => 0]);
 
             $this->container
-                ->register('andreo.eventsauce.aggregate_message_decorator_chain', MessageDecoratorChain::class)
+                ->register('andreo.eventsauce.message_decorator_chain', MessageDecoratorChain::class)
                 ->addArgument(new TaggedIteratorArgument('andreo.eventsauce.aggregate_message_decorator'))
                 ->setFactory([MessageDecoratorChainFactory::class, 'create'])
                 ->setPublic(false)
             ;
         } else {
             $this->container
-                ->register('andreo.eventsauce.aggregate_message_decorator_chain', MessageDecoratorChain::class)
+                ->register('andreo.eventsauce.message_decorator_chain', MessageDecoratorChain::class)
                 ->addArgument([])
                 ->setFactory([MessageDecoratorChainFactory::class, 'create'])
                 ->setPublic(false)

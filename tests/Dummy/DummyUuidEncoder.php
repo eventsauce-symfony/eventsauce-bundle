@@ -1,8 +1,7 @@
 <?php
-
 declare(strict_types=1);
 
-namespace Tests\Config\Dummy;
+namespace Tests\Dummy;
 
 use EventSauce\UuidEncoding\UuidEncoder;
 use Ramsey\Uuid\UuidInterface;

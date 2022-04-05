@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Tests\Config;
+namespace Tests\DefaultConfig;
 
 use Andreo\EventSauceBundle\Attribute\AsUpcaster;
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
 use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
+use Tests\Dummy\DummyMessageUpcaster;
 
-final class UpcastConfigTest extends AbstractExtensionTestCase
+final class UpcasterConfigTest extends AbstractExtensionTestCase
 {
     protected function getContainerExtensions(): array
     {
@@ -20,14 +21,24 @@ final class UpcastConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function should_register_upcaster_autoconfiguration(): void
+    public function should_load_upcaster(): void
     {
+
         $this->load([
-            'upcast' => [
+            'upcaster' => [
                 'enabled' => true,
             ],
         ]);
+        $this->container
+            ->register(DummyMessageUpcaster::class, DummyMessageUpcaster::class)
+            ->setAutoconfigured(true)
+        ;
+        $this->compile();
 
         $this->assertArrayHasKey(AsUpcaster::class, $this->container->getAutoconfiguredAttributes());
+
+        $this->assertContainerBuilderHasServiceDefinitionWithTag(DummyMessageUpcaster::class, 'andreo.eventsauce.upcaster.dummy', [
+            'priority' => -2
+        ]);
     }
 }

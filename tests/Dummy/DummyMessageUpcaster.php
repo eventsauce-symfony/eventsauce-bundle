@@ -1,13 +1,14 @@
 <?php
-
 declare(strict_types=1);
 
-namespace Tests\Factory\Dummy;
+namespace Tests\Dummy;
 
 use Andreo\EventSauce\Upcasting\MessageUpcaster;
+use Andreo\EventSauceBundle\Attribute\AsUpcaster;
 use EventSauce\EventSourcing\Message;
 
-final class DummyMessageUpcaster implements MessageUpcaster
+#[AsUpcaster(aggregate: 'dummy', version: 2)]
+class DummyMessageUpcaster implements MessageUpcaster
 {
     public function upcast(Message $message): Message
     {

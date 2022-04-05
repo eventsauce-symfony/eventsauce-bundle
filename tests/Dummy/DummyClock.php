@@ -1,14 +1,12 @@
 <?php
-
 declare(strict_types=1);
 
-namespace Tests\Config\Dummy;
+namespace Tests\Dummy;
 
-use DateTimeImmutable;
-use DateTimeZone;
 use EventSauce\Clock\Clock;
+use DateTimeImmutable, DateTimeZone;
 
-class DummyCustomClock implements Clock
+class DummyClock implements Clock
 {
     public function now(): DateTimeImmutable
     {

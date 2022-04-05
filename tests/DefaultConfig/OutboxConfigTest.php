@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Config;
+namespace Tests\DefaultConfig;
 
 use Andreo\EventSauce\Outbox\OutboxProcessMessagesCommand;
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
@@ -18,8 +18,8 @@ use EventSauce\MessageOutbox\RelayCommitStrategy;
 use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\Reference;
-use Tests\Config\Dummy\DummyCustomBackOfStrategy;
-use Tests\Config\Dummy\DummyCustomLogger;
+use Tests\Dummy\DummyCustomBackOfStrategy;
+use Tests\Dummy\DummyCustomLogger;
 
 final class OutboxConfigTest extends AbstractExtensionTestCase
 {

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Tests\Config;
+namespace Tests\DefaultConfig;
 
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
 use EventSauce\EventSourcing\ClassNameInflector;
 use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
-use Tests\Config\Dummy\DummyClassNameInflector;
+use Tests\Dummy\DummyClassNameInflector;
 
 final class ClassNameInflectorConfigTest extends AbstractExtensionTestCase
 {

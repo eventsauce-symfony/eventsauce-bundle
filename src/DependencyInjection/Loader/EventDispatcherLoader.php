@@ -25,6 +25,10 @@ final class EventDispatcherLoader
     public function __invoke(array $config): void
     {
         $eventDispatcherConfig = $config['event_dispatcher'];
+        if (!$this->extension->isConfigEnabled($this->container, $eventDispatcherConfig)) {
+            return;
+        }
+
         $eventDispatcherOutboxConfig = $eventDispatcherConfig['outbox'];
         $outboxConfig = $config['outbox'];
 
@@ -59,7 +63,7 @@ final class EventDispatcherLoader
             ->register(MessageDispatchingEventDispatcher::class, MessageDispatchingEventDispatcher::class)
             ->setArguments([
                 $messageDispatcherArgument,
-                new Reference('andreo.eventsauce.aggregate_message_decorator_chain'),
+                new Reference('andreo.eventsauce.message_decorator_chain'),
             ])
             ->setPublic(false)
         ;
