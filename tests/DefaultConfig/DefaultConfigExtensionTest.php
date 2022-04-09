@@ -207,7 +207,7 @@ final class DefaultConfigExtensionTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function should_migration_generator(): void
+    public function should_not_load_migration_generator(): void
     {
         $this->load();
 
