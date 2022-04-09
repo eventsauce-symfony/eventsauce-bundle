@@ -26,10 +26,10 @@ use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\Argument\IteratorArgument;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
-use Tests\Dummy\DummyCustomStoreStrategy;
 use Tests\Dummy\DummyFooAggregate;
 use Tests\Dummy\DummyFooAggregateWithSnapshotting;
 use Tests\Dummy\DummyFooAggregateWithVersionedSnapshotting;
+use Tests\Dummy\DummyStoreStrategy;
 
 final class AggregatesConfigTest extends AbstractExtensionTestCase
 {
@@ -533,7 +533,7 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
             'snapshot' => [
                 'store_strategy' => [
                     'custom' => [
-                        'id' => DummyCustomStoreStrategy::class,
+                        'id' => DummyStoreStrategy::class,
                     ],
                 ],
             ],
@@ -550,7 +550,7 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
         $this->assertEquals(AggregateRootRepositoryWithSnapshottingAndStoreStrategy::class, $repositoryDef->getClass());
         /** @var Reference $canStoreDef */
         $canStoreDef = $repositoryDef->getArgument(1);
-        $this->assertEquals(DummyCustomStoreStrategy::class, $canStoreDef->__toString());
+        $this->assertEquals(DummyStoreStrategy::class, $canStoreDef->__toString());
     }
 
     /**

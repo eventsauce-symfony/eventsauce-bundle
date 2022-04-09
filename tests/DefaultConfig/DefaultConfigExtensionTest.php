@@ -108,7 +108,7 @@ final class DefaultConfigExtensionTest extends AbstractExtensionTestCase
         $this->compile();
 
         $this->assertContainerBuilderHasServiceDefinitionWithTag(DummyMessageDecorator::class, 'andreo.eventsauce.aggregate_message_decorator', [
-            'priority' => 10
+            'priority' => 10,
         ]);
 
         /** @var TaggedIteratorArgument $chainArgument */
@@ -194,12 +194,12 @@ final class DefaultConfigExtensionTest extends AbstractExtensionTestCase
         $this->load();
 
         $this->assertContainerBuilderHasAlias(PayloadSerializer::class);
-        $encoderDefinition = $this->container->findDefinition(PayloadSerializer::class);
-        $this->assertEquals(ConstructingPayloadSerializer::class, $encoderDefinition->getClass());
+        $payloadDefinition = $this->container->findDefinition(PayloadSerializer::class);
+        $this->assertEquals(ConstructingPayloadSerializer::class, $payloadDefinition->getClass());
 
         $this->assertContainerBuilderHasAlias(MessageSerializer::class);
-        $encoderDefinition = $this->container->findDefinition(MessageSerializer::class);
-        $this->assertEquals(ConstructingMessageSerializer::class, $encoderDefinition->getClass());
+        $messageDefinition = $this->container->findDefinition(MessageSerializer::class);
+        $this->assertEquals(ConstructingMessageSerializer::class, $messageDefinition->getClass());
 
         $this->assertContainerBuilderNotHasService(SnapshotStateSerializer::class);
     }

@@ -7,7 +7,7 @@ namespace Tests\Dummy;
 use EventSauce\EventSourcing\Message;
 use EventSauce\EventSourcing\Serialization\MessageSerializer;
 
-class DummyCustomMessageSerializer implements MessageSerializer
+class DummyMessageSerializer implements MessageSerializer
 {
     public function serializeMessage(Message $message): array
     {

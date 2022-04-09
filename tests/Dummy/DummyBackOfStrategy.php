@@ -7,7 +7,7 @@ namespace Tests\Dummy;
 use EventSauce\BackOff\BackOffStrategy;
 use Throwable;
 
-class DummyCustomBackOfStrategy implements BackOffStrategy
+class DummyBackOfStrategy implements BackOffStrategy
 {
     public function backOff(int $tries, Throwable $throwable): void
     {

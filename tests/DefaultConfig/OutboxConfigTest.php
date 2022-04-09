@@ -18,8 +18,8 @@ use EventSauce\MessageOutbox\RelayCommitStrategy;
 use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\Reference;
-use Tests\Dummy\DummyCustomBackOfStrategy;
-use Tests\Dummy\DummyCustomLogger;
+use Tests\Dummy\DummyBackOfStrategy;
+use Tests\Dummy\DummyLogger;
 
 final class OutboxConfigTest extends AbstractExtensionTestCase
 {
@@ -180,7 +180,7 @@ final class OutboxConfigTest extends AbstractExtensionTestCase
                 'enabled' => true,
                 'back_off' => [
                     'custom' => [
-                        'id' => DummyCustomBackOfStrategy::class,
+                        'id' => DummyBackOfStrategy::class,
                     ],
                 ],
             ],
@@ -188,7 +188,7 @@ final class OutboxConfigTest extends AbstractExtensionTestCase
 
         $this->assertContainerBuilderHasAlias(BackOffStrategy::class);
         $backOffStrategyAlias = $this->container->getAlias(BackOffStrategy::class);
-        $this->assertEquals(DummyCustomBackOfStrategy::class, $backOffStrategyAlias->__toString());
+        $this->assertEquals(DummyBackOfStrategy::class, $backOffStrategyAlias->__toString());
     }
 
     /**
@@ -302,13 +302,13 @@ final class OutboxConfigTest extends AbstractExtensionTestCase
         $this->load([
             'outbox' => [
                 'enabled' => true,
-                'logger' => DummyCustomLogger::class,
+                'logger' => DummyLogger::class,
             ],
         ]);
 
         $processMessagesCommandDef = $this->container->getDefinition(OutboxProcessMessagesCommand::class);
         /** @var Reference $loggerArgument */
         $loggerArgument = $processMessagesCommandDef->getArgument(1);
-        $this->assertEquals(DummyCustomLogger::class, $loggerArgument->__toString());
+        $this->assertEquals(DummyLogger::class, $loggerArgument->__toString());
     }
 }

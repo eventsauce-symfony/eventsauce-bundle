@@ -11,9 +11,9 @@ use EventSauce\EventSourcing\Serialization\MessageSerializer;
 use EventSauce\MessageOutbox\DoctrineOutbox\DoctrineOutboxRepository;
 use EventSauce\MessageOutbox\InMemoryOutboxRepository;
 use EventSauce\MessageOutbox\OutboxMessageDispatcher;
-use LogicException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
+use Symfony\Component\DependencyInjection\Exception\LogicException;
 use Symfony\Component\DependencyInjection\Reference;
 
 final class EventDispatcherLoader

@@ -9,9 +9,9 @@ use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
 use Andreo\EventSauceBundle\Factory\MessageDispatcherChainFactory;
 use EventSauce\EventSourcing\MessageDispatcher;
 use EventSauce\EventSourcing\MessageDispatcherChain;
-use LogicException;
 use Symfony\Component\DependencyInjection\Argument\IteratorArgument;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Exception\LogicException;
 use Symfony\Component\DependencyInjection\Reference;
 
 final class MessengerMessageDispatcherLoader
@@ -26,11 +26,12 @@ final class MessengerMessageDispatcherLoader
         if (!$this->extension->isConfigEnabled($this->container, $messageDispatcherConfig)) {
             return;
         }
+        $synchronousDispatcherConfig = $config['synchronous_message_dispatcher'];
+        if ($this->extension->isConfigEnabled($this->container, $synchronousDispatcherConfig)) {
+            throw new LogicException('Can not enable synchronous_message_dispatcher and messenger_message_dispatcher in one configuration. Disable one of configs.');
+        }
 
         $dispatcherChainConfig = $messageDispatcherConfig['chain'];
-        $aclConfig = $config['acl'];
-        $outboundConfig = $aclConfig['outbound'];
-        $outboundAclEnabled = $this->extension->isConfigEnabled($this->container, $outboundConfig);
 
         $dispatcherChainReferences = [];
         foreach ($dispatcherChainConfig as $dispatcherAlias => $dispatcherConfig) {
@@ -45,16 +46,20 @@ final class MessengerMessageDispatcherLoader
                 ]);
 
             if ($this->extension->isConfigEnabled($this->container, $dispatcherConfig['acl'])) {
-                if (!$outboundAclEnabled) {
+                $aclConfig = $config['acl'];
+                $outboundConfig = $aclConfig['outbound'];
+
+                if (!$this->extension->isConfigEnabled($this->container, $aclConfig) ||
+                    !$this->extension->isConfigEnabled($this->container, $outboundConfig)) {
                     throw new LogicException('Default acl outbound config is disabled. If you want to use it, enable and configure it.');
                 }
 
                 $dispatcherDef->addTag('andreo.eventsauce.acl_outbound');
 
-                $outboundFilterChainConfig = $aclConfig['filter_chain'];
+                $outboundFilterChainConfig = $outboundConfig['filter_chain'];
                 $dispatcherDef->addTag('andreo.eventsauce.acl.filter_chain', [
-                    'before' => $outboundFilterChainConfig['before'],
-                    'after' => $outboundFilterChainConfig['after'],
+                    'before' => $outboundFilterChainConfig['before_translate'],
+                    'after' => $outboundFilterChainConfig['after_translate'],
                 ]);
             }
 

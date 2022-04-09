@@ -15,8 +15,8 @@ use EventSauce\BackOff\LinearBackOffStrategy;
 use EventSauce\BackOff\NoWaitingBackOffStrategy;
 use EventSauce\MessageOutbox\DeleteMessageOnCommit;
 use EventSauce\MessageOutbox\RelayCommitStrategy;
-use LogicException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Exception\LogicException;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
 

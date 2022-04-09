@@ -11,8 +11,8 @@ use EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer;
 use EventSauce\EventSourcing\Serialization\ConstructingPayloadSerializer;
 use EventSauce\EventSourcing\Serialization\MessageSerializer;
 use EventSauce\EventSourcing\Serialization\PayloadSerializer;
-use LogicException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Exception\LogicException;
 
 final class SerializerLoader
 {
@@ -23,7 +23,6 @@ final class SerializerLoader
     public function __invoke(array $config): void
     {
         $serializerConfig = $config['serializer'];
-
         $payloadSerializerId = $serializerConfig['payload'];
         if (!in_array($payloadSerializerId, [null, PayloadSerializer::class, ConstructingPayloadSerializer::class], true)) {
             $this->container->setAlias(PayloadSerializer::class, $payloadSerializerId);
@@ -33,7 +32,6 @@ final class SerializerLoader
         if (!in_array($messageSerializerServiceId, [null, MessageSerializer::class, ConstructingMessageSerializer::class], true)) {
             $this->container->setAlias(MessageSerializer::class, $messageSerializerServiceId);
         }
-
 
         $snapshotConfig = $config['snapshot'];
         $snapshotRepositoryConfig = $snapshotConfig['repository'];

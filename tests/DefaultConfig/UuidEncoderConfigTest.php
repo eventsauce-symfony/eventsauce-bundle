@@ -32,4 +32,3 @@ final class UuidEncoderConfigTest extends AbstractExtensionTestCase
         $this->assertEquals(DummyUuidEncoder::class, $uuidEncoderAlias->__toString());
     }
 }
-

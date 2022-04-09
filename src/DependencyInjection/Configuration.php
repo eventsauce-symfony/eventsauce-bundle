@@ -48,10 +48,10 @@ final class Configuration implements ConfigurationInterface
             ->children()
                 ->append($this->getTimeSection())
                 ->append($this->getMessageStorageSection())
+                ->append($this->getSynchronousMessageDispatcherSection())
                 ->append($this->getMessengerMessageDispatcherSection())
                 ->append($this->getAclSection())
                 ->append($this->getMessageDecoratorSection())
-                ->append($this->getSynchronousMessageDispatcherSection())
                 ->append($this->getEventDispatcherSection())
                 ->append($this->getOutboxSection())
                 ->append($this->getSnapshotSection())
@@ -227,8 +227,8 @@ final class Configuration implements ConfigurationInterface
                     ->normalizeKeys(false)
                     ->validate()
                         ->ifTrue(static function (array $config) {
-                            foreach (array_keys($config) as $key) {
-                                if (is_numeric($key)) {
+                            foreach (array_keys($config) as $alias) {
+                                if (is_numeric($alias)) {
                                     return true;
                                 }
                             }
@@ -236,6 +236,20 @@ final class Configuration implements ConfigurationInterface
                             return false;
                         })
                         ->thenInvalid('Dispatcher alias must be string')
+                    ->end()
+                    ->beforeNormalization()
+                        ->always(static function (array $config) {
+                            $normalizedConfig = [];
+                            foreach ($config as $aliasOrIndex => $aliasOrConfig) {
+                                if (is_string($aliasOrConfig)) {
+                                    $normalizedConfig[$aliasOrConfig] = [];
+                                } else {
+                                    $normalizedConfig[$aliasOrIndex] = $aliasOrConfig;
+                                }
+                            }
+
+                            return $normalizedConfig;
+                        })
                     ->end()
                     ->arrayPrototype()
                         ->children()

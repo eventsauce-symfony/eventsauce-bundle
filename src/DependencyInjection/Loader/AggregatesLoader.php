@@ -37,11 +37,11 @@ use EventSauce\MessageOutbox\RelayCommitStrategy;
 use EventSauce\MessageRepository\DoctrineMessageRepository\DoctrineUuidV4MessageRepository;
 use EventSauce\MessageRepository\TableSchema\TableSchema;
 use EventSauce\UuidEncoding\UuidEncoder;
-use LogicException;
 use Symfony\Component\DependencyInjection\Argument\IteratorArgument;
 use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
+use Symfony\Component\DependencyInjection\Exception\LogicException;
 use Symfony\Component\DependencyInjection\Reference;
 
 final class AggregatesLoader

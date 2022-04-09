@@ -7,9 +7,9 @@ namespace Andreo\EventSauceBundle\DependencyInjection\Loader;
 use Andreo\EventSauce\Upcasting\MessageUpcaster;
 use Andreo\EventSauceBundle\Attribute\AsUpcaster;
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
-use LogicException;
 use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Exception\LogicException;
 
 final class UpcasterLoader
 {

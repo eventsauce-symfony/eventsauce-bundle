@@ -7,8 +7,8 @@ namespace Andreo\EventSauceBundle\DependencyInjection\Loader;
 use Andreo\EventSauce\Doctrine\Migration\GenerateAggregateMigrationCommand;
 use Andreo\EventSauce\Doctrine\Migration\TableNameSuffix;
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
-use LogicException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Exception\LogicException;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 
 final class MigrationGeneratorLoader

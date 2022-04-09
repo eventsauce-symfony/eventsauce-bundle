@@ -23,7 +23,6 @@ final class UpcasterConfigTest extends AbstractExtensionTestCase
      */
     public function should_load_upcaster(): void
     {
-
         $this->load([
             'upcaster' => [
                 'enabled' => true,
@@ -38,7 +37,7 @@ final class UpcasterConfigTest extends AbstractExtensionTestCase
         $this->assertArrayHasKey(AsUpcaster::class, $this->container->getAutoconfiguredAttributes());
 
         $this->assertContainerBuilderHasServiceDefinitionWithTag(DummyMessageUpcaster::class, 'andreo.eventsauce.upcaster.dummy', [
-            'priority' => -2
+            'priority' => -2,
         ]);
     }
 }

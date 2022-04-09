@@ -6,7 +6,7 @@ namespace Tests\Dummy;
 
 use EventSauce\EventSourcing\Serialization\PayloadSerializer;
 
-class DummyCustomPayloadSerializer implements PayloadSerializer
+class DummyPayloadSerializer implements PayloadSerializer
 {
     public function serializePayload(object $event): array
     {

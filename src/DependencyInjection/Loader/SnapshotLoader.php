@@ -8,8 +8,8 @@ use Andreo\EventSauce\Snapshotting\AggregateRootRepositoryWithVersionedSnapshott
 use Andreo\EventSauce\Snapshotting\CanStoreSnapshotStrategy;
 use Andreo\EventSauce\Snapshotting\DoctrineSnapshotRepository;
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
-use LogicException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Exception\LogicException;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 
 final class SnapshotLoader

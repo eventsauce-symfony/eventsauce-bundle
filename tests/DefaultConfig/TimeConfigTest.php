@@ -7,8 +7,6 @@ namespace Tests\DefaultConfig;
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
 use EventSauce\Clock\Clock;
 use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
-use DateTimeImmutable;
-use DateTimeZone;
 use Tests\Dummy\DummyClock;
 
 final class TimeConfigTest extends AbstractExtensionTestCase
