@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\DefaultConfig;
 
+use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
+use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
 use Symfony\Component\DependencyInjection\Exception\LogicException;
 
-final class MessengerMessageDispatcherTest
+final class MessengerMessageDispatcherTest extends AbstractExtensionTestCase
 {
     /**
      * @test
@@ -20,7 +22,7 @@ final class MessengerMessageDispatcherTest
                         'bus' => 'bar',
                     ],
                     'bar' => [
-                        'baz' => 'foo',
+                        'bus' => 'baz',
                     ],
                 ],
             ],
@@ -40,6 +42,7 @@ final class MessengerMessageDispatcherTest
     public function should_load_dispatcher_with_acl(): void
     {
         $this->load([
+            'acl' => true,
             'messenger_message_dispatcher' => [
                 'chain' => [
                     'foo' => [
@@ -107,5 +110,12 @@ final class MessengerMessageDispatcherTest
             'messenger_message_dispatcher' => [],
             'synchronous_message_dispatcher' => [],
         ]);
+    }
+
+    protected function getContainerExtensions(): array
+    {
+        return [
+            new AndreoEventSauceExtension(),
+        ];
     }
 }
