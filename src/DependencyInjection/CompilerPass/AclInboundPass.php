@@ -47,11 +47,11 @@ final class AclInboundPass implements CompilerPassInterface
         $beforeFilters = [];
         $consumerBeforeFilters = [];
         foreach ($this->findAndSortTaggedServices('andreo.eventsauce.acl_inbound.filter_before', $container) as $index => $filterBeforeReference) {
-            $translatorDef = $container->findDefinition($filterBeforeReference->__toString());
-            if (!$translatorDef->hasTag('andreo.eventsauce.acl_inbound_target')) {
+            $filterBeforeDef = $container->findDefinition($filterBeforeReference->__toString());
+            if (!$filterBeforeDef->hasTag('andreo.eventsauce.acl_inbound_target')) {
                 $beforeFilters[$index] = $filterBeforeReference;
             } else {
-                [$targetAttrs] = $translatorDef->getTag('andreo.eventsauce.acl_inbound_target');
+                [$targetAttrs] = $filterBeforeDef->getTag('andreo.eventsauce.acl_inbound_target');
                 $filterBeforeTargetId = $targetAttrs['id'] ?? null;
                 if (null === $filterBeforeTargetId) {
                     $beforeFilters[$index] = $filterBeforeReference;
@@ -65,11 +65,11 @@ final class AclInboundPass implements CompilerPassInterface
         $afterFilters = [];
         $consumerAfterFilters = [];
         foreach ($this->findAndSortTaggedServices('andreo.eventsauce.acl_inbound.filter_after', $container) as $index => $filterAfterReference) {
-            $translatorDef = $container->findDefinition($filterAfterReference->__toString());
-            if (!$translatorDef->hasTag('andreo.eventsauce.acl_inbound_target')) {
+            $filterAfterDef = $container->findDefinition($filterAfterReference->__toString());
+            if (!$filterAfterDef->hasTag('andreo.eventsauce.acl_inbound_target')) {
                 $afterFilters[$index] = $filterAfterReference;
             } else {
-                [$targetAttrs] = $translatorDef->getTag('andreo.eventsauce.acl_inbound_target');
+                [$targetAttrs] = $filterAfterDef->getTag('andreo.eventsauce.acl_inbound_target');
                 $filterAfterTargetId = $targetAttrs['id'] ?? null;
                 if (null === $filterAfterTargetId) {
                     $afterFilters[$index] = $filterAfterReference;

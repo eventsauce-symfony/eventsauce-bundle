@@ -48,37 +48,37 @@ final class AclLoader
                 if ($outboundEnabled && $reflector->implementsInterface(MessageDispatcher::class)) {
                     $definition->addTag('andreo.eventsauce.acl_outbound');
 
-                    $filterStrategyAttrRef = $reflector->getAttributes(AclMessageFilterChain::class)[0] ?? null;
-                    if (null === $filterStrategyAttrRef) {
+                    $filterChainAttrRef = $reflector->getAttributes(AclMessageFilterChain::class)[0] ?? null;
+                    if (null === $filterChainAttrRef) {
                         $filterChainConfig = $outboundConfig['filter_chain'];
                         $definition->addTag('andreo.eventsauce.acl.filter_chain', [
                             'before' => $filterChainConfig['before'],
                             'after' => $filterChainConfig['after'],
                         ]);
                     } else {
-                        /** @var AclMessageFilterChain $filterStrategyAttr */
-                        $filterStrategyAttr = $filterStrategyAttrRef->newInstance();
+                        /** @var AclMessageFilterChain $filterChainAttr */
+                        $filterChainAttr = $filterChainAttrRef->newInstance();
                         $definition->addTag('andreo.eventsauce.acl.filter_chain', [
-                            'before' => $filterStrategyAttr->beforeTranslate,
-                            'after' => $filterStrategyAttr->afterTranslate,
+                            'before' => $filterChainAttr->beforeTranslate,
+                            'after' => $filterChainAttr->afterTranslate,
                         ]);
                     }
                 } elseif ($inboundEnabled && $reflector->implementsInterface(MessageConsumer::class)) {
                     $definition->addTag('andreo.eventsauce.acl_inbound');
 
-                    $filterStrategyAttrRef = $reflector->getAttributes(AclMessageFilterChain::class)[0] ?? null;
-                    if (null === $filterStrategyAttrRef) {
+                    $filterChainAttrRef = $reflector->getAttributes(AclMessageFilterChain::class)[0] ?? null;
+                    if (null === $filterChainAttrRef) {
                         $filterChainConfig = $inboundConfig['filter_chain'];
                         $definition->addTag('andreo.eventsauce.acl.filter_chain', [
                             'before' => $filterChainConfig['before'],
                             'after' => $filterChainConfig['after'],
                         ]);
                     } else {
-                        /** @var AclMessageFilterChain $filterStrategyAttr */
-                        $filterStrategyAttr = $filterStrategyAttrRef->newInstance();
+                        /** @var AclMessageFilterChain $filterChainAttr */
+                        $filterChainAttr = $filterChainAttrRef->newInstance();
                         $definition->addTag('andreo.eventsauce.acl.filter_chain', [
-                            'before' => $filterStrategyAttr->beforeTranslate,
-                            'after' => $filterStrategyAttr->afterTranslate,
+                            'before' => $filterChainAttr->beforeTranslate,
+                            'after' => $filterChainAttr->afterTranslate,
                         ]);
                     }
                 }

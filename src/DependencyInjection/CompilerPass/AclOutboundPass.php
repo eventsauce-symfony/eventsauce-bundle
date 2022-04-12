@@ -28,44 +28,55 @@ final class AclOutboundPass implements CompilerPassInterface
     {
         $translators = [];
         $dispatcherTranslators = [];
-        foreach ($this->findAndSortTaggedServices('andreo.eventsauce.acl_outbound.message_translator', $container) as $index => $reference) {
-            $translatorDef = $container->findDefinition($reference->__toString());
+        foreach ($this->findAndSortTaggedServices('andreo.eventsauce.acl_outbound.message_translator', $container) as $index => $translatorReference) {
+            $translatorDef = $container->findDefinition($translatorReference->__toString());
             if (!$translatorDef->hasTag('andreo.eventsauce.acl_outbound_target')) {
-                $translators[$index] = $reference;
+                $translators[$index] = $translatorReference;
             } else {
                 [$targetAttrs] = $translatorDef->getTag('andreo.eventsauce.acl_outbound_target');
-                $targetId = $targetAttrs['id'];
-                $this->checkTarget($container, $targetId, $reference->__toString());
-                $dispatcherTranslators[$targetId][$index] = $reference;
+                $translatorTargetId = $targetAttrs['id'] ?? null;
+                if (null === $translatorTargetId) {
+                    $translators[$index] = $translatorReference;
+                    continue;
+                }
+                $this->checkTarget($container, $translatorTargetId, $translatorReference->__toString());
+                $dispatcherTranslators[$translatorTargetId][$index] = $translatorReference;
             }
         }
 
         $beforeFilters = [];
         $dispatcherBeforeFilters = [];
-        foreach ($this->findAndSortTaggedServices('andreo.eventsauce.acl_outbound.filter_before', $container) as $index => $reference) {
-            $translatorDef = $container->findDefinition($reference->__toString());
-            if (!$translatorDef->hasTag('andreo.eventsauce.acl_outbound_target')) {
-                $beforeFilters[$index] = $reference;
+        foreach ($this->findAndSortTaggedServices('andreo.eventsauce.acl_outbound.filter_before', $container) as $index => $filterBeforeReference) {
+            $filterBeforeDef = $container->findDefinition($filterBeforeReference->__toString());
+            if (!$filterBeforeDef->hasTag('andreo.eventsauce.acl_outbound_target')) {
+                $beforeFilters[$index] = $filterBeforeReference;
             } else {
-                [$targetAttrs] = $translatorDef->getTag('andreo.eventsauce.acl_outbound_target');
-                $targetId = $targetAttrs['id'];
-
-                $this->checkTarget($container, $targetId, $reference->__toString());
-                $dispatcherBeforeFilters[$targetId][$index] = $reference;
+                [$targetAttrs] = $filterBeforeDef->getTag('andreo.eventsauce.acl_outbound_target');
+                $filterBeforeTargetId = $targetAttrs['id'] ?? null;
+                if (null === $filterBeforeTargetId) {
+                    $beforeFilters[$index] = $filterBeforeReference;
+                    continue;
+                }
+                $this->checkTarget($container, $filterBeforeTargetId, $filterBeforeReference->__toString());
+                $dispatcherBeforeFilters[$filterBeforeTargetId][$index] = $filterBeforeReference;
             }
         }
 
         $afterFilters = [];
         $dispatcherAfterFilters = [];
         foreach ($this->findAndSortTaggedServices('andreo.eventsauce.acl_outbound.filter_after', $container) as $index => $reference) {
-            $translatorDef = $container->findDefinition($reference->__toString());
-            if (!$translatorDef->hasTag('andreo.eventsauce.acl_outbound_target')) {
+            $filterAfterDef = $container->findDefinition($reference->__toString());
+            if (!$filterAfterDef->hasTag('andreo.eventsauce.acl_outbound_target')) {
                 $afterFilters[$index] = $reference;
             } else {
-                [$targetAttrs] = $translatorDef->getTag('andreo.eventsauce.acl_outbound_target');
-                $targetId = $targetAttrs['id'];
-                $this->checkTarget($container, $targetId, $reference->__toString());
-                $dispatcherAfterFilters[$targetId][$index] = $reference;
+                [$targetAttrs] = $filterAfterDef->getTag('andreo.eventsauce.acl_outbound_target');
+                $filterAfterTargetId = $targetAttrs['id'] ?? null;
+                if (null === $filterAfterTargetId) {
+                    $afterFilters[$index] = $reference;
+                    continue;
+                }
+                $this->checkTarget($container, $filterAfterTargetId, $reference->__toString());
+                $dispatcherAfterFilters[$filterAfterTargetId][$index] = $reference;
             }
         }
 
@@ -83,8 +94,8 @@ final class AclOutboundPass implements CompilerPassInterface
             ]))->setFactory([MessageTranslatorChainFactory::class, 'create']);
 
             $dispatcherDef = $container->findDefinition($dispatcherId);
-            if ($dispatcherDef->hasTag('andreo.eventsauce.acl.filter_strategy')) {
-                [$targetAttrs] = $dispatcherDef->getTag('andreo.eventsauce.acl.filter_strategy');
+            if ($dispatcherDef->hasTag('andreo.eventsauce.acl.filter_chain')) {
+                [$targetAttrs] = $dispatcherDef->getTag('andreo.eventsauce.acl.filter_chain');
 
                 $filterChainBefore = $targetAttrs['before'];
                 if ('match_all' === $filterChainBefore) {
