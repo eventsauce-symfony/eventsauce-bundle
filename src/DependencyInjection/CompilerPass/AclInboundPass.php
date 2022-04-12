@@ -28,43 +28,56 @@ final class AclInboundPass implements CompilerPassInterface
     {
         $translators = [];
         $consumerTranslators = [];
-        foreach ($this->findAndSortTaggedServices('andreo.eventsauce.acl_inbound.message_translator', $container) as $index => $reference) {
-            $translatorDef = $container->findDefinition($reference->__toString());
+        foreach ($this->findAndSortTaggedServices('andreo.eventsauce.acl_inbound.message_translator', $container) as $index => $translatorReference) {
+            $translatorDef = $container->findDefinition($translatorReference->__toString());
             if (!$translatorDef->hasTag('andreo.eventsauce.acl_inbound_target')) {
-                $translators[$index] = $reference;
+                $translators[$index] = $translatorReference;
             } else {
                 [$targetAttrs] = $translatorDef->getTag('andreo.eventsauce.acl_inbound_target');
-                $targetId = $targetAttrs['id'];
-                $this->checkTarget($container, $targetId, $reference->__toString());
-                $consumerTranslators[$targetId][$index] = $reference;
+                $translatorTargetId = $targetAttrs['id'] ?? null;
+                if (null === $translatorTargetId) {
+                    $translators[$index] = $translatorReference;
+                    continue;
+                }
+                $this->checkTarget($container, $translatorTargetId, $translatorReference->__toString());
+                $consumerTranslators[$translatorTargetId][$index] = $translatorReference;
             }
         }
 
         $beforeFilters = [];
         $consumerBeforeFilters = [];
-        foreach ($this->findAndSortTaggedServices('andreo.eventsauce.acl_inbound.filter_before', $container) as $index => $reference) {
-            $translatorDef = $container->findDefinition($reference->__toString());
+        foreach ($this->findAndSortTaggedServices('andreo.eventsauce.acl_inbound.filter_before', $container) as $index => $filterBeforeReference) {
+            $translatorDef = $container->findDefinition($filterBeforeReference->__toString());
             if (!$translatorDef->hasTag('andreo.eventsauce.acl_inbound_target')) {
-                $beforeFilters[$index] = $reference;
+                $beforeFilters[$index] = $filterBeforeReference;
             } else {
                 [$targetAttrs] = $translatorDef->getTag('andreo.eventsauce.acl_inbound_target');
-                $targetId = $targetAttrs['id'];
-                $this->checkTarget($container, $targetId, $reference->__toString());
-                $consumerBeforeFilters[$targetId][$index] = $reference;
+                $filterBeforeTargetId = $targetAttrs['id'] ?? null;
+                if (null === $filterBeforeTargetId) {
+                    $beforeFilters[$index] = $filterBeforeReference;
+                    continue;
+                }
+                $this->checkTarget($container, $filterBeforeTargetId, $filterBeforeReference->__toString());
+                $consumerBeforeFilters[$filterBeforeTargetId][$index] = $filterBeforeReference;
             }
         }
 
         $afterFilters = [];
         $consumerAfterFilters = [];
-        foreach ($this->findAndSortTaggedServices('andreo.eventsauce.acl_inbound.filter_after', $container) as $index => $reference) {
-            $translatorDef = $container->findDefinition($reference->__toString());
+        foreach ($this->findAndSortTaggedServices('andreo.eventsauce.acl_inbound.filter_after', $container) as $index => $filterAfterReference) {
+            $translatorDef = $container->findDefinition($filterAfterReference->__toString());
             if (!$translatorDef->hasTag('andreo.eventsauce.acl_inbound_target')) {
-                $afterFilters[$index] = $reference;
+                $afterFilters[$index] = $filterAfterReference;
             } else {
                 [$targetAttrs] = $translatorDef->getTag('andreo.eventsauce.acl_inbound_target');
-                $targetId = $targetAttrs['id'];
-                $this->checkTarget($container, $targetId, $reference->__toString());
-                $consumerAfterFilters[$targetId][$index] = $reference;
+                $filterAfterTargetId = $targetAttrs['id'] ?? null;
+                if (null === $filterAfterTargetId) {
+                    $afterFilters[$index] = $filterAfterReference;
+                    continue;
+                }
+
+                $this->checkTarget($container, $filterAfterTargetId, $filterAfterReference->__toString());
+                $consumerAfterFilters[$filterAfterTargetId][$index] = $filterAfterReference;
             }
         }
 

@@ -6,5 +6,11 @@
         <testsuite name="config">
             <directory>tests/Config</directory>
         </testsuite>
+        <testsuite name="factory">
+            <directory>tests/Factory</directory>
+        </testsuite>
+        <testsuite name="compiler-pass">
+            <directory>tests/CompilerPass</directory>
+        </testsuite>
     </testsuites>
 </phpunit>
