@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\DefaultConfig;
+namespace Tests\Config;
 
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
 use EventSauce\EventSourcing\ClassNameInflector;

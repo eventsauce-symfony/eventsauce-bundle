@@ -643,7 +643,7 @@ final class Configuration implements ConfigurationInterface
                         ->normalizeKeys(false)
                         ->scalarPrototype()->end()
                     ?->end()
-                    ?->arrayNode('upcast')->canBeEnabled()->end()
+                    ?->arrayNode('upcaster')->canBeEnabled()->end()
                     ?->arrayNode('snapshot')->canBeEnabled()->end()
                 ?->end()
             ->end();

@@ -87,7 +87,7 @@ final class AclOutboundPass implements CompilerPassInterface
         foreach ($container->findTaggedServiceIds('andreo.eventsauce.acl_outbound') as $dispatcherId => [$attrs]) {
             $outboundTranslators = $translators + ($dispatcherTranslators[$dispatcherId] ?? []);
             ksort($outboundTranslators);
-            $outboundTranslators = array_values($outboundTranslators);
+            $outboundTranslators = array_unique(array_values($outboundTranslators), SORT_REGULAR);
 
             $messageTranslatorChain = (new Definition(MessageTranslatorChain::class, [
                 new IteratorArgument($outboundTranslators),
@@ -101,7 +101,7 @@ final class AclOutboundPass implements CompilerPassInterface
                 if ('match_all' === $filterChainBefore) {
                     $outboundBeforeFilters = $beforeFilters + ($dispatcherBeforeFilters[$dispatcherId] ?? []);
                     ksort($outboundBeforeFilters);
-                    $outboundBeforeFilters = array_values($outboundBeforeFilters);
+                    $outboundBeforeFilters = array_unique(array_values($outboundBeforeFilters), SORT_REGULAR);
 
                     $filterBefore = (new Definition(MatchAllMessageFilters::class, [
                         new IteratorArgument($outboundBeforeFilters),
@@ -109,7 +109,7 @@ final class AclOutboundPass implements CompilerPassInterface
                 } elseif ('match_any' === $filterChainBefore) {
                     $outboundBeforeFilters = $beforeFilters + ($dispatcherBeforeFilters[$dispatcherId] ?? []);
                     ksort($outboundBeforeFilters);
-                    $outboundBeforeFilters = array_values($outboundBeforeFilters);
+                    $outboundBeforeFilters = array_unique(array_values($outboundBeforeFilters), SORT_REGULAR);
 
                     $filterBefore = (new Definition(MatchAnyMessageFilter::class, [
                         new IteratorArgument($outboundBeforeFilters),
@@ -122,7 +122,7 @@ final class AclOutboundPass implements CompilerPassInterface
                 if ('match_all' === $filterChainAfter) {
                     $outboundAfterFilters = $afterFilters + ($dispatcherAfterFilters[$dispatcherId] ?? []);
                     ksort($outboundAfterFilters);
-                    $outboundAfterFilters = array_values($outboundAfterFilters);
+                    $outboundAfterFilters = array_unique(array_values($outboundAfterFilters), SORT_REGULAR);
 
                     $filterAfter = (new Definition(MatchAllMessageFilters::class, [
                         new IteratorArgument($outboundAfterFilters),
@@ -130,7 +130,7 @@ final class AclOutboundPass implements CompilerPassInterface
                 } elseif ('match_any' === $filterChainAfter) {
                     $outboundAfterFilters = $afterFilters + ($dispatcherAfterFilters[$dispatcherId] ?? []);
                     ksort($outboundAfterFilters);
-                    $outboundAfterFilters = array_values($outboundAfterFilters);
+                    $outboundAfterFilters = array_unique(array_values($outboundAfterFilters), SORT_REGULAR);
 
                     $filterAfter = (new Definition(MatchAnyMessageFilter::class, [
                         new IteratorArgument($outboundAfterFilters),

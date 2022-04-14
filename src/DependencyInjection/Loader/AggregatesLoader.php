@@ -54,7 +54,7 @@ final class AggregatesLoader
     {
         $messageConfig = $config['event_store'];
         $snapshotConfig = $config['snapshot'];
-        $upcastConfig = $config['upcaster'];
+        $upcasterConfig = $config['upcaster'];
 
         foreach ($config['aggregates'] as $aggregateName => $aggregateConfig) {
             $aggregateConfig['repository_alias'] ??= sprintf('%sRepository', $aggregateName);
@@ -69,7 +69,7 @@ final class AggregatesLoader
                 $aggregateName,
                 $aggregateConfig,
                 $messageConfig,
-                $upcastConfig
+                $upcasterConfig
             );
 
             $this->loadAggregateRepository(
@@ -103,7 +103,10 @@ final class AggregatesLoader
         $aggregateDispatchers = $aggregateConfig['dispatchers'];
 
         if (empty($aggregateDispatchers)) {
-            $this->container->setAlias("andreo.eventsauce.message_dispatcher_chain.$aggregateName", 'andreo.eventsauce.message_dispatcher_chain');
+            $this->container->setAlias(
+                "andreo.eventsauce.message_dispatcher_chain.$aggregateName",
+                'andreo.eventsauce.message_dispatcher_chain'
+            );
         } else {
             $synchronousMessageDispatcher = $config['synchronous_message_dispatcher'];
             $messengerMessageDispatcher = $config['messenger_message_dispatcher'];
@@ -138,7 +141,7 @@ final class AggregatesLoader
         string $aggregateName,
         array $aggregateConfig,
         array $messageConfig,
-        array $upcastConfig
+        array $upcasterConfig
     ): void {
         $messageRepositoryConfig = $messageConfig['repository'];
         $messageRepositoryDoctrineConfig = $messageRepositoryConfig['doctrine'];
@@ -146,11 +149,11 @@ final class AggregatesLoader
         $messageTableName = $messageRepositoryDoctrineConfig['table_name'];
 
         if ($this->extension->isConfigEnabled($this->container, $aggregateConfig['upcaster'])) {
-            if (!$this->extension->isConfigEnabled($this->container, $upcastConfig)) {
+            if (!$this->extension->isConfigEnabled($this->container, $upcasterConfig)) {
                 throw new LogicException('Upcast config is disabled. If you want to use it, enable and configure it .');
             }
 
-            $context = $upcastConfig['argument'];
+            $context = $upcasterConfig['argument'];
             if ('payload' === $context) {
                 if (!class_exists(UpcasterChainWithEventGuessing::class)) {
                     $upcasterChainDef = (new Definition(UpcasterChain::class, [

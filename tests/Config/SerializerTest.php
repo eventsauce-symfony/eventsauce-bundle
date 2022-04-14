@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\DefaultConfig;
+namespace Tests\Config;
 
 use Andreo\EventSauce\Snapshotting\SnapshotStateSerializer;
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;

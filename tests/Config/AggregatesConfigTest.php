@@ -20,11 +20,11 @@ use EventSauce\MessageOutbox\DoctrineOutbox\DoctrineOutboxRepository;
 use EventSauce\MessageOutbox\DoctrineOutbox\DoctrineTransactionalMessageRepository;
 use EventSauce\MessageOutbox\InMemoryOutboxRepository;
 use EventSauce\MessageRepository\DoctrineMessageRepository\DoctrineUuidV4MessageRepository;
-use LogicException;
 use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\Argument\IteratorArgument;
 use Symfony\Component\DependencyInjection\Definition;
+use Symfony\Component\DependencyInjection\Exception\LogicException;
 use Symfony\Component\DependencyInjection\Reference;
 use Tests\Dummy\DummyFooAggregate;
 use Tests\Dummy\DummyFooAggregateWithSnapshotting;
@@ -43,20 +43,9 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function should_register_default_aggregate_repository(): void
+    public function should_load_aggregate_repository(): void
     {
         $this->load([
-            'message' => [
-                'dispatcher' => [
-                    'messenger' => [
-                        'mode' => 'event',
-                    ],
-                    'chain' => [
-                        'fooBus' => 'barBus',
-                        'bazBus' => 'quxBus',
-                    ],
-                ],
-            ],
             'aggregates' => [
                 'foo' => [
                     'class' => DummyFooAggregate::class,
@@ -68,11 +57,6 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
         $definition = $this->container->getDefinition('andreo.eventsauce.message_repository.foo');
         $this->assertEquals(DoctrineUuidV4MessageRepository::class, $definition->getClass());
 
-        $this->assertContainerBuilderHasService('andreo.eventsauce.message_dispatcher_chain.foo');
-        $dispatcherChainDef = $this->container->getDefinition('andreo.eventsauce.message_dispatcher_chain.foo');
-        $this->assertInstanceOf(IteratorArgument::class, $argument = $dispatcherChainDef->getArgument(0));
-        $this->assertCount(2, $argument->getValues());
-
         $this->assertContainerBuilderHasAlias('fooRepository');
         $repositoryDef = $this->container->getDefinition('andreo.eventsauce.aggregate_repository.foo');
         $this->assertEquals(EventSourcedAggregateRootRepository::class, $repositoryDef->getClass());
@@ -81,31 +65,52 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function should_register_default_aggregate_repository_with_empty_dispatchers(): void
+    public function should_load_aggregate_repository_with_empty_dispatchers(): void
     {
         $this->load([
-            'message' => [
-                'dispatcher' => [
-                    'messenger' => [
-                        'mode' => 'event',
-                    ],
-                    'chain' => [
-                        'fooBus' => 'barBus',
-                        'bazBus' => 'quxBus',
-                    ],
+            'synchronous_message_dispatcher' => [
+                'chain' => [
+                    'fooBus',
+                    'barBus',
                 ],
             ],
             'aggregates' => [
-                'baz' => [
+                'foo' => [
                     'class' => DummyFooAggregate::class,
                 ],
             ],
         ]);
 
-        $this->assertContainerBuilderHasService('andreo.eventsauce.message_dispatcher_chain.baz');
-        $dispatcherChainDef = $this->container->getDefinition('andreo.eventsauce.message_dispatcher_chain.baz');
+        $this->assertContainerBuilderHasService('andreo.eventsauce.message_dispatcher_chain.foo');
+        $dispatcherChainDef = $this->container->findDefinition('andreo.eventsauce.message_dispatcher_chain.foo');
         $this->assertInstanceOf(IteratorArgument::class, $argument = $dispatcherChainDef->getArgument(0));
         $this->assertCount(2, $argument->getValues());
+    }
+
+    /**
+     * @test
+     */
+    public function should_load_aggregate_repository_with_dispatchers(): void
+    {
+        $this->load([
+            'synchronous_message_dispatcher' => [
+                'chain' => [
+                    'fooBus',
+                    'barBus',
+                ],
+            ],
+            'aggregates' => [
+                'foo' => [
+                    'class' => DummyFooAggregate::class,
+                    'dispatchers' => ['fooBus'],
+                ],
+            ],
+        ]);
+
+        $this->assertContainerBuilderHasService('andreo.eventsauce.message_dispatcher_chain.foo');
+        $dispatcherChainDef = $this->container->findDefinition('andreo.eventsauce.message_dispatcher_chain.foo');
+        $this->assertInstanceOf(IteratorArgument::class, $argument = $dispatcherChainDef->getArgument(0));
+        $this->assertCount(1, $argument->getValues());
     }
 
     /**
@@ -114,23 +119,12 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
     public function should_register_outbox_aggregate_repository(): void
     {
         $this->load([
-            'message' => [
-                'dispatcher' => [
-                    'messenger' => [
-                        'mode' => 'event',
-                    ],
-                    'chain' => [
-                        'fooBus' => 'barBus',
-                    ],
-                ],
-            ],
             'outbox' => [
                 'enabled' => true,
             ],
             'aggregates' => [
                 'bar' => [
                     'class' => DummyFooAggregate::class,
-                    'dispatchers' => ['fooBus'],
                     'outbox' => true,
                 ],
             ],
@@ -139,11 +133,6 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
         $this->assertContainerBuilderHasService('andreo.eventsauce.message_repository.bar');
         $definition = $this->container->getDefinition('andreo.eventsauce.message_repository.bar');
         $this->assertEquals(DoctrineTransactionalMessageRepository::class, $definition->getClass());
-
-        $this->assertContainerBuilderHasService('andreo.eventsauce.message_dispatcher_chain.bar');
-        $dispatcherChainDef = $this->container->getDefinition('andreo.eventsauce.message_dispatcher_chain.bar');
-        $this->assertInstanceOf(IteratorArgument::class, $argument = $dispatcherChainDef->getArgument(0));
-        $this->assertCount(1, $argument->getValues());
 
         $this->assertContainerBuilderHasAlias('barRepository');
         $repositoryDef = $this->container->getDefinition('andreo.eventsauce.aggregate_repository.bar');
@@ -156,19 +145,9 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function should_register_doctrine_outbox_aggregate_repository(): void
+    public function should_register_outbox_aggregate_repository_with_doctrine_message_repository(): void
     {
         $this->load([
-            'message' => [
-                'dispatcher' => [
-                    'messenger' => [
-                        'mode' => 'event',
-                    ],
-                    'chain' => [
-                        'fooBus' => 'barBus',
-                    ],
-                ],
-            ],
             'outbox' => [
                 'repository' => [
                     'doctrine' => [
@@ -179,7 +158,6 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
             'aggregates' => [
                 'bar' => [
                     'class' => DummyFooAggregate::class,
-                    'dispatchers' => ['fooBus'],
                     'outbox' => true,
                 ],
             ],
@@ -198,21 +176,10 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
     public function should_register_doctrine_outbox_aggregate_repository_as_default(): void
     {
         $this->load([
-            'message' => [
-                'dispatcher' => [
-                    'messenger' => [
-                        'mode' => 'event',
-                    ],
-                    'chain' => [
-                        'fooBus' => 'barBus',
-                    ],
-                ],
-            ],
             'outbox' => true,
             'aggregates' => [
                 'bar' => [
                     'class' => DummyFooAggregate::class,
-                    'dispatchers' => ['fooBus'],
                     'outbox' => true,
                 ],
             ],
@@ -231,16 +198,6 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
     public function should_register_memory_outbox_aggregate_repository(): void
     {
         $this->load([
-            'message' => [
-                'dispatcher' => [
-                    'messenger' => [
-                        'mode' => 'event',
-                    ],
-                    'chain' => [
-                        'fooBus' => 'barBus',
-                    ],
-                ],
-            ],
             'outbox' => [
                 'repository' => [
                     'memory' => true,
@@ -249,7 +206,6 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
             'aggregates' => [
                 'bar' => [
                     'class' => DummyFooAggregate::class,
-                    'dispatchers' => ['fooBus'],
                     'outbox' => true,
                 ],
             ],
@@ -288,21 +244,9 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
             'snapshot' => [
                 'enabled' => true,
             ],
-            'message' => [
-                'dispatcher' => [
-                    'messenger' => [
-                        'mode' => 'event',
-                    ],
-                    'chain' => [
-                        'fooBus' => 'barBus',
-                        'bazBus' => 'quxBus',
-                    ],
-                ],
-            ],
             'aggregates' => [
                 'baz' => [
                     'class' => DummyFooAggregateWithSnapshotting::class,
-                    'dispatchers' => ['fooBus'],
                     'snapshot' => true,
                 ],
             ],
@@ -311,11 +255,6 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
         $this->assertContainerBuilderHasService('andreo.eventsauce.message_repository.baz');
         $definition = $this->container->getDefinition('andreo.eventsauce.message_repository.baz');
         $this->assertEquals(DoctrineUuidV4MessageRepository::class, $definition->getClass());
-
-        $this->assertContainerBuilderHasService('andreo.eventsauce.message_dispatcher_chain.baz');
-        $dispatcherChainDef = $this->container->getDefinition('andreo.eventsauce.message_dispatcher_chain.baz');
-        $this->assertInstanceOf(IteratorArgument::class, $argument = $dispatcherChainDef->getArgument(0));
-        $this->assertCount(1, $argument->getValues());
 
         $this->assertContainerBuilderHasAlias('bazRepository');
         $repositoryDef = $this->container->getDefinition('andreo.eventsauce.aggregate_repository.baz');
@@ -333,21 +272,9 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
                     'memory' => true,
                 ],
             ],
-            'message' => [
-                'dispatcher' => [
-                    'messenger' => [
-                        'mode' => 'event',
-                    ],
-                    'chain' => [
-                        'fooBus' => 'barBus',
-                        'bazBus' => 'quxBus',
-                    ],
-                ],
-            ],
             'aggregates' => [
                 'baz' => [
                     'class' => DummyFooAggregateWithSnapshotting::class,
-                    'dispatchers' => ['fooBus'],
                     'snapshot' => true,
                 ],
             ],
@@ -366,21 +293,9 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
     {
         $this->load([
             'snapshot' => true,
-            'message' => [
-                'dispatcher' => [
-                    'messenger' => [
-                        'mode' => 'event',
-                    ],
-                    'chain' => [
-                        'fooBus' => 'barBus',
-                        'bazBus' => 'quxBus',
-                    ],
-                ],
-            ],
             'aggregates' => [
                 'bar' => [
                     'class' => DummyFooAggregateWithSnapshotting::class,
-                    'dispatchers' => ['fooBus'],
                     'snapshot' => true,
                 ],
             ],
@@ -406,21 +321,9 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
                     ],
                 ],
             ],
-            'message' => [
-                'dispatcher' => [
-                    'messenger' => [
-                        'mode' => 'event',
-                    ],
-                    'chain' => [
-                        'fooBus' => 'barBus',
-                        'bazBus' => 'quxBus',
-                    ],
-                ],
-            ],
             'aggregates' => [
                 'foo' => [
                     'class' => DummyFooAggregateWithSnapshotting::class,
-                    'dispatchers' => ['fooBus'],
                     'snapshot' => true,
                 ],
             ],
@@ -460,22 +363,10 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
             'snapshot' => [
                 'versioned' => true,
             ],
-            'message' => [
-                'dispatcher' => [
-                    'messenger' => [
-                        'mode' => 'event',
-                    ],
-                    'chain' => [
-                        'fooBus' => 'barBus',
-                        'bazBus' => 'quxBus',
-                    ],
-                ],
-            ],
             'aggregates' => [
                 'foo' => [
                     'class' => DummyFooAggregateWithVersionedSnapshotting::class,
                     'repository_alias' => 'customNameRepository',
-                    'dispatchers' => ['fooBus', 'bazBus'],
                     'snapshot' => true,
                 ],
             ],
@@ -484,11 +375,6 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
         $this->assertContainerBuilderHasService('andreo.eventsauce.message_repository.foo');
         $definition = $this->container->getDefinition('andreo.eventsauce.message_repository.foo');
         $this->assertEquals(DoctrineUuidV4MessageRepository::class, $definition->getClass());
-
-        $this->assertContainerBuilderHasService('andreo.eventsauce.message_dispatcher_chain.foo');
-        $dispatcherChainDef = $this->container->getDefinition('andreo.eventsauce.message_dispatcher_chain.foo');
-        $this->assertInstanceOf(IteratorArgument::class, $argument = $dispatcherChainDef->getArgument(0));
-        $this->assertCount(2, $argument->getValues());
 
         $this->assertContainerBuilderHasAlias('customNameRepository');
         $repositoryDef = $this->container->getDefinition('andreo.eventsauce.aggregate_repository.foo');
@@ -556,16 +442,16 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function should_register_message_repository_with_upcaster_payload_context(): void
+    public function should_register_message_repository_with_upcaster_payload_argument(): void
     {
         $this->load([
-            'upcast' => [
-                'context' => 'payload',
+            'upcaster' => [
+                'argument' => 'payload',
             ],
             'aggregates' => [
                 'foo' => [
                     'class' => DummyFooAggregate::class,
-                    'upcast' => true,
+                    'upcaster' => true,
                 ],
             ],
         ]);
@@ -580,16 +466,16 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function should_register_message_repository_with_upcaster_message_context(): void
+    public function should_register_message_repository_with_upcaster_message_argument(): void
     {
         $this->load([
-            'upcast' => [
-                'context' => 'message',
+            'upcaster' => [
+                'argument' => 'message',
             ],
             'aggregates' => [
                 'bar' => [
                     'class' => DummyFooAggregate::class,
-                    'upcast' => true,
+                    'upcaster' => true,
                 ],
             ],
         ]);
@@ -607,7 +493,7 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
     public function should_register_default_serializer_if_upcaster_is_disabled(): void
     {
         $this->load([
-            'upcast' => false,
+            'upcaster' => false,
             'aggregates' => [
                 'baz' => [
                     'class' => DummyFooAggregate::class,
@@ -629,15 +515,9 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
     {
         $this->expectException(LogicException::class);
         $this->load([
-            'message' => [
-                'dispatcher' => [
-                    'messenger' => [
-                        'enabled' => true,
-                        'mode' => 'event',
-                    ],
-                    'chain' => [
-                        'fooBus' => 'bazBus',
-                    ],
+            'synchronous_message_dispatcher' => [
+                'chain' => [
+                    'fooBus',
                 ],
             ],
             'aggregates' => [
@@ -652,17 +532,17 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function should_throw_exception_if_aggregate_upcast_is_enabled_but_root_upcast_option_is_disabled(): void
+    public function should_throw_exception_if_aggregate_upcaster_is_enabled_but_root_upcaster_option_is_disabled(): void
     {
         $this->expectException(LogicException::class);
         $this->load([
-            'upcast' => [
+            'upcaster' => [
                 'enabled' => false,
             ],
             'aggregates' => [
                 'foo' => [
                     'class' => DummyFooAggregate::class,
-                    'upcast' => true,
+                    'upcaster' => true,
                 ],
             ],
         ]);

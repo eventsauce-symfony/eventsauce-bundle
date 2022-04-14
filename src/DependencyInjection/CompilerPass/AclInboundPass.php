@@ -88,7 +88,7 @@ final class AclInboundPass implements CompilerPassInterface
         foreach ($container->findTaggedServiceIds('andreo.eventsauce.acl_inbound') as $consumerId => [$attrs]) {
             $inboundTranslators = $translators + ($consumerTranslators[$consumerId] ?? []);
             ksort($inboundTranslators);
-            $inboundTranslators = array_values($inboundTranslators);
+            $inboundTranslators = array_unique(array_values($inboundTranslators), SORT_REGULAR);
 
             $messageTranslatorChain = (new Definition(MessageTranslatorChain::class, [
                 new IteratorArgument($inboundTranslators),
@@ -102,7 +102,7 @@ final class AclInboundPass implements CompilerPassInterface
                 if ('match_all' === $filterChainBefore) {
                     $inboundBeforeFilters = $beforeFilters + ($consumerBeforeFilters[$consumerId] ?? []);
                     ksort($inboundBeforeFilters);
-                    $inboundBeforeFilters = array_values($inboundBeforeFilters);
+                    $inboundBeforeFilters = array_unique(array_values($inboundBeforeFilters), SORT_REGULAR);
 
                     $filterBefore = (new Definition(MatchAllMessageFilters::class, [
                         new IteratorArgument($inboundBeforeFilters),
@@ -110,7 +110,7 @@ final class AclInboundPass implements CompilerPassInterface
                 } elseif ('match_any' === $filterChainBefore) {
                     $inboundBeforeFilters = $beforeFilters + ($consumerBeforeFilters[$consumerId] ?? []);
                     ksort($inboundBeforeFilters);
-                    $inboundBeforeFilters = array_values($inboundBeforeFilters);
+                    $inboundBeforeFilters = array_unique(array_values($inboundBeforeFilters), SORT_REGULAR);
 
                     $filterBefore = (new Definition(MatchAnyMessageFilter::class, [
                         new IteratorArgument($inboundBeforeFilters),
@@ -123,7 +123,7 @@ final class AclInboundPass implements CompilerPassInterface
                 if ('match_all' === $filterChainAfter) {
                     $inboundAfterFilters = $afterFilters + ($consumerAfterFilters[$consumerId] ?? []);
                     ksort($inboundAfterFilters);
-                    $inboundAfterFilters = array_values($inboundAfterFilters);
+                    $inboundAfterFilters = array_unique(array_values($inboundAfterFilters), SORT_REGULAR);
 
                     $filterAfter = (new Definition(MatchAllMessageFilters::class, [
                         new IteratorArgument($inboundAfterFilters),
@@ -131,7 +131,7 @@ final class AclInboundPass implements CompilerPassInterface
                 } elseif ('match_any' === $filterChainAfter) {
                     $inboundAfterFilters = $afterFilters + ($consumerAfterFilters[$consumerId] ?? []);
                     ksort($inboundAfterFilters);
-                    $inboundAfterFilters = array_values($inboundAfterFilters);
+                    $inboundAfterFilters = array_unique(array_values($inboundAfterFilters), SORT_REGULAR);
 
                     $filterAfter = (new Definition(MatchAnyMessageFilter::class, [
                         new IteratorArgument($inboundAfterFilters),

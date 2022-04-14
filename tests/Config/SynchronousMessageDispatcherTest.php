@@ -2,28 +2,38 @@
 
 declare(strict_types=1);
 
-namespace Tests\DefaultConfig;
+namespace Tests\Config;
 
+use Andreo\EventSauceBundle\Attribute\AsSynchronousMessageConsumer;
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
 use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
 use Symfony\Component\DependencyInjection\Exception\LogicException;
 
-final class MessengerMessageDispatcherTest extends AbstractExtensionTestCase
+final class SynchronousMessageDispatcherTest extends AbstractExtensionTestCase
 {
+    /**
+     * @test
+     */
+    public function should_load_dispatcher_components(): void
+    {
+        $this->load([
+            'synchronous_message_dispatcher' => [],
+        ]);
+
+        $attributes = $this->container->getAutoconfiguredAttributes();
+        $this->assertArrayHasKey(AsSynchronousMessageConsumer::class, $attributes);
+    }
+
     /**
      * @test
      */
     public function should_load_dispatchers(): void
     {
         $this->load([
-            'messenger_message_dispatcher' => [
+            'synchronous_message_dispatcher' => [
                 'chain' => [
-                    'foo' => [
-                        'bus' => 'bar',
-                    ],
-                    'bar' => [
-                        'bus' => 'baz',
-                    ],
+                    'foo',
+                    'bar',
                 ],
             ],
         ]);
@@ -43,10 +53,9 @@ final class MessengerMessageDispatcherTest extends AbstractExtensionTestCase
     {
         $this->load([
             'acl' => true,
-            'messenger_message_dispatcher' => [
+            'synchronous_message_dispatcher' => [
                 'chain' => [
                     'foo' => [
-                        'bus' => 'bar',
                         'acl' => true,
                     ],
                 ],
@@ -72,11 +81,10 @@ final class MessengerMessageDispatcherTest extends AbstractExtensionTestCase
 
         $this->load([
             'acl' => false,
-            'messenger_message_dispatcher' => [
+            'synchronous_message_dispatcher' => [
                 'chain' => [
                     'foo' => [
                         'acl' => true,
-                        'bus' => 'bar',
                     ],
                 ],
             ],
@@ -88,11 +96,10 @@ final class MessengerMessageDispatcherTest extends AbstractExtensionTestCase
             'acl' => [
                 'outbound' => false,
             ],
-            'messenger_message_dispatcher' => [
+            'synchronous_message_dispatcher' => [
                 'chain' => [
                     'foo' => [
                         'acl' => true,
-                        'bus' => 'bar',
                     ],
                 ],
             ],
@@ -102,7 +109,7 @@ final class MessengerMessageDispatcherTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function should_throw_exception_if_synchronous_dispatcher_is_enabled(): void
+    public function should_throw_exception_if_messenger_dispatcher_is_enabled(): void
     {
         $this->expectException(LogicException::class);
 

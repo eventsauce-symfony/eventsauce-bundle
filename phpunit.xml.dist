@@ -1,8 +1,5 @@
 <phpunit bootstrap="vendor/autoload.php">
     <testsuites>
-        <testsuite name="default-config">
-            <directory>tests/DefaultConfig</directory>
-        </testsuite>
         <testsuite name="config">
             <directory>tests/Config</directory>
         </testsuite>
