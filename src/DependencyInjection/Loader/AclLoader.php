@@ -34,8 +34,12 @@ final class AclLoader
         }
         $outboundConfig = $aclConfig['outbound'];
         $inboundConfig = $aclConfig['inbound'];
-        $outboundEnabled = $this->extension->isConfigEnabled($this->container, $outboundConfig);
-        $inboundEnabled = $this->extension->isConfigEnabled($this->container, $inboundConfig);
+        if ($outboundEnabled = $this->extension->isConfigEnabled($this->container, $outboundConfig)) {
+            $this->container->setParameter('andreo.eventsauce.acl_outbound', true);
+        }
+        if ($inboundEnabled = $this->extension->isConfigEnabled($this->container, $inboundConfig)) {
+            $this->container->setParameter('andreo.eventsauce.acl_inbound', true);
+        }
 
         if (!$outboundEnabled && !$inboundEnabled) {
             return;
