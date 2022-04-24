@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Andreo\EventSauceBundle\DependencyInjection\Loader;
 
-use Andreo\EventSauce\Doctrine\Migration\GenerateAggregateMigrationCommand;
+use Andreo\EventSauce\Doctrine\Migration\GenerateEventSauceDoctrineMigrationCommand;
 use Andreo\EventSauce\Doctrine\Migration\TableNameSuffix;
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -24,7 +24,7 @@ final class MigrationGeneratorLoader
             return;
         }
 
-        if (!class_exists(GenerateAggregateMigrationCommand::class)) {
+        if (!class_exists(GenerateEventSauceDoctrineMigrationCommand::class)) {
             throw new LogicException('Migration generator is not available. Try running "composer require andreo/eventsauce-migration-generator".');
         }
 
