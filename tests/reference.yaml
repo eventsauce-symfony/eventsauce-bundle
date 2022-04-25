@@ -37,11 +37,7 @@ andreo_eventsauce:
                 acl: true
 
     event_dispatcher:
-        outbox:
-            repository:
-                memory: false
-                doctrine:
-                    table_name: _outbox_message
+        outbox: true
     upcaster:
         argument: payload # one of [payload, message]
 

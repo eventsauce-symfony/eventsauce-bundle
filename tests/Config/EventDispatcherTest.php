@@ -64,13 +64,13 @@ final class EventDispatcherTest extends AbstractExtensionTestCase
     public function should_load_event_dispatcher_with_outbox_of_memory(): void
     {
         $this->load([
-            'outbox' => true,
-            'event_dispatcher' => [
-                'outbox' => [
-                    'repository' => [
-                        'memory' => true,
-                    ],
+            'outbox' => [
+                'repository' => [
+                    'memory' => true,
                 ],
+            ],
+            'event_dispatcher' => [
+                'outbox' => true,
             ],
         ]);
 

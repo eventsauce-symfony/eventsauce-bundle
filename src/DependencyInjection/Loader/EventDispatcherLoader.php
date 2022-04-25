@@ -29,15 +29,13 @@ final class EventDispatcherLoader
             return;
         }
 
-        $eventDispatcherOutboxConfig = $eventDispatcherConfig['outbox'];
         $outboxConfig = $config['outbox'];
-
-        if ($this->extension->isConfigEnabled($this->container, $eventDispatcherOutboxConfig)) {
+        if ($this->extension->isConfigEnabled($this->container, $eventDispatcherConfig['outbox'])) {
             if (!$this->extension->isConfigEnabled($this->container, $outboxConfig)) {
                 throw new LogicException('Message default outbox config is disabled. If you want to use it, enable and configure it .');
             }
 
-            $outboxRepositoryConfig = $eventDispatcherOutboxConfig['repository'];
+            $outboxRepositoryConfig = $outboxConfig['repository'];
             $memoryRepositoryEnabled = $this->extension->isConfigEnabled($this->container, $outboxRepositoryConfig['memory']);
             $doctrineRepositoryEnabled = $this->extension->isConfigEnabled($this->container, $outboxRepositoryDoctrineConfig = $outboxRepositoryConfig['doctrine']);
 
