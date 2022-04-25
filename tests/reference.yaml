@@ -101,10 +101,10 @@ andreo_eventsauce:
             outbox: true
             message_dispatchers:
                 - eventBus
-            upcast: true
+            upcaster: true
             snapshot: true
         bar:
             class: App\Domain\Bar
             repository_alias: barRepository
-            upcast: true
+            upcaster: true
             snapshot: true

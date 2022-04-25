@@ -17,7 +17,7 @@ services:
         public: false
         lazy: true
 
-    Andreo\EventSauce\Doctrine\Migration\GenerateAggregateMigrationCommand:
+    Andreo\EventSauce\Doctrine\Migration\GenerateEventSauceDoctrineMigrationCommand:
         public: false
         arguments:
             - '@andreo.eventsauce.migration_generator.dependency_factory'

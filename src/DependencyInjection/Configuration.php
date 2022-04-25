@@ -47,7 +47,7 @@ final class Configuration implements ConfigurationInterface
         $rootNode
             ->children()
                 ->append($this->getTimeSection())
-                ->append($this->getMessageStorageSection())
+                ->append($this->getEventStoreSection())
                 ->append($this->getSynchronousMessageDispatcherSection())
                 ->append($this->getMessengerMessageDispatcherSection())
                 ->append($this->getAclSection())
@@ -89,7 +89,7 @@ final class Configuration implements ConfigurationInterface
         return $node;
     }
 
-    private function getMessageStorageSection(): NodeDefinition
+    private function getEventStoreSection(): NodeDefinition
     {
         $node = new ArrayNodeDefinition('event_store');
         $node
