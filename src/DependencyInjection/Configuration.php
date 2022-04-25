@@ -425,7 +425,7 @@ final class Configuration implements ConfigurationInterface
                                 ->scalarNode('table_name')
                                     ->info('Table name suffix.')
                                     ->cannotBeEmpty()
-                                    ->defaultValue('outbox_message')
+                                    ->defaultValue('outbox')
                                 ->end()
                             ?->end()
                         ->end()
