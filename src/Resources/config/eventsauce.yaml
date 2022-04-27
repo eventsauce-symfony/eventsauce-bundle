@@ -54,3 +54,4 @@ services:
         arguments:
             - '@EventSauce\EventSourcing\ClassNameInflector'
             - '@EventSauce\Clock\Clock'
+            - !php/const EventSauce\EventSourcing\Message::TIME_OF_RECORDING_FORMAT
