@@ -31,7 +31,7 @@ final class MessengerMessageDispatcherLoader
             throw new LogicException('Can not enable synchronous_message_dispatcher and messenger_message_dispatcher in one configuration. Disable one of configs.');
         }
 
-        $this->container->setParameter('andreo.eventsauce.messenger_dispatcher', true);
+        $this->container->setParameter('andreo.eventsauce.messenger_enabled', true);
 
         $dispatcherChainConfig = $messageDispatcherConfig['chain'];
 
