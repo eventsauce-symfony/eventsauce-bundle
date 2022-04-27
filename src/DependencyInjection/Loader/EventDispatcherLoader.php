@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace Andreo\EventSauceBundle\DependencyInjection\Loader;
 
+use Andreo\EventSauce\Outbox\ForwardingMessageConsumer;
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
+use EventSauce\BackOff\BackOffStrategy;
 use EventSauce\EventSourcing\EventDispatcher;
 use EventSauce\EventSourcing\MessageDispatchingEventDispatcher;
 use EventSauce\EventSourcing\Serialization\MessageSerializer;
 use EventSauce\MessageOutbox\DoctrineOutbox\DoctrineOutboxRepository;
 use EventSauce\MessageOutbox\InMemoryOutboxRepository;
 use EventSauce\MessageOutbox\OutboxMessageDispatcher;
+use EventSauce\MessageOutbox\OutboxRelay;
+use EventSauce\MessageOutbox\RelayCommitStrategy;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Exception\LogicException;
@@ -53,6 +57,23 @@ final class EventDispatcherLoader
             $messageDispatcherArgument = new Definition(OutboxMessageDispatcher::class, [
                 $outboxRepositoryDef,
             ]);
+
+            $messageConsumerDefinition = new Definition(ForwardingMessageConsumer::class, [
+                new Reference('andreo.eventsauce.message_dispatcher_chain'),
+            ]);
+            $this->container
+                ->register('andreo.eventsauce.outbox_relay.event_dispatcher', OutboxRelay::class)
+                ->setArguments([
+                    $outboxRepositoryDef,
+                    $messageConsumerDefinition,
+                    new Reference(BackOffStrategy::class),
+                    new Reference(RelayCommitStrategy::class),
+                ])
+                ->addTag('andreo.eventsauce.outbox_relay', [
+                    'name' => 'outbox_relay_event_dispatcher',
+                ])
+                ->setPublic(false)
+            ;
         } else {
             $messageDispatcherArgument = new Reference('andreo.eventsauce.message_dispatcher_chain');
         }

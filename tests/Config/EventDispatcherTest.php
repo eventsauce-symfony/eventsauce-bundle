@@ -56,6 +56,8 @@ final class EventDispatcherTest extends AbstractExtensionTestCase
         /** @var Definition $repositoryArg */
         $repositoryArg = $messageDispatcherArg->getArgument(0);
         $this->assertEquals(DoctrineOutboxRepository::class, $repositoryArg->getClass());
+
+        $this->assertContainerBuilderHasService('andreo.eventsauce.outbox_relay.event_dispatcher');
     }
 
     /**
