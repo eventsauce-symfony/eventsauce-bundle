@@ -14,14 +14,8 @@ final class AndreoEventSauceBundle extends Bundle
 {
     public function build(ContainerBuilder $container): void
     {
-        if ($container->hasParameter('andreo.eventsauce.acl_outbound')) {
-            $container->addCompilerPass(new AclOutboundPass(), priority: -10);
-        }
-        if ($container->hasParameter('andreo.eventsauce.acl_inbound')) {
-            $container->addCompilerPass(new AclInboundPass(), priority: -10);
-        }
-        if ($container->hasParameter('andreo.eventsauce.messenger_dispatcher')) {
-            $container->addCompilerPass(new HandleEventSauceMessageMiddlewarePass(), priority: -15);
-        }
+        $container->addCompilerPass(new AclOutboundPass('andreo.eventsauce.acl_outbound_enabled'), priority: -10);
+        $container->addCompilerPass(new AclInboundPass('andreo.eventsauce.acl_inbound_enabled'), priority: -10);
+        $container->addCompilerPass(new HandleEventSauceMessageMiddlewarePass('andreo.eventsauce.messenger_enabled'), priority: -15);
     }
 }

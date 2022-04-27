@@ -24,8 +24,16 @@ final class AclInboundPass implements CompilerPassInterface
 {
     use PriorityTaggedServiceTrait;
 
+    public function __construct(private ?string $enablingParameter = null)
+    {
+    }
+
     public function process(ContainerBuilder $container): void
     {
+        if ($this->enablingParameter && (!$container->hasParameter($this->enablingParameter) || !$container->getParameter($this->enablingParameter))) {
+            return;
+        }
+
         $translators = [];
         $consumerTranslators = [];
         foreach ($this->findAndSortTaggedServices('andreo.eventsauce.acl_inbound.message_translator', $container) as $index => $translatorReference) {
