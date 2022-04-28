@@ -18,7 +18,7 @@ final class AclInboundPassTest extends AbstractCompilerPassTestCase
     public function should_register_inbound_acl_without_target_definitions(): void
     {
         $translatorDef = new Definition();
-        $translatorDef->addTag('andreo.eventsauce.acl_inbound.message_translator');
+        $translatorDef->addTag('andreo.eventsauce.acl_inbound.translator');
         $this->setDefinition('foo_translator', $translatorDef);
 
         $filterBeforeDef = new Definition();
@@ -45,13 +45,13 @@ final class AclInboundPassTest extends AbstractCompilerPassTestCase
     {
         $translatorDef = new Definition();
         $translatorDef
-            ->addTag('andreo.eventsauce.acl_inbound.message_translator')
+            ->addTag('andreo.eventsauce.acl_inbound.translator')
             ->addTag('andreo.eventsauce.acl_inbound_target');
         $this->setDefinition('foo_translator', $translatorDef);
 
         $translatorV2Def = new Definition();
         $translatorV2Def
-            ->addTag('andreo.eventsauce.acl_inbound.message_translator')
+            ->addTag('andreo.eventsauce.acl_inbound.translator')
             ->addTag('andreo.eventsauce.acl_inbound_target', [
                 'id' => 'foo_consumer',
             ]);
@@ -59,7 +59,7 @@ final class AclInboundPassTest extends AbstractCompilerPassTestCase
 
         $translatorV3Def = new Definition();
         $translatorV3Def
-            ->addTag('andreo.eventsauce.acl_inbound.message_translator')
+            ->addTag('andreo.eventsauce.acl_inbound.translator')
             ->addTag('andreo.eventsauce.acl_inbound_target', [
                 'id' => 'other_consumer',
             ]);

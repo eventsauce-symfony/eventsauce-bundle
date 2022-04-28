@@ -36,7 +36,7 @@ final class AclOutboundPass implements CompilerPassInterface
 
         $translators = [];
         $dispatcherTranslators = [];
-        foreach ($this->findAndSortTaggedServices('andreo.eventsauce.acl_outbound.message_translator', $container) as $index => $translatorReference) {
+        foreach ($this->findAndSortTaggedServices('andreo.eventsauce.acl_outbound.translator', $container) as $index => $translatorReference) {
             $translatorDef = $container->findDefinition($translatorReference->__toString());
             if (!$translatorDef->hasTag('andreo.eventsauce.acl_outbound_target')) {
                 $translators[$index] = $translatorReference;
