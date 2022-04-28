@@ -56,8 +56,8 @@ final class AclLoader
                     if (null === $filterChainAttrRef) {
                         $filterChainConfig = $outboundConfig['filter_chain'];
                         $definition->addTag('andreo.eventsauce.acl.filter_chain', [
-                            'before' => $filterChainConfig['before'],
-                            'after' => $filterChainConfig['after'],
+                            'before' => $filterChainConfig['before_translate'],
+                            'after' => $filterChainConfig['after_translate'],
                         ]);
                     } else {
                         /** @var AclMessageFilterChain $filterChainAttr */
@@ -74,8 +74,8 @@ final class AclLoader
                     if (null === $filterChainAttrRef) {
                         $filterChainConfig = $inboundConfig['filter_chain'];
                         $definition->addTag('andreo.eventsauce.acl.filter_chain', [
-                            'before' => $filterChainConfig['before'],
-                            'after' => $filterChainConfig['after'],
+                            'before' => $filterChainConfig['before_translate'],
+                            'after' => $filterChainConfig['after_translate'],
                         ]);
                     } else {
                         /** @var AclMessageFilterChain $filterChainAttr */
