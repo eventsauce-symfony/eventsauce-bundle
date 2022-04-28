@@ -50,7 +50,6 @@ services:
     EventSauce\EventSourcing\DefaultHeadersDecorator:
         class: EventSauce\EventSourcing\DefaultHeadersDecorator
         public: false
-        lazy: true
         arguments:
             - '@EventSauce\EventSourcing\ClassNameInflector'
             - '@EventSauce\Clock\Clock'

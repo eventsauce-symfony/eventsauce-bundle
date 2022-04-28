@@ -64,12 +64,11 @@ andreo_eventsauce:
             mark_consumed:
                 enabled: true
         repository:
-            repository:
-                memory:
-                    enabled: false
-                doctrine:
-                    table_name: outbox_message
-        logger: outboxLogger
+            memory:
+                enabled: false
+            doctrine:
+                table_name: outbox_message
+        logger: outbox_logger
 
     snapshot:
         versioned: true
