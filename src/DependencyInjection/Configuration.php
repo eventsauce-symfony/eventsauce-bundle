@@ -186,6 +186,7 @@ final class Configuration implements ConfigurationInterface
                     ->addDefaultsIfNotSet()
                     ->children()
                         ->arrayNode('filter_chain')
+                            ->addDefaultsIfNotSet()
                             ->children()
                                 ->enumNode('before_translate')
                                     ->values(['match_all', 'match_any'])
