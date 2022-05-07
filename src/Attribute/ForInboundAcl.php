@@ -7,9 +7,9 @@ namespace Andreo\EventSauceBundle\Attribute;
 use Attribute;
 
 #[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
-final class AclOutboundTarget
+final class ForInboundAcl
 {
-    public function __construct(public readonly ?string $id = null)
+    public function __construct(public readonly ?string $target = null)
     {
     }
 }

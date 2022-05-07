@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Andreo\EventSauceBundle\DependencyInjection\Loader;
 
 use Andreo\EventSauceBundle\Attribute\Acl;
-use Andreo\EventSauceBundle\Attribute\AclInboundTarget;
 use Andreo\EventSauceBundle\Attribute\AclMessageFilterChain;
-use Andreo\EventSauceBundle\Attribute\AclOutboundTarget;
 use Andreo\EventSauceBundle\Attribute\AsMessageFilterAfter;
 use Andreo\EventSauceBundle\Attribute\AsMessageFilterBefore;
 use Andreo\EventSauceBundle\Attribute\AsMessageTranslator;
+use Andreo\EventSauceBundle\Attribute\ForInboundAcl;
+use Andreo\EventSauceBundle\Attribute\ForOutboundAcl;
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
 use EventSauce\EventSourcing\MessageConsumer;
 use EventSauce\EventSourcing\MessageDispatcher;
@@ -93,10 +93,10 @@ final class AclLoader
             AsMessageFilterBefore::class,
             static function (ChildDefinition $definition, AsMessageFilterBefore $attribute, Reflector $reflector) use ($outboundEnabled, $inboundEnabled): void {
                 assert($reflector instanceof ReflectionClass);
-                $aclInboundTargetReflections = $reflector->getAttributes(AclInboundTarget::class);
-                $aclOutboundTargetReflections = $reflector->getAttributes(AclOutboundTarget::class);
+                $inboundTargetReflections = $reflector->getAttributes(ForInboundAcl::class);
+                $outboundTargetReflections = $reflector->getAttributes(ForOutboundAcl::class);
 
-                if (empty($aclInboundTargetReflections) && empty($aclOutboundTargetReflections)) {
+                if (empty($inboundTargetReflections) && empty($outboundTargetReflections)) {
                     if ($outboundEnabled) {
                         $definition->addTag('andreo.eventsauce.acl_outbound.filter_before', [
                             'priority' => $attribute->priority,
@@ -112,30 +112,30 @@ final class AclLoader
                 }
 
                 if ($outboundEnabled) {
-                    foreach ($aclOutboundTargetReflections as $outboundTargetReflection) {
-                        /** @var AclOutboundTarget $outboundTargetAttr */
+                    foreach ($outboundTargetReflections as $outboundTargetReflection) {
+                        /** @var ForOutboundAcl $outboundTargetAttr */
                         $outboundTargetAttr = $outboundTargetReflection->newInstance();
                         $definition->addTag('andreo.eventsauce.acl_outbound.filter_before', [
                             'priority' => $attribute->priority,
                         ]);
-                        if (null !== $outboundTargetAttr->id) {
+                        if (null !== $outboundTargetAttr->target) {
                             $definition->addTag('andreo.eventsauce.acl_outbound_target', [
-                                'id' => $outboundTargetAttr->id,
+                                'id' => $outboundTargetAttr->target,
                             ]);
                         }
                     }
                 }
 
                 if ($inboundEnabled) {
-                    foreach ($aclInboundTargetReflections as $inboundTargetReflection) {
-                        /** @var AclInboundTarget $inboundTargetAttr */
+                    foreach ($inboundTargetReflections as $inboundTargetReflection) {
+                        /** @var ForInboundAcl $inboundTargetAttr */
                         $inboundTargetAttr = $inboundTargetReflection->newInstance();
                         $definition->addTag('andreo.eventsauce.acl_inbound.filter_before', [
                             'priority' => $attribute->priority,
                         ]);
-                        if (null !== $inboundTargetAttr->id) {
+                        if (null !== $inboundTargetAttr->target) {
                             $definition->addTag('andreo.eventsauce.acl_inbound_target', [
-                                'id' => $inboundTargetAttr->id,
+                                'id' => $inboundTargetAttr->target,
                             ]);
                         }
                     }
@@ -147,10 +147,10 @@ final class AclLoader
             AsMessageFilterAfter::class,
             static function (ChildDefinition $definition, AsMessageFilterAfter $attribute, Reflector $reflector) use ($outboundEnabled, $inboundEnabled): void {
                 assert($reflector instanceof ReflectionClass);
-                $aclInboundTargetReflections = $reflector->getAttributes(AclInboundTarget::class);
-                $aclOutboundTargetReflections = $reflector->getAttributes(AclOutboundTarget::class);
+                $inboundTargetReflections = $reflector->getAttributes(ForInboundAcl::class);
+                $outboundTargetReflections = $reflector->getAttributes(ForOutboundAcl::class);
 
-                if (empty($aclInboundTargetReflections) && empty($aclOutboundTargetReflections)) {
+                if (empty($inboundTargetReflections) && empty($outboundTargetReflections)) {
                     if ($outboundEnabled) {
                         $definition->addTag('andreo.eventsauce.acl_outbound.filter_after', [
                             'priority' => $attribute->priority,
@@ -166,30 +166,30 @@ final class AclLoader
                 }
 
                 if ($outboundEnabled) {
-                    foreach ($aclOutboundTargetReflections as $outboundTargetReflection) {
-                        /** @var AclOutboundTarget $outboundTargetAttr */
+                    foreach ($outboundTargetReflections as $outboundTargetReflection) {
+                        /** @var ForOutboundAcl $outboundTargetAttr */
                         $outboundTargetAttr = $outboundTargetReflection->newInstance();
                         $definition->addTag('andreo.eventsauce.acl_outbound.filter_after', [
                             'priority' => $attribute->priority,
                         ]);
-                        if (null !== $outboundTargetAttr->id) {
+                        if (null !== $outboundTargetAttr->target) {
                             $definition->addTag('andreo.eventsauce.acl_outbound_target', [
-                                'id' => $outboundTargetAttr->id,
+                                'id' => $outboundTargetAttr->target,
                             ]);
                         }
                     }
                 }
 
                 if ($inboundEnabled) {
-                    foreach ($aclInboundTargetReflections as $inboundTargetReflection) {
-                        /** @var AclInboundTarget $inboundTargetAttr */
+                    foreach ($inboundTargetReflections as $inboundTargetReflection) {
+                        /** @var ForInboundAcl $inboundTargetAttr */
                         $inboundTargetAttr = $inboundTargetReflection->newInstance();
                         $definition->addTag('andreo.eventsauce.acl_inbound.filter_after', [
                             'priority' => $attribute->priority,
                         ]);
-                        if (null !== $inboundTargetAttr->id) {
+                        if (null !== $inboundTargetAttr->target) {
                             $definition->addTag('andreo.eventsauce.acl_inbound_target', [
-                                'id' => $inboundTargetAttr->id,
+                                'id' => $inboundTargetAttr->target,
                             ]);
                         }
                     }
@@ -201,10 +201,10 @@ final class AclLoader
             AsMessageTranslator::class,
             static function (ChildDefinition $definition, AsMessageTranslator $attribute, Reflector $reflector) use ($outboundEnabled, $inboundEnabled): void {
                 assert($reflector instanceof ReflectionClass);
-                $aclInboundTargetReflections = $reflector->getAttributes(AclInboundTarget::class);
-                $aclOutboundTargetReflections = $reflector->getAttributes(AclOutboundTarget::class);
+                $inboundTargetReflections = $reflector->getAttributes(ForInboundAcl::class);
+                $outboundTargetReflections = $reflector->getAttributes(ForOutboundAcl::class);
 
-                if (empty($aclInboundTargetReflections) && empty($aclOutboundTargetReflections)) {
+                if (empty($inboundTargetReflections) && empty($outboundTargetReflections)) {
                     if ($outboundEnabled) {
                         $definition->addTag('andreo.eventsauce.acl_outbound.translator', [
                             'priority' => $attribute->priority,
@@ -220,30 +220,30 @@ final class AclLoader
                 }
 
                 if ($outboundEnabled) {
-                    foreach ($aclOutboundTargetReflections as $outboundTargetReflection) {
-                        /** @var AclOutboundTarget $outboundTargetAttr */
+                    foreach ($outboundTargetReflections as $outboundTargetReflection) {
+                        /** @var ForOutboundAcl $outboundTargetAttr */
                         $outboundTargetAttr = $outboundTargetReflection->newInstance();
                         $definition->addTag('andreo.eventsauce.acl_outbound.translator', [
                             'priority' => $attribute->priority,
                         ]);
-                        if (null !== $outboundTargetAttr->id) {
+                        if (null !== $outboundTargetAttr->target) {
                             $definition->addTag('andreo.eventsauce.acl_outbound_target', [
-                                'id' => $outboundTargetAttr->id,
+                                'id' => $outboundTargetAttr->target,
                             ]);
                         }
                     }
                 }
 
                 if ($inboundEnabled) {
-                    foreach ($aclInboundTargetReflections as $inboundTargetReflection) {
-                        /** @var AclInboundTarget $inboundTargetAttr */
+                    foreach ($inboundTargetReflections as $inboundTargetReflection) {
+                        /** @var ForInboundAcl $inboundTargetAttr */
                         $inboundTargetAttr = $inboundTargetReflection->newInstance();
                         $definition->addTag('andreo.eventsauce.acl_inbound.translator', [
                             'priority' => $attribute->priority,
                         ]);
-                        if (null !== $inboundTargetAttr->id) {
+                        if (null !== $inboundTargetAttr->target) {
                             $definition->addTag('andreo.eventsauce.acl_inbound_target', [
-                                'id' => $inboundTargetAttr->id,
+                                'id' => $inboundTargetAttr->target,
                             ]);
                         }
                     }
