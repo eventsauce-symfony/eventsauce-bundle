@@ -40,7 +40,7 @@ final class Configuration implements ConfigurationInterface
 
     public function getConfigTreeBuilder(): TreeBuilder
     {
-        $treeBuilder = new TreeBuilder('andreo_eventsauce');
+        $treeBuilder = new TreeBuilder('andreo_event_sauce');
         /** @var ArrayNodeDefinition $rootNode */
         $rootNode = $treeBuilder->getRootNode();
 
