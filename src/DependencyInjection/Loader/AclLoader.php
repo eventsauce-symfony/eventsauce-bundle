@@ -9,8 +9,8 @@ use Andreo\EventSauceBundle\Attribute\AsMessageFilterBefore;
 use Andreo\EventSauceBundle\Attribute\AsMessageTranslator;
 use Andreo\EventSauceBundle\Attribute\ForInboundAcl;
 use Andreo\EventSauceBundle\Attribute\ForOutboundAcl;
-use Andreo\EventSauceBundle\Attribute\InboundAcl;
-use Andreo\EventSauceBundle\Attribute\OutboundAcl;
+use Andreo\EventSauceBundle\Attribute\WithInboundAcl;
+use Andreo\EventSauceBundle\Attribute\WithOutboundAcl;
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
 use ReflectionClass;
 use Reflector;
@@ -45,8 +45,8 @@ final class AclLoader
 
         if ($outboundEnabled) {
             $this->container->registerAttributeForAutoconfiguration(
-                OutboundAcl::class,
-                static function (ChildDefinition $definition, OutboundAcl $attribute, Reflector $reflector) use ($outboundConfig): void {
+                WithOutboundAcl::class,
+                static function (ChildDefinition $definition, WithOutboundAcl $attribute, Reflector $reflector) use ($outboundConfig): void {
                     assert($reflector instanceof ReflectionClass);
                     $definition->addTag('andreo.eventsauce.acl_outbound');
 
@@ -62,8 +62,8 @@ final class AclLoader
 
         if ($inboundEnabled) {
             $this->container->registerAttributeForAutoconfiguration(
-                InboundAcl::class,
-                static function (ChildDefinition $definition, InboundAcl $attribute, Reflector $reflector) use ($inboundConfig): void {
+                WithInboundAcl::class,
+                static function (ChildDefinition $definition, WithInboundAcl $attribute, Reflector $reflector) use ($inboundConfig): void {
                     assert($reflector instanceof ReflectionClass);
                     $definition->addTag('andreo.eventsauce.acl_inbound');
 

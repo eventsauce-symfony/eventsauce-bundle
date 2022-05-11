@@ -7,7 +7,7 @@ namespace Andreo\EventSauceBundle\Attribute;
 use Attribute;
 
 #[Attribute(Attribute::TARGET_CLASS)]
-final class InboundAcl
+final class WithOutboundAcl
 {
     public function __construct(
         public readonly ?string $filterBeforeStrategy = null,

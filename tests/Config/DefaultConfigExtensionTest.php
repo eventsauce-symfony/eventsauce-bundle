@@ -12,8 +12,8 @@ use Andreo\EventSauceBundle\Attribute\AsMessageFilterAfter;
 use Andreo\EventSauceBundle\Attribute\AsMessageFilterBefore;
 use Andreo\EventSauceBundle\Attribute\AsMessageTranslator;
 use Andreo\EventSauceBundle\Attribute\AsSynchronousMessageConsumer;
-use Andreo\EventSauceBundle\Attribute\InboundAcl;
-use Andreo\EventSauceBundle\Attribute\OutboundAcl;
+use Andreo\EventSauceBundle\Attribute\WithInboundAcl;
+use Andreo\EventSauceBundle\Attribute\WithOutboundAcl;
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
 use EventSauce\BackOff\BackOffStrategy;
 use EventSauce\Clock\Clock;
@@ -84,8 +84,8 @@ final class DefaultConfigExtensionTest extends AbstractExtensionTestCase
         $this->load();
 
         $attributes = $this->container->getAutoconfiguredAttributes();
-        $this->assertArrayNotHasKey(InboundAcl::class, $attributes);
-        $this->assertArrayNotHasKey(OutboundAcl::class, $attributes);
+        $this->assertArrayNotHasKey(WithInboundAcl::class, $attributes);
+        $this->assertArrayNotHasKey(WithOutboundAcl::class, $attributes);
         $this->assertArrayNotHasKey(AsMessageFilterBefore::class, $attributes);
         $this->assertArrayNotHasKey(AsMessageFilterAfter::class, $attributes);
         $this->assertArrayNotHasKey(AsMessageTranslator::class, $attributes);

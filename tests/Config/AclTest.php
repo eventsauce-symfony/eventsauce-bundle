@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Config;
 
-use Andreo\EventSauceBundle\Attribute\InboundAcl;
-use Andreo\EventSauceBundle\Attribute\OutboundAcl;
+use Andreo\EventSauceBundle\Attribute\WithInboundAcl;
+use Andreo\EventSauceBundle\Attribute\WithOutboundAcl;
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
 use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
 use Symfony\Component\DependencyInjection\Compiler\ResolveTaggedIteratorArgumentPass;
@@ -35,7 +35,7 @@ final class AclTest extends AbstractExtensionTestCase
         $this->compile();
 
         $attributes = $this->container->getAutoconfiguredAttributes();
-        $this->assertArrayHasKey(InboundAcl::class, $attributes);
+        $this->assertArrayHasKey(WithInboundAcl::class, $attributes);
 
         $this->assertContainerBuilderHasServiceDefinitionWithTag(
             DummyAclMessageConsumer::class,
@@ -70,7 +70,7 @@ final class AclTest extends AbstractExtensionTestCase
         $this->compile();
 
         $attributes = $this->container->getAutoconfiguredAttributes();
-        $this->assertArrayHasKey(OutboundAcl::class, $attributes);
+        $this->assertArrayHasKey(WithOutboundAcl::class, $attributes);
 
         $this->assertContainerBuilderHasServiceDefinitionWithTag(
             DummyAclMessageDispatcher::class,
