@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Config;
 
+use Andreo\EventSauceBundle\Attribute\InboundAcl;
+use Andreo\EventSauceBundle\Attribute\OutboundAcl;
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
 use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
 use Symfony\Component\DependencyInjection\Compiler\ResolveTaggedIteratorArgumentPass;
@@ -24,12 +26,16 @@ final class AclTest extends AbstractExtensionTestCase
             'acl' => true,
         ]);
 
-        $this->container->register(DummyAclMessageConsumer::class, DummyAclMessageConsumer::class)
+        $this->container
+            ->register(DummyAclMessageConsumer::class, DummyAclMessageConsumer::class)
             ->setAutoconfigured(true)
         ;
 
         $this->container->addCompilerPass(new ResolveTaggedIteratorArgumentPass());
         $this->compile();
+
+        $attributes = $this->container->getAutoconfiguredAttributes();
+        $this->assertArrayHasKey(InboundAcl::class, $attributes);
 
         $this->assertContainerBuilderHasServiceDefinitionWithTag(
             DummyAclMessageConsumer::class,
@@ -38,7 +44,7 @@ final class AclTest extends AbstractExtensionTestCase
 
         $this->assertContainerBuilderHasServiceDefinitionWithTag(
             DummyAclMessageConsumer::class,
-            'andreo.eventsauce.acl.filter_chain',
+            'andreo.eventsauce.acl.filter_strategy',
             [
                 'before' => 'match_any',
                 'after' => 'match_all',
@@ -55,12 +61,16 @@ final class AclTest extends AbstractExtensionTestCase
             'acl' => true,
         ]);
 
-        $this->container->register(DummyAclMessageDispatcher::class, DummyAclMessageDispatcher::class)
+        $this->container
+            ->register(DummyAclMessageDispatcher::class, DummyAclMessageDispatcher::class)
             ->setAutoconfigured(true)
         ;
 
         $this->container->addCompilerPass(new ResolveTaggedIteratorArgumentPass());
         $this->compile();
+
+        $attributes = $this->container->getAutoconfiguredAttributes();
+        $this->assertArrayHasKey(OutboundAcl::class, $attributes);
 
         $this->assertContainerBuilderHasServiceDefinitionWithTag(
             DummyAclMessageDispatcher::class,
@@ -69,7 +79,7 @@ final class AclTest extends AbstractExtensionTestCase
 
         $this->assertContainerBuilderHasServiceDefinitionWithTag(
             DummyAclMessageDispatcher::class,
-            'andreo.eventsauce.acl.filter_chain',
+            'andreo.eventsauce.acl.filter_strategy',
             [
                 'before' => 'match_any',
                 'after' => 'match_any',
@@ -86,10 +96,12 @@ final class AclTest extends AbstractExtensionTestCase
             'acl' => true,
         ]);
 
-        $this->container->register(DummyMessageFilterAfter::class, DummyMessageFilterAfter::class)
+        $this->container
+            ->register(DummyMessageFilterAfter::class, DummyMessageFilterAfter::class)
             ->setAutoconfigured(true)
         ;
-        $this->container->register(DummyMessageFilterBefore::class, DummyMessageFilterBefore::class)
+        $this->container
+            ->register(DummyMessageFilterBefore::class, DummyMessageFilterBefore::class)
             ->setAutoconfigured(true)
         ;
 
@@ -122,10 +134,12 @@ final class AclTest extends AbstractExtensionTestCase
             'acl' => true,
         ]);
 
-        $this->container->register(DummyMessageFilterAfter::class, DummyMessageFilterAfter::class)
+        $this->container
+            ->register(DummyMessageFilterAfter::class, DummyMessageFilterAfter::class)
             ->setAutoconfigured(true)
         ;
-        $this->container->register(DummyMessageFilterBefore::class, DummyMessageFilterBefore::class)
+        $this->container
+            ->register(DummyMessageFilterBefore::class, DummyMessageFilterBefore::class)
             ->setAutoconfigured(true)
         ;
 
@@ -158,7 +172,8 @@ final class AclTest extends AbstractExtensionTestCase
             'acl' => true,
         ]);
 
-        $this->container->register(DummyMessageTranslator::class, DummyMessageTranslator::class)
+        $this->container
+            ->register(DummyMessageTranslator::class, DummyMessageTranslator::class)
             ->setAutoconfigured(true)
         ;
         $this->container->addCompilerPass(new ResolveTaggedIteratorArgumentPass());
@@ -182,7 +197,8 @@ final class AclTest extends AbstractExtensionTestCase
             'acl' => true,
         ]);
 
-        $this->container->register(DummyMessageTranslator::class, DummyMessageTranslator::class)
+        $this->container
+            ->register(DummyMessageTranslator::class, DummyMessageTranslator::class)
             ->setAutoconfigured(true)
         ;
         $this->container->addCompilerPass(new ResolveTaggedIteratorArgumentPass());

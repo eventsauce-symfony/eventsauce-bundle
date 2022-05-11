@@ -55,7 +55,7 @@ final class MessengerMessageDispatcherTest extends AbstractExtensionTestCase
 
         $this->assertContainerBuilderHasServiceDefinitionWithTag(
             'andreo.eventsauce.message_dispatcher.foo',
-            'andreo.eventsauce.acl.filter_chain',
+            'andreo.eventsauce.acl.filter_strategy',
             [
                 'before' => 'match_all',
                 'after' => 'match_all',

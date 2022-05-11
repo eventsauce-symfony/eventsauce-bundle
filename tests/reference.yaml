@@ -14,13 +14,13 @@ andreo_eventsauce:
                 table_name: event_store
     acl:
         outbound:
-            filter_chain:
-                before_translate: match_any
-                after_translate: match_any
+            filter_strategy:
+                before: match_any
+                after: match_any
         inbound:
-            filter_chain:
-                before_translate: match_any
-                after_translate: match_any
+            filter_strategy:
+                before: match_any
+                after: match_any
 
     message_decorator: true
 

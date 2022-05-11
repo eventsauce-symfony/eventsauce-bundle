@@ -7,11 +7,11 @@ namespace Andreo\EventSauceBundle\Attribute;
 use Attribute;
 
 #[Attribute(Attribute::TARGET_CLASS)]
-final class AclMessageFilterChain
+final class OutboundAcl
 {
     public function __construct(
-        public readonly string $beforeTranslate = 'match_all',
-        public readonly string $afterTranslate = 'match_all',
+        public readonly ?string $filterBeforeStrategy = null,
+        public readonly ?string $filterAfterStrategy = null,
     ) {
     }
 }

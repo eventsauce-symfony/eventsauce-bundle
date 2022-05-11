@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace Tests\Config;
 
-use Andreo\EventSauce\Doctrine\Migration\GenerateAggregateMigrationCommand;
+use Andreo\EventSauce\Doctrine\Migration\GenerateEventSauceDoctrineMigrationCommand;
 use Andreo\EventSauce\Doctrine\Migration\TableNameSuffix;
 use Andreo\EventSauce\Snapshotting\SnapshotStateSerializer;
-use Andreo\EventSauceBundle\Attribute\Acl;
 use Andreo\EventSauceBundle\Attribute\AsMessageDecorator;
 use Andreo\EventSauceBundle\Attribute\AsMessageFilterAfter;
 use Andreo\EventSauceBundle\Attribute\AsMessageFilterBefore;
 use Andreo\EventSauceBundle\Attribute\AsMessageTranslator;
 use Andreo\EventSauceBundle\Attribute\AsSynchronousMessageConsumer;
+use Andreo\EventSauceBundle\Attribute\InboundAcl;
+use Andreo\EventSauceBundle\Attribute\OutboundAcl;
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
 use EventSauce\BackOff\BackOffStrategy;
 use EventSauce\Clock\Clock;
@@ -83,7 +84,8 @@ final class DefaultConfigExtensionTest extends AbstractExtensionTestCase
         $this->load();
 
         $attributes = $this->container->getAutoconfiguredAttributes();
-        $this->assertArrayNotHasKey(Acl::class, $attributes);
+        $this->assertArrayNotHasKey(InboundAcl::class, $attributes);
+        $this->assertArrayNotHasKey(OutboundAcl::class, $attributes);
         $this->assertArrayNotHasKey(AsMessageFilterBefore::class, $attributes);
         $this->assertArrayNotHasKey(AsMessageFilterAfter::class, $attributes);
         $this->assertArrayNotHasKey(AsMessageTranslator::class, $attributes);
@@ -212,7 +214,7 @@ final class DefaultConfigExtensionTest extends AbstractExtensionTestCase
         $this->load();
 
         $this->assertContainerBuilderNotHasService(TableNameSuffix::class);
-        $this->assertContainerBuilderNotHasService(GenerateAggregateMigrationCommand::class);
+        $this->assertContainerBuilderNotHasService(GenerateEventSauceDoctrineMigrationCommand::class);
     }
 
     protected function getContainerExtensions(): array

@@ -4,16 +4,14 @@ declare(strict_types=1);
 
 namespace Andreo\EventSauceBundle\DependencyInjection\Loader;
 
-use Andreo\EventSauceBundle\Attribute\Acl;
-use Andreo\EventSauceBundle\Attribute\AclMessageFilterChain;
 use Andreo\EventSauceBundle\Attribute\AsMessageFilterAfter;
 use Andreo\EventSauceBundle\Attribute\AsMessageFilterBefore;
 use Andreo\EventSauceBundle\Attribute\AsMessageTranslator;
 use Andreo\EventSauceBundle\Attribute\ForInboundAcl;
 use Andreo\EventSauceBundle\Attribute\ForOutboundAcl;
+use Andreo\EventSauceBundle\Attribute\InboundAcl;
+use Andreo\EventSauceBundle\Attribute\OutboundAcl;
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
-use EventSauce\EventSourcing\MessageConsumer;
-use EventSauce\EventSourcing\MessageDispatcher;
 use ReflectionClass;
 use Reflector;
 use Symfony\Component\DependencyInjection\ChildDefinition;
@@ -45,49 +43,39 @@ final class AclLoader
             return;
         }
 
-        $this->container->registerAttributeForAutoconfiguration(
-            Acl::class,
-            static function (ChildDefinition $definition, Acl $attribute, Reflector $reflector) use ($outboundEnabled, $inboundEnabled, $outboundConfig, $inboundConfig): void {
-                assert($reflector instanceof ReflectionClass);
-                if ($outboundEnabled && $reflector->implementsInterface(MessageDispatcher::class)) {
+        if ($outboundEnabled) {
+            $this->container->registerAttributeForAutoconfiguration(
+                OutboundAcl::class,
+                static function (ChildDefinition $definition, OutboundAcl $attribute, Reflector $reflector) use ($outboundConfig): void {
+                    assert($reflector instanceof ReflectionClass);
                     $definition->addTag('andreo.eventsauce.acl_outbound');
 
-                    $filterChainAttrRef = $reflector->getAttributes(AclMessageFilterChain::class)[0] ?? null;
-                    if (null === $filterChainAttrRef) {
-                        $filterChainConfig = $outboundConfig['filter_chain'];
-                        $definition->addTag('andreo.eventsauce.acl.filter_chain', [
-                            'before' => $filterChainConfig['before_translate'],
-                            'after' => $filterChainConfig['after_translate'],
-                        ]);
-                    } else {
-                        /** @var AclMessageFilterChain $filterChainAttr */
-                        $filterChainAttr = $filterChainAttrRef->newInstance();
-                        $definition->addTag('andreo.eventsauce.acl.filter_chain', [
-                            'before' => $filterChainAttr->beforeTranslate,
-                            'after' => $filterChainAttr->afterTranslate,
-                        ]);
-                    }
-                } elseif ($inboundEnabled && $reflector->implementsInterface(MessageConsumer::class)) {
+                    $filterStrategy = $outboundConfig['filter_strategy'];
+
+                    $definition->addTag('andreo.eventsauce.acl.filter_strategy', [
+                        'before' => $attribute->filterBeforeStrategy ?? $filterStrategy['before'],
+                        'after' => $attribute->filterAfterStrategy ?? $filterStrategy['after'],
+                    ]);
+                }
+            );
+        }
+
+        if ($inboundEnabled) {
+            $this->container->registerAttributeForAutoconfiguration(
+                InboundAcl::class,
+                static function (ChildDefinition $definition, InboundAcl $attribute, Reflector $reflector) use ($inboundConfig): void {
+                    assert($reflector instanceof ReflectionClass);
                     $definition->addTag('andreo.eventsauce.acl_inbound');
 
-                    $filterChainAttrRef = $reflector->getAttributes(AclMessageFilterChain::class)[0] ?? null;
-                    if (null === $filterChainAttrRef) {
-                        $filterChainConfig = $inboundConfig['filter_chain'];
-                        $definition->addTag('andreo.eventsauce.acl.filter_chain', [
-                            'before' => $filterChainConfig['before_translate'],
-                            'after' => $filterChainConfig['after_translate'],
-                        ]);
-                    } else {
-                        /** @var AclMessageFilterChain $filterChainAttr */
-                        $filterChainAttr = $filterChainAttrRef->newInstance();
-                        $definition->addTag('andreo.eventsauce.acl.filter_chain', [
-                            'before' => $filterChainAttr->beforeTranslate,
-                            'after' => $filterChainAttr->afterTranslate,
-                        ]);
-                    }
+                    $filterStrategy = $inboundConfig['filter_strategy'];
+
+                    $definition->addTag('andreo.eventsauce.acl.filter_strategy', [
+                        'before' => $attribute->filterBeforeStrategy ?? $filterStrategy['before'],
+                        'after' => $attribute->filterAfterStrategy ?? $filterStrategy['after'],
+                    ]);
                 }
-            }
-        );
+            );
+        }
 
         $this->container->registerAttributeForAutoconfiguration(
             AsMessageFilterBefore::class,

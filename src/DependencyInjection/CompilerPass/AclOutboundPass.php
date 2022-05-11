@@ -102,11 +102,11 @@ final class AclOutboundPass implements CompilerPassInterface
             ]))->setFactory([MessageTranslatorChainFactory::class, 'create']);
 
             $dispatcherDef = $container->findDefinition($dispatcherId);
-            if ($dispatcherDef->hasTag('andreo.eventsauce.acl.filter_chain')) {
-                [$targetAttrs] = $dispatcherDef->getTag('andreo.eventsauce.acl.filter_chain');
+            if ($dispatcherDef->hasTag('andreo.eventsauce.acl.filter_strategy')) {
+                [$targetAttrs] = $dispatcherDef->getTag('andreo.eventsauce.acl.filter_strategy');
 
-                $filterChainBefore = $targetAttrs['before'];
-                if ('match_all' === $filterChainBefore) {
+                $filterStrategyBefore = $targetAttrs['before'];
+                if ('match_all' === $filterStrategyBefore) {
                     $outboundBeforeFilters = $beforeFilters + ($dispatcherBeforeFilters[$dispatcherId] ?? []);
                     ksort($outboundBeforeFilters);
                     $outboundBeforeFilters = array_unique(array_values($outboundBeforeFilters), SORT_REGULAR);
@@ -114,7 +114,7 @@ final class AclOutboundPass implements CompilerPassInterface
                     $filterBefore = (new Definition(MatchAllMessageFilters::class, [
                         new IteratorArgument($outboundBeforeFilters),
                     ]))->setFactory([MatchAllMessageFiltersFactory::class, 'create']);
-                } elseif ('match_any' === $filterChainBefore) {
+                } elseif ('match_any' === $filterStrategyBefore) {
                     $outboundBeforeFilters = $beforeFilters + ($dispatcherBeforeFilters[$dispatcherId] ?? []);
                     ksort($outboundBeforeFilters);
                     $outboundBeforeFilters = array_unique(array_values($outboundBeforeFilters), SORT_REGULAR);
@@ -126,8 +126,8 @@ final class AclOutboundPass implements CompilerPassInterface
                     throw new RuntimeException(sprintf('Invalid filter chain before for dispatcher=%s. Available values: %s', $dispatcherId, implode(', ', ['match_all', 'match_any'])));
                 }
 
-                $filterChainAfter = $targetAttrs['after'];
-                if ('match_all' === $filterChainAfter) {
+                $filterStrategyAfter = $targetAttrs['after'];
+                if ('match_all' === $filterStrategyAfter) {
                     $outboundAfterFilters = $afterFilters + ($dispatcherAfterFilters[$dispatcherId] ?? []);
                     ksort($outboundAfterFilters);
                     $outboundAfterFilters = array_unique(array_values($outboundAfterFilters), SORT_REGULAR);
@@ -135,7 +135,7 @@ final class AclOutboundPass implements CompilerPassInterface
                     $filterAfter = (new Definition(MatchAllMessageFilters::class, [
                         new IteratorArgument($outboundAfterFilters),
                     ]))->setFactory([MatchAllMessageFiltersFactory::class, 'create']);
-                } elseif ('match_any' === $filterChainAfter) {
+                } elseif ('match_any' === $filterStrategyAfter) {
                     $outboundAfterFilters = $afterFilters + ($dispatcherAfterFilters[$dispatcherId] ?? []);
                     ksort($outboundAfterFilters);
                     $outboundAfterFilters = array_unique(array_values($outboundAfterFilters), SORT_REGULAR);
@@ -144,7 +144,7 @@ final class AclOutboundPass implements CompilerPassInterface
                         new IteratorArgument($outboundAfterFilters),
                     ]))->setFactory([MatchAnyMessageFiltersFactory::class, 'create']);
                 } else {
-                    throw new RuntimeException(sprintf('Invalid filter chain after for dispatcher=%s. Available values: %s', $dispatcherId, implode(', ', ['match_all', 'match_any'])));
+                    throw new RuntimeException(sprintf('Invalid filter strategy after for dispatcher=%s. Available values: %s', $dispatcherId, implode(', ', ['match_all', 'match_any'])));
                 }
             }
 

@@ -58,10 +58,10 @@ final class MessengerMessageDispatcherLoader
 
                 $dispatcherDef->addTag('andreo.eventsauce.acl_outbound');
 
-                $outboundFilterChainConfig = $outboundConfig['filter_chain'];
-                $dispatcherDef->addTag('andreo.eventsauce.acl.filter_chain', [
-                    'before' => $outboundFilterChainConfig['before_translate'],
-                    'after' => $outboundFilterChainConfig['after_translate'],
+                $outboundFilterStrategyConfig = $outboundConfig['filter_strategy'];
+                $dispatcherDef->addTag('andreo.eventsauce.acl.filter_strategy', [
+                    'before' => $outboundFilterStrategyConfig['before'],
+                    'after' => $outboundFilterStrategyConfig['after'],
                 ]);
             }
 

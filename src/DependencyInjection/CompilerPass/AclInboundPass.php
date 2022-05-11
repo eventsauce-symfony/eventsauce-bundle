@@ -103,11 +103,11 @@ final class AclInboundPass implements CompilerPassInterface
             ]))->setFactory([MessageTranslatorChainFactory::class, 'create']);
 
             $consumerDef = $container->findDefinition($consumerId);
-            if ($consumerDef->hasTag('andreo.eventsauce.acl.filter_chain')) {
-                [$targetAttrs] = $consumerDef->getTag('andreo.eventsauce.acl.filter_chain');
+            if ($consumerDef->hasTag('andreo.eventsauce.acl.filter_strategy')) {
+                [$targetAttrs] = $consumerDef->getTag('andreo.eventsauce.acl.filter_strategy');
 
-                $filterChainBefore = $targetAttrs['before'];
-                if ('match_all' === $filterChainBefore) {
+                $filterStrategyBefore = $targetAttrs['before'];
+                if ('match_all' === $filterStrategyBefore) {
                     $inboundBeforeFilters = $beforeFilters + ($consumerBeforeFilters[$consumerId] ?? []);
                     ksort($inboundBeforeFilters);
                     $inboundBeforeFilters = array_unique(array_values($inboundBeforeFilters), SORT_REGULAR);
@@ -115,7 +115,7 @@ final class AclInboundPass implements CompilerPassInterface
                     $filterBefore = (new Definition(MatchAllMessageFilters::class, [
                         new IteratorArgument($inboundBeforeFilters),
                     ]))->setFactory([MatchAllMessageFiltersFactory::class, 'create']);
-                } elseif ('match_any' === $filterChainBefore) {
+                } elseif ('match_any' === $filterStrategyBefore) {
                     $inboundBeforeFilters = $beforeFilters + ($consumerBeforeFilters[$consumerId] ?? []);
                     ksort($inboundBeforeFilters);
                     $inboundBeforeFilters = array_unique(array_values($inboundBeforeFilters), SORT_REGULAR);
@@ -127,8 +127,8 @@ final class AclInboundPass implements CompilerPassInterface
                     throw new RuntimeException(sprintf('Invalid filter chain before for consumer=%s. Available values: %s', $consumerId, implode(', ', ['match_all', 'match_any'])));
                 }
 
-                $filterChainAfter = $targetAttrs['after'];
-                if ('match_all' === $filterChainAfter) {
+                $filterStrategyAfter = $targetAttrs['after'];
+                if ('match_all' === $filterStrategyAfter) {
                     $inboundAfterFilters = $afterFilters + ($consumerAfterFilters[$consumerId] ?? []);
                     ksort($inboundAfterFilters);
                     $inboundAfterFilters = array_unique(array_values($inboundAfterFilters), SORT_REGULAR);
@@ -136,7 +136,7 @@ final class AclInboundPass implements CompilerPassInterface
                     $filterAfter = (new Definition(MatchAllMessageFilters::class, [
                         new IteratorArgument($inboundAfterFilters),
                     ]))->setFactory([MatchAllMessageFiltersFactory::class, 'create']);
-                } elseif ('match_any' === $filterChainAfter) {
+                } elseif ('match_any' === $filterStrategyAfter) {
                     $inboundAfterFilters = $afterFilters + ($consumerAfterFilters[$consumerId] ?? []);
                     ksort($inboundAfterFilters);
                     $inboundAfterFilters = array_unique(array_values($inboundAfterFilters), SORT_REGULAR);
@@ -145,7 +145,7 @@ final class AclInboundPass implements CompilerPassInterface
                         new IteratorArgument($inboundAfterFilters),
                     ]))->setFactory([MatchAnyMessageFiltersFactory::class, 'create']);
                 } else {
-                    throw new RuntimeException(sprintf('Invalid filter chain after for consumer=%s. Available values: %s', $consumerId, implode(', ', ['match_all', 'match_any'])));
+                    throw new RuntimeException(sprintf('Invalid filter strategy after for consumer=%s. Available values: %s', $consumerId, implode(', ', ['match_all', 'match_any'])));
                 }
             }
 

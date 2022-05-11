@@ -116,7 +116,7 @@ final class AclInboundPassTest extends AbstractCompilerPassTestCase
         $consumerDef = new Definition();
         $consumerDef
             ->addTag('andreo.eventsauce.acl_inbound')
-            ->addTag('andreo.eventsauce.acl.filter_chain', [
+            ->addTag('andreo.eventsauce.acl.filter_strategy', [
                 'before' => 'match_all',
                 'after' => 'match_all',
             ])
@@ -170,7 +170,7 @@ final class AclInboundPassTest extends AbstractCompilerPassTestCase
         $consumerDef = new Definition();
         $consumerDef
             ->addTag('andreo.eventsauce.acl_inbound')
-            ->addTag('andreo.eventsauce.acl.filter_chain', [
+            ->addTag('andreo.eventsauce.acl.filter_strategy', [
                 'before' => 'match_any',
                 'after' => 'match_any',
             ])
