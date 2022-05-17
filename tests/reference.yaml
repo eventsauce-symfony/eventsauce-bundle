@@ -38,6 +38,7 @@ andreo_eventsauce:
 
     event_dispatcher:
         outbox: true
+        
     upcaster:
         argument: payload # one of [payload, message]
 

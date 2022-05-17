@@ -8,7 +8,7 @@ use Andreo\EventSauce\Doctrine\Migration\GenerateEventSauceDoctrineMigrationComm
 use Andreo\EventSauce\Doctrine\Migration\TableNameSuffix;
 use Andreo\EventSauce\Snapshotting\SnapshotStateSerializer;
 use Andreo\EventSauceBundle\Attribute\AsMessageDecorator;
-use Andreo\EventSauceBundle\Attribute\AsMessageFilterAfter;
+use Andreo\EventSauceBundle\Attribute\AsMessageFilter;
 use Andreo\EventSauceBundle\Attribute\AsMessageFilterBefore;
 use Andreo\EventSauceBundle\Attribute\AsMessageTranslator;
 use Andreo\EventSauceBundle\Attribute\AsSynchronousMessageConsumer;
@@ -87,7 +87,7 @@ final class DefaultConfigExtensionTest extends AbstractExtensionTestCase
         $this->assertArrayNotHasKey(WithInboundAcl::class, $attributes);
         $this->assertArrayNotHasKey(WithOutboundAcl::class, $attributes);
         $this->assertArrayNotHasKey(AsMessageFilterBefore::class, $attributes);
-        $this->assertArrayNotHasKey(AsMessageFilterAfter::class, $attributes);
+        $this->assertArrayNotHasKey(AsMessageFilter::class, $attributes);
         $this->assertArrayNotHasKey(AsMessageTranslator::class, $attributes);
     }
 

@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Andreo\EventSauceBundle\Attribute;
 
+use Andreo\EventSauceBundle\Enum\FilterStrategy;
 use Attribute;
 
 #[Attribute(Attribute::TARGET_CLASS)]
 final class WithInboundAcl
 {
     public function __construct(
-        public readonly ?string $filterBeforeStrategy = null,
-        public readonly ?string $filterAfterStrategy = null,
+        public readonly ?FilterStrategy $beforeStrategy = null,
+        public readonly ?FilterStrategy $afterStrategy = null,
     ) {
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Andreo\EventSauceBundle\DependencyInjection\CompilerPass;
 
+use Andreo\EventSauceBundle\Enum\FilterStrategy;
 use Andreo\EventSauceBundle\Factory\MatchAllMessageFiltersFactory;
 use Andreo\EventSauceBundle\Factory\MatchAnyMessageFiltersFactory;
 use Andreo\EventSauceBundle\Factory\MessageTranslatorChainFactory;
@@ -106,8 +107,8 @@ final class AclInboundPass implements CompilerPassInterface
             if ($consumerDef->hasTag('andreo.eventsauce.acl.filter_strategy')) {
                 [$targetAttrs] = $consumerDef->getTag('andreo.eventsauce.acl.filter_strategy');
 
-                $filterStrategyBefore = $targetAttrs['before'];
-                if ('match_all' === $filterStrategyBefore) {
+                $filterStrategyBefore = FilterStrategy::from($targetAttrs['before']);
+                if ($filterStrategyBefore->identity(FilterStrategy::MATCH_ALL)) {
                     $inboundBeforeFilters = $beforeFilters + ($consumerBeforeFilters[$consumerId] ?? []);
                     ksort($inboundBeforeFilters);
                     $inboundBeforeFilters = array_unique(array_values($inboundBeforeFilters), SORT_REGULAR);
@@ -115,7 +116,7 @@ final class AclInboundPass implements CompilerPassInterface
                     $filterBefore = (new Definition(MatchAllMessageFilters::class, [
                         new IteratorArgument($inboundBeforeFilters),
                     ]))->setFactory([MatchAllMessageFiltersFactory::class, 'create']);
-                } elseif ('match_any' === $filterStrategyBefore) {
+                } elseif ($filterStrategyBefore->identity(FilterStrategy::MATCH_ANY)) {
                     $inboundBeforeFilters = $beforeFilters + ($consumerBeforeFilters[$consumerId] ?? []);
                     ksort($inboundBeforeFilters);
                     $inboundBeforeFilters = array_unique(array_values($inboundBeforeFilters), SORT_REGULAR);
@@ -123,12 +124,10 @@ final class AclInboundPass implements CompilerPassInterface
                     $filterBefore = (new Definition(MatchAnyMessageFilter::class, [
                         new IteratorArgument($inboundBeforeFilters),
                     ]))->setFactory([MatchAnyMessageFiltersFactory::class, 'create']);
-                } else {
-                    throw new RuntimeException(sprintf('Invalid filter chain before for consumer=%s. Available values: %s', $consumerId, implode(', ', ['match_all', 'match_any'])));
                 }
 
-                $filterStrategyAfter = $targetAttrs['after'];
-                if ('match_all' === $filterStrategyAfter) {
+                $filterStrategyAfter = FilterStrategy::from($targetAttrs['after']);
+                if ($filterStrategyAfter->identity(FilterStrategy::MATCH_ALL)) {
                     $inboundAfterFilters = $afterFilters + ($consumerAfterFilters[$consumerId] ?? []);
                     ksort($inboundAfterFilters);
                     $inboundAfterFilters = array_unique(array_values($inboundAfterFilters), SORT_REGULAR);
@@ -136,7 +135,7 @@ final class AclInboundPass implements CompilerPassInterface
                     $filterAfter = (new Definition(MatchAllMessageFilters::class, [
                         new IteratorArgument($inboundAfterFilters),
                     ]))->setFactory([MatchAllMessageFiltersFactory::class, 'create']);
-                } elseif ('match_any' === $filterStrategyAfter) {
+                } elseif ($filterStrategyAfter->identity(FilterStrategy::MATCH_ANY)) {
                     $inboundAfterFilters = $afterFilters + ($consumerAfterFilters[$consumerId] ?? []);
                     ksort($inboundAfterFilters);
                     $inboundAfterFilters = array_unique(array_values($inboundAfterFilters), SORT_REGULAR);
@@ -144,8 +143,6 @@ final class AclInboundPass implements CompilerPassInterface
                     $filterAfter = (new Definition(MatchAnyMessageFilter::class, [
                         new IteratorArgument($inboundAfterFilters),
                     ]))->setFactory([MatchAnyMessageFiltersFactory::class, 'create']);
-                } else {
-                    throw new RuntimeException(sprintf('Invalid filter strategy after for consumer=%s. Available values: %s', $consumerId, implode(', ', ['match_all', 'match_any'])));
                 }
             }
 
