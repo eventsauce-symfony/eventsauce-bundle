@@ -7,6 +7,7 @@ namespace Tests\Config;
 use Andreo\EventSauceBundle\DependencyInjection\AndreoEventSauceExtension;
 use EventSauce\MessageRepository\TableSchema\TableSchema;
 use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Tests\Dummy\DummyTableSchema;
 
 final class EventStoreConfigTest extends AbstractExtensionTestCase
@@ -41,5 +42,22 @@ final class EventStoreConfigTest extends AbstractExtensionTestCase
         $this->assertContainerBuilderHasAlias(TableSchema::class);
         $tableSchemaAlias = $this->container->getAlias(TableSchema::class);
         $this->assertEquals(DummyTableSchema::class, $tableSchemaAlias->__toString());
+    }
+
+    /**
+     * @test
+     */
+    public function should_throw_exception_when_more_than_one_repository_is_enabled(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->load([
+            'event_store' => [
+                'repository' => [
+                    'memory' => true,
+                    'doctrine' => true,
+                ],
+            ],
+        ]);
     }
 }

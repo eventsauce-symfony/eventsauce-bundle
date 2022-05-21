@@ -311,4 +311,21 @@ final class OutboxConfigTest extends AbstractExtensionTestCase
         $loggerArgument = $processMessagesCommandDef->getArgument(1);
         $this->assertEquals(DummyLogger::class, $loggerArgument->__toString());
     }
+
+    /**
+     * @test
+     */
+    public function should_throw_exception_when_more_than_one_repository_is_enabled(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        $this->load([
+            'outbox' => [
+                'repository' => [
+                    'memory' => true,
+                    'doctrine' => true,
+                ],
+            ],
+        ]);
+    }
 }

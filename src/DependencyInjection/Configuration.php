@@ -4,14 +4,7 @@ declare(strict_types=1);
 
 namespace Andreo\EventSauceBundle\DependencyInjection;
 
-use Andreo\EventSauce\Snapshotting\ConstructingSnapshotStateSerializer;
 use Doctrine\Bundle\MigrationsBundle\DoctrineMigrationsBundle;
-use EventSauce\Clock\SystemClock;
-use EventSauce\EventSourcing\DotSeparatedSnakeCaseInflector;
-use EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer;
-use EventSauce\EventSourcing\Serialization\ConstructingPayloadSerializer;
-use EventSauce\MessageRepository\TableSchema\DefaultTableSchema;
-use EventSauce\UuidEncoding\BinaryUuidEncoder;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\ScalarNodeDefinition;
@@ -78,11 +71,6 @@ final class Configuration implements ConfigurationInterface
                 ->end()
                 ?->scalarNode('clock')
                     ->defaultNull()
-                    ->info(
-                        sprintf(
-                            'Clock implementation. Default is: %s',
-                            SystemClock::class
-                        ))
                 ->end()
             ?->end();
 
@@ -97,34 +85,35 @@ final class Configuration implements ConfigurationInterface
             ->children()
                 ->arrayNode('repository')
                     ->addDefaultsIfNotSet()
+                    ->validate()
+                        ->ifTrue(static fn (array $config) => $config['memory']['enabled'] && $config['doctrine']['enabled'])
+                        ->thenInvalid('Only one type of message repository can be set: memory or doctrine')
+                    ->end()
                     ->children()
-                        ->arrayNode('json_encode_options')
-                            ->normalizeKeys(false)
-                            ->scalarPrototype()
-                                ->validate()
-                                    ->ifNotInArray(self::JSON_OPTIONS)
-                                    ->thenInvalid('Invalid JSON options.')
-                                ->end()
-                            ->end()
-                        ?->end()
-                        ->arrayNode('doctrine')
+                        ->arrayNode('memory')
+                            ->canBeEnabled()
+                        ->end()
+                        ?->arrayNode('doctrine')
+                            ->canBeEnabled()
                             ->addDefaultsIfNotSet()
                             ->children()
+                                ->arrayNode('json_encode_options')
+                                    ->normalizeKeys(false)
+                                    ->scalarPrototype()
+                                        ->validate()
+                                            ->ifNotInArray(self::JSON_OPTIONS)
+                                            ->thenInvalid('Invalid JSON options.')
+                                        ->end()
+                                    ->end()
+                                ?->end()
                                 ->scalarNode('connection')
                                     ->cannotBeEmpty()
                                     ->defaultValue('doctrine.dbal.default_connection')
                                 ->end()
                                 ?->scalarNode('table_schema')
                                     ->defaultNull()
-                                    ->info(
-                                        sprintf(
-                                            'TableSchema implementation. Default is: %s',
-                                            DefaultTableSchema::class
-                                        )
-                                    )
                                 ->end()
                                 ?->scalarNode('table_name')
-                                    ->info('Table name suffix.')
                                     ->cannotBeEmpty()
                                     ->defaultValue('event_store')
                                 ->end()
@@ -409,7 +398,6 @@ final class Configuration implements ConfigurationInterface
                     ?->end()
                 ->end()
                 ->arrayNode('repository')
-                    ->info('Repository type.')
                     ->addDefaultsIfNotSet()
                     ->validate()
                         ->ifTrue(static fn (array $config) => $config['memory']['enabled'] && $config['doctrine']['enabled'])
@@ -424,7 +412,6 @@ final class Configuration implements ConfigurationInterface
                             ->addDefaultsIfNotSet()
                             ->children()
                                 ->scalarNode('table_name')
-                                    ->info('Table name suffix.')
                                     ->cannotBeEmpty()
                                     ->defaultValue('outbox')
                                 ->end()
@@ -445,7 +432,6 @@ final class Configuration implements ConfigurationInterface
             ->addDefaultsIfNotSet()
             ->children()
                 ->arrayNode('repository')
-                    ->info('Repository type.')
                     ->addDefaultsIfNotSet()
                     ->validate()
                         ->ifTrue(static fn (array $config) => $config['memory']['enabled'] && $config['doctrine']['enabled'])
@@ -460,7 +446,6 @@ final class Configuration implements ConfigurationInterface
                             ->addDefaultsIfNotSet()
                             ->children()
                                 ->scalarNode('table_name')
-                                    ->info('Table name suffix.')
                                     ->cannotBeEmpty()
                                     ->defaultValue('snapshot')
                                 ->end()
@@ -520,29 +505,13 @@ final class Configuration implements ConfigurationInterface
             ->addDefaultsIfNotSet()
             ->children()
                 ->scalarNode('payload')
-                    ->info(
-                        sprintf(
-                            'PayloadSerializer implementation. Default is: %s',
-                            ConstructingPayloadSerializer::class
-                        ))
                     ->defaultNull()
                 ->end()
                 ?->scalarNode('message')
-                    ->info(
-                        sprintf(
-                            'MessageSerializer implementation. Default is: %s',
-                            ConstructingMessageSerializer::class
-                        ))
                     ->defaultNull()
                 ->end()
                 ?->scalarNode('snapshot')
                     ->defaultNull()
-                    ->info(
-                        sprintf(
-                            'SnapshotStateSerializer implementation. Default is: %s',
-                            ConstructingSnapshotStateSerializer::class
-                        )
-                    )
                 ->end()
             ?->end();
 
@@ -554,11 +523,6 @@ final class Configuration implements ConfigurationInterface
         $node = new ScalarNodeDefinition('class_name_inflector');
         $node
             ->defaultNull()
-            ->info(
-                sprintf(
-                    'ClassNameInflector implementation. Default is: %s',
-                    DotSeparatedSnakeCaseInflector::class
-                ))
             ->end();
 
         return $node;
@@ -569,11 +533,6 @@ final class Configuration implements ConfigurationInterface
         $node = new ScalarNodeDefinition('uuid_encoder');
         $node
             ->defaultNull()
-            ->info(
-                sprintf(
-                    'UuidEncoder implementation. Default is: %s',
-                    BinaryUuidEncoder::class
-                ))
             ->end()
         ?->end();
 
@@ -601,12 +560,10 @@ final class Configuration implements ConfigurationInterface
             ->arrayPrototype()
                 ->children()
                     ->scalarNode('class')
-                        ->info('Aggregate root class')
                         ->cannotBeEmpty()
                         ->isRequired()
                     ->end()
                     ?->scalarNode('repository_alias')
-                        ->info('Default "${aggregateName}Repository"')
                         ->defaultNull()
                         ->cannotBeEmpty()
                     ->end()

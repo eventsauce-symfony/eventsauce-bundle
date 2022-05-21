@@ -37,7 +37,7 @@ final class AndreoEventSauceExtension extends Extension
         $loader->load('eventsauce.yaml');
 
         (new TimeLoader($container))($config);
-        (new EventStoreLoader($container))($config);
+        (new EventStoreLoader($this, $container))($config);
         (new AclLoader($this, $container))($config);
         (new MessageDecoratorLoader($this, $container))($config);
         (new SynchronousMessageDispatcherLoader($this, $container))($config);

@@ -5,10 +5,12 @@ andreo_eventsauce:
 
     event_store:
         repository:
-            json_encode_options:
-                - !php/const JSON_PRETTY_PRINT
-                - !php/const JSON_PRESERVE_ZERO_FRACTION
+            memory:
+                enabled: false
             doctrine:
+                json_encode_options:
+                    - !php/const JSON_PRETTY_PRINT
+                    - !php/const JSON_PRESERVE_ZERO_FRACTION
                 connection: doctrine.dbal.default_connection
                 table_schema: EventSauce\MessageRepository\TableSchema\TableSchema
                 table_name: event_store
@@ -95,7 +97,7 @@ andreo_eventsauce:
             class: App\Domain\Foo
             repository_alias: fooRepository
             outbox: true
-            message_dispatchers:
+            dispatchers:
                 - eventBus
             upcaster: true
             snapshot: true

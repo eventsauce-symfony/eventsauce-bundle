@@ -22,6 +22,7 @@ use EventSauce\BackOff\BackOffStrategy;
 use EventSauce\EventSourcing\AggregateRootRepository;
 use EventSauce\EventSourcing\ClassNameInflector;
 use EventSauce\EventSourcing\EventSourcedAggregateRootRepository;
+use EventSauce\EventSourcing\InMemoryMessageRepository;
 use EventSauce\EventSourcing\MessageDispatcherChain;
 use EventSauce\EventSourcing\Serialization\MessageSerializer;
 use EventSauce\EventSourcing\Snapshotting\AggregateRootRepositoryWithSnapshotting;
@@ -137,17 +138,11 @@ final class AggregatesLoader
         }
     }
 
-    private function loadAggregateMessageRepository(
+    private function loadMessageSerializer(
         string $aggregateName,
         array $aggregateConfig,
-        array $messageConfig,
         array $upcasterConfig
-    ): void {
-        $messageRepositoryConfig = $messageConfig['repository'];
-        $messageRepositoryDoctrineConfig = $messageRepositoryConfig['doctrine'];
-        $jsonEncodeOptions = $messageRepositoryConfig['json_encode_options'];
-        $messageTableName = $messageRepositoryDoctrineConfig['table_name'];
-
+    ): Definition|Reference {
         if ($this->extension->isConfigEnabled($this->container, $aggregateConfig['upcaster'])) {
             if (!$this->extension->isConfigEnabled($this->container, $upcasterConfig)) {
                 throw new LogicException('Upcast config is disabled. If you want to use it, enable and configure it .');
@@ -184,19 +179,49 @@ final class AggregatesLoader
             $messageSerializerArgument = new Reference(MessageSerializer::class);
         }
 
-        $tableName = sprintf('%s_%s', $aggregateName, $messageTableName);
-        $this->container
-            ->register("andreo.eventsauce.message_repository.$aggregateName", DoctrineUuidV4MessageRepository::class)
-            ->setArguments([
-                new Reference('andreo.eventsauce.doctrine.connection'),
-                $tableName,
-                $messageSerializerArgument,
-                array_reduce($jsonEncodeOptions, static fn (int $a, int $b) => $a | $b, 0),
-                new Reference(TableSchema::class),
-                new Reference(UuidEncoder::class),
-            ])
-            ->setPublic(false)
-        ;
+        return $messageSerializerArgument;
+    }
+
+    private function loadAggregateMessageRepository(
+        string $aggregateName,
+        array $aggregateConfig,
+        array $messageConfig,
+        array $upcasterConfig
+    ): void {
+        $messageRepositoryConfig = $messageConfig['repository'];
+        $messageRepositoryMemoryEnabled = $this->extension->isConfigEnabled(
+            $this->container,
+            $messageRepositoryConfig['memory']
+        );
+
+        if (!$messageRepositoryMemoryEnabled) {
+            $messageRepositoryDoctrineConfig = $messageRepositoryConfig['doctrine'];
+            $jsonEncodeOptions = $messageRepositoryDoctrineConfig['json_encode_options'];
+            $messageTableName = $messageRepositoryDoctrineConfig['table_name'];
+            $tableName = sprintf('%s_%s', $aggregateName, $messageTableName);
+            $messageSerializerArgument = $this->loadMessageSerializer(
+                $aggregateName,
+                $aggregateConfig,
+                $upcasterConfig
+            );
+
+            $this->container
+                ->register("andreo.eventsauce.message_repository.$aggregateName", DoctrineUuidV4MessageRepository::class)
+                ->setArguments([
+                    new Reference('andreo.eventsauce.doctrine.connection'),
+                    $tableName,
+                    $messageSerializerArgument,
+                    array_reduce($jsonEncodeOptions, static fn (int $a, int $b) => $a | $b, 0),
+                    new Reference(TableSchema::class),
+                    new Reference(UuidEncoder::class),
+                ])
+                ->setPublic(false)
+            ;
+        } else {
+            $this->container
+                ->register("andreo.eventsauce.message_repository.$aggregateName", InMemoryMessageRepository::class)
+                ->setPublic(false);
+        }
     }
 
     private function loadAggregateRepository(
@@ -235,10 +260,13 @@ final class AggregatesLoader
             throw new LogicException('Message default outbox config is disabled. If you want to use it, enable and configure it .');
         }
 
-        $memoryRepositoryEnabled = $this->extension->isConfigEnabled($this->container, $outboxRepositoryConfig['memory']);
-        $doctrineRepositoryEnabled = $this->extension->isConfigEnabled($this->container, $outboxRepositoryDoctrineConfig = $outboxRepositoryConfig['doctrine']);
+        $memoryRepositoryEnabled = $this->extension->isConfigEnabled(
+            $this->container,
+            $outboxRepositoryConfig['memory']
+        );
 
-        if ($doctrineRepositoryEnabled || !$memoryRepositoryEnabled) {
+        if (!$memoryRepositoryEnabled) {
+            $outboxRepositoryDoctrineConfig = $outboxRepositoryConfig['doctrine'];
             $tableName = sprintf('%s_%s', $aggregateName, $outboxRepositoryDoctrineConfig['table_name']);
             $this->container
                 ->register("andreo.eventsauce.outbox_repository.$aggregateName", DoctrineOutboxRepository::class)
@@ -316,10 +344,12 @@ final class AggregatesLoader
         $repositoryAlias = $aggregateConfig['repository_alias'];
         $storeStrategyConfig = $snapshotConfig['store_strategy'];
 
-        $snapshotMemoryRepositoryEnabled = $this->extension->isConfigEnabled($this->container, $snapshotRepositoryConfig['memory']);
-        $snapshotDoctrineRepositoryEnabled = $this->extension->isConfigEnabled($this->container, $snapshotDoctrineRepositoryConfig = $snapshotRepositoryConfig['doctrine']);
+        $snapshotDoctrineRepositoryEnabled = $this->extension->isConfigEnabled(
+            $this->container,
+            $snapshotDoctrineRepositoryConfig = $snapshotRepositoryConfig['doctrine']
+        );
 
-        if ($snapshotMemoryRepositoryEnabled || !$snapshotDoctrineRepositoryEnabled) {
+        if (!$snapshotDoctrineRepositoryEnabled) {
             $snapshotRepositoryDef = new Definition(InMemorySnapshotRepository::class);
         } else {
             $tableName = sprintf('%s_%s', $aggregateName, $snapshotDoctrineRepositoryConfig['table_name']);

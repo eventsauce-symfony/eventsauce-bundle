@@ -41,9 +41,8 @@ final class EventDispatcherLoader
 
             $outboxRepositoryConfig = $outboxConfig['repository'];
             $memoryRepositoryEnabled = $this->extension->isConfigEnabled($this->container, $outboxRepositoryConfig['memory']);
-            $doctrineRepositoryEnabled = $this->extension->isConfigEnabled($this->container, $outboxRepositoryDoctrineConfig = $outboxRepositoryConfig['doctrine']);
-
-            if ($doctrineRepositoryEnabled || !$memoryRepositoryEnabled) {
+            if (!$memoryRepositoryEnabled) {
+                $outboxRepositoryDoctrineConfig = $outboxRepositoryConfig['doctrine'];
                 $tableName = $outboxRepositoryDoctrineConfig['table_name'];
                 $outboxRepositoryDef = new Definition(DoctrineOutboxRepository::class, [
                     new Reference('andreo.eventsauce.doctrine.connection'),
