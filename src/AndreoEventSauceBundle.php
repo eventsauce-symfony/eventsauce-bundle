@@ -16,6 +16,8 @@ final class AndreoEventSauceBundle extends Bundle
     {
         $container->addCompilerPass(new AclOutboundPass('andreo.eventsauce.acl_outbound_enabled'), priority: -10);
         $container->addCompilerPass(new AclInboundPass('andreo.eventsauce.acl_inbound_enabled'), priority: -10);
-        $container->addCompilerPass(new HandleEventSauceMessageMiddlewarePass('andreo.eventsauce.messenger_enabled'), priority: -15);
+        if (class_exists(HandleEventSauceMessageMiddlewarePass::class)) {
+            $container->addCompilerPass(new HandleEventSauceMessageMiddlewarePass('andreo.eventsauce.messenger_enabled'), priority: -15);
+        }
     }
 }
