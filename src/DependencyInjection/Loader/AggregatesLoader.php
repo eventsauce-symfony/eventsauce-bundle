@@ -6,6 +6,7 @@ namespace Andreo\EventSauceBundle\DependencyInjection\Loader;
 
 use Andreo\EventSauce\Outbox\EventSourcedAggregateRootRepositoryForOutbox;
 use Andreo\EventSauce\Outbox\ForwardingMessageConsumer;
+use Andreo\EventSauce\Outbox\InMemoryTransactionalMessageRepository;
 use Andreo\EventSauce\Snapshotting\AggregateRootRepositoryWithSnapshottingAndStoreStrategy;
 use Andreo\EventSauce\Snapshotting\AggregateRootRepositoryWithVersionedSnapshotting;
 use Andreo\EventSauce\Snapshotting\DoctrineSnapshotRepository;
@@ -277,23 +278,33 @@ final class AggregatesLoader
                 ])
                 ->setPublic(false)
             ;
+
+            $regularMessageRepositoryDef = $this->container->getDefinition("andreo.eventsauce.message_repository.$aggregateName");
+            $this->container
+                ->register("andreo.eventsauce.message_repository.$aggregateName", DoctrineTransactionalMessageRepository::class)
+                ->setArguments([
+                    new Reference('andreo.eventsauce.doctrine.connection'),
+                    $regularMessageRepositoryDef,
+                    new Reference("andreo.eventsauce.outbox_repository.$aggregateName"),
+                ])
+                ->setPublic(false)
+            ;
         } else {
             $this->container
                 ->register("andreo.eventsauce.outbox_repository.$aggregateName", InMemoryOutboxRepository::class)
                 ->setPublic(false)
             ;
-        }
 
-        $regularMessageRepositoryDef = $this->container->getDefinition("andreo.eventsauce.message_repository.$aggregateName");
-        $this->container
-            ->register("andreo.eventsauce.message_repository.$aggregateName", DoctrineTransactionalMessageRepository::class)
-            ->setArguments([
-                new Reference('andreo.eventsauce.doctrine.connection'),
-                $regularMessageRepositoryDef,
-                new Reference("andreo.eventsauce.outbox_repository.$aggregateName"),
-            ])
-            ->setPublic(false)
-        ;
+            $regularMessageRepositoryDef = $this->container->getDefinition("andreo.eventsauce.message_repository.$aggregateName");
+            $this->container
+                ->register("andreo.eventsauce.message_repository.$aggregateName", InMemoryTransactionalMessageRepository::class)
+                ->setArguments([
+                    $regularMessageRepositoryDef,
+                    new Reference("andreo.eventsauce.outbox_repository.$aggregateName"),
+                ])
+                ->setPublic(false)
+            ;
+        }
 
         $regularAggregateRepositoryDef = $this->container->getDefinition("andreo.eventsauce.aggregate_repository.$aggregateName");
         $this->container

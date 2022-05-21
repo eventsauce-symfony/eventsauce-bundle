@@ -214,7 +214,7 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
         $this->assertContainerBuilderHasService('andreo.eventsauce.message_repository.bar');
         $aggregateRepositoryDefinition = $this->container->getDefinition('andreo.eventsauce.message_repository.bar');
         /** @var Definition $outboxRepositoryDef */
-        $outboxRepositoryDef = $this->container->getDefinition($aggregateRepositoryDefinition->getArgument(2)->__toString());
+        $outboxRepositoryDef = $this->container->getDefinition($aggregateRepositoryDefinition->getArgument(1)->__toString());
         $this->assertEquals(InMemoryOutboxRepository::class, $outboxRepositoryDef->getClass());
     }
 
