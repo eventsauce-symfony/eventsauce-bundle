@@ -289,27 +289,6 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function should_register_memory_snapshot_aggregate_repository_as_default(): void
-    {
-        $this->load([
-            'snapshot' => true,
-            'aggregates' => [
-                'bar' => [
-                    'class' => DummyFooAggregateWithSnapshotting::class,
-                    'snapshot' => true,
-                ],
-            ],
-        ]);
-
-        $repositoryDef = $this->container->getDefinition('andreo.eventsauce.aggregate_repository.bar');
-        /** @var Definition $snapshotRepositoryDef */
-        $snapshotRepositoryDef = $repositoryDef->getArgument(2);
-        $this->assertEquals(InMemorySnapshotRepository::class, $snapshotRepositoryDef->getClass());
-    }
-
-    /**
-     * @test
-     */
     public function should_register_doctrine_snapshot_aggregate_repository(): void
     {
         $this->load([

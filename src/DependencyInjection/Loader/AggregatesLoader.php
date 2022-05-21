@@ -355,14 +355,14 @@ final class AggregatesLoader
         $repositoryAlias = $aggregateConfig['repository_alias'];
         $storeStrategyConfig = $snapshotConfig['store_strategy'];
 
-        $snapshotDoctrineRepositoryEnabled = $this->extension->isConfigEnabled(
+        $snapshotMemoryRepositoryEnabled = $this->extension->isConfigEnabled(
             $this->container,
-            $snapshotDoctrineRepositoryConfig = $snapshotRepositoryConfig['doctrine']
+            $snapshotRepositoryConfig['memory']
         );
 
-        if (!$snapshotDoctrineRepositoryEnabled) {
-            $snapshotRepositoryDef = new Definition(InMemorySnapshotRepository::class);
-        } else {
+        $doctrineAvailable = class_exists(DoctrineSnapshotRepository::class);
+        if (!$snapshotMemoryRepositoryEnabled && $doctrineAvailable) {
+            $snapshotDoctrineRepositoryConfig = $snapshotRepositoryConfig['doctrine'];
             $tableName = sprintf('%s_%s', $aggregateName, $snapshotDoctrineRepositoryConfig['table_name']);
             $snapshotRepositoryDef = new Definition(DoctrineSnapshotRepository::class, [
                 new Reference('andreo.eventsauce.doctrine.connection'),
@@ -370,6 +370,8 @@ final class AggregatesLoader
                 new Reference(SnapshotStateSerializer::class),
                 new Reference(UuidEncoder::class),
             ]);
+        } else {
+            $snapshotRepositoryDef = new Definition(InMemorySnapshotRepository::class);
         }
 
         $regularRepositoryDef = $this->container->getDefinition("andreo.eventsauce.aggregate_repository.$aggregateName");
