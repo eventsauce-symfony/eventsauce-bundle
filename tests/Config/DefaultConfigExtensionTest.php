@@ -65,7 +65,7 @@ final class DefaultConfigExtensionTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function should_load_event_store(): void
+    public function should_load_message_storage(): void
     {
         $this->load();
 

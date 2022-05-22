@@ -10,7 +10,7 @@ use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Tests\Dummy\DummyTableSchema;
 
-final class EventStoreConfigTest extends AbstractExtensionTestCase
+final class MessageStorageConfigTest extends AbstractExtensionTestCase
 {
     protected function getContainerExtensions(): array
     {
@@ -22,10 +22,10 @@ final class EventStoreConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function should_load_event_store(): void
+    public function should_load_message_storage(): void
     {
         $this->load([
-            'event_store' => [
+            'message_storage' => [
                 'repository' => [
                     'doctrine' => [
                         'connection' => 'doctrine.default_connection',
@@ -52,7 +52,7 @@ final class EventStoreConfigTest extends AbstractExtensionTestCase
         $this->expectException(InvalidConfigurationException::class);
 
         $this->load([
-            'event_store' => [
+            'message_storage' => [
                 'repository' => [
                     'memory' => true,
                     'doctrine' => true,

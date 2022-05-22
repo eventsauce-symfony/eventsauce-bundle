@@ -1,9 +1,9 @@
-andreo_eventsauce:
+andreo_event_sauce:
     time:
         timezone: UTC
         clock: EventSauce\Clock\Clock
 
-    event_store:
+    message_storage:
         repository:
             memory:
                 enabled: false
@@ -13,7 +13,7 @@ andreo_eventsauce:
                     - !php/const JSON_PRESERVE_ZERO_FRACTION
                 connection: doctrine.dbal.default_connection
                 table_schema: EventSauce\MessageRepository\TableSchema\TableSchema
-                table_name: event_store
+                table_name: message_storage
     acl:
         outbound:
             filter_strategy:

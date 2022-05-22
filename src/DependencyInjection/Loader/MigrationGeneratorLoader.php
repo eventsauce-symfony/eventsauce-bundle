@@ -31,7 +31,7 @@ final class MigrationGeneratorLoader
         $dependencyFactoryId = $migrationGeneratorConfig['dependency_factory'];
         $this->container->setAlias('andreo.eventsauce.migration_generator.dependency_factory', $dependencyFactoryId);
 
-        $messageDoctrineConfig = $config['event_store']['repository']['doctrine'];
+        $messageDoctrineConfig = $config['message_storage']['repository']['doctrine'];
         $eventTableName = $messageDoctrineConfig['table_name'];
 
         $snapshotDoctrineConfig = $config['snapshot']['repository']['doctrine'];

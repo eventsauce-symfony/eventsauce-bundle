@@ -4,7 +4,7 @@
     </a>
 </p>
 
-# EventSauceBundle (BETA)
+# EventSauceBundle
 
 This bundle provides the basic and extended container configuration of
 symfony for the [EventSauce](https://eventsauce.io/) library.
@@ -16,12 +16,11 @@ Before using it, I strongly recommend that you read the official [documentation]
 - All events in table per aggregate type
 - Message Outbox
 - Symfony messenger
-- Symfony serializer
-- Snapshot doctrine repository
-- Snapshot versioning
-- Snapshot store every n event
-- Automatic generate migration for aggregate
-- Message upcasting
+- Snapshot doctrine repository, versioning, store strategies
+- Generating migrations per aggregate
+- ACL
+
+and more...
 
 ### Requirements
 
@@ -34,9 +33,9 @@ Before using it, I strongly recommend that you read the official [documentation]
 composer require andreo/eventsauce-bundle
 ```
 
-Verify that the bundle has been added the `config/bundles.php` file
-
 ```php
+// config/bundles.php
+
 return [
     Andreo\EventSauceBundle\AndreoEventSauceBundle::class => ['all' => true],
 ];
@@ -49,20 +48,23 @@ You probably want to set your time zone.
 ```yaml
 andreo_event_sauce:
     time:
-        timezone: Europe/Warsaw # default is UTC
+        timezone: UTC #default
 ```
 
-### Doctrine connection
+### Message Storage
 
-Perhaps you want to set doctrine dbal connection.
-Default value is **doctrine.dbal.default_connection**.
-If you don't have doctrine dbal config, try install
+About [message storage](https://eventsauce.io/docs/message-storage/)
+
+#### Doctrine
+
+Perhaps you want to set doctrine dbal connection. \
+If you don't have doctrine, try install
 
 ```bash
 composer require doctrine/doctrine-bundle
 ```
 
-or, if you will be using migration and orm for projection
+or, if you will be using migration and orm
 
 ```bash
 composer require symfony/orm-pack
@@ -70,35 +72,33 @@ composer require symfony/orm-pack
 
 ```yaml
 andreo_event_sauce:
-    message:
+    message_storage:
         repository:
             doctrine:
-                # default is doctrine.dbal.default_connection
-                connection:  doctrine.dbal.main_connection 
+                connection:  doctrine.dbal.default_connection #default
 ```
 
-### Message dispatching
+### Synchronous message dispatcher
 
 Defaults EventSauce to dispatch events use [SynchronousMessageDispatcher](https://eventsauce.io/docs/reacting-to-events/setup-consumers/#synchronous-message-dispatcher).
-An example configuration is as follows
+
+Example configuration
 
 ```yaml
 andreo_event_sauce:
-    message:
-        dispatcher:
-            chain:
-                - fooBus
-                - barBus
+    synchronous_message_dispatcher:
+        chain:
+            foo_dispatcher: ~
+            bar_dispatcher: ~
 ```
 
-Defining the example message consumer is as follows
-
+Message consumer example
 ```php
 use EventSauce\EventSourcing\MessageConsumer;
 use Andreo\EventSauceBundle\Attribute\AsSynchronousMessageConsumer;
 
-#[AsSynchronousMessageConsumer(dispatcher: fooBus)]
-final class SomeProjection implements MessageConsumer {
+#[AsSynchronousMessageConsumer(dispatcher: 'foo_dispatcher')]
+final class FooConsumer implements MessageConsumer {
 
     public function handle(Message $message): void {
         // do something
@@ -106,102 +106,39 @@ final class SomeProjection implements MessageConsumer {
 }
 ```
 
-### Message dispatching with symfony messenger
+### Messenger message dispatcher
 
-You need install the [package](https://github.com/andrew-pakula/eventsauce-messenger) (recommend reading doc).
+Install the [package](https://github.com/andrew-pakula/eventsauce-messenger). I recommend reading the documentation
 
 
 ```bash
 composer require andreo/eventsauce-messenger
 ```
 
-If you don't have messenger config, try install
+If you don't have the messenger, try install
 
 ```bash
 composer require symfony/messenger
 ```
 
-An example configuration is as follows
+Example configuration
 
 ```yaml
 andreo_event_sauce:
-    message:
-        dispatcher:
-            messenger: true
-            chain:
-                fooBus: barBus # message bus alias from messenger config
-                bazBus: quxBus
+    messenger_message_dispatcher:
+        chain:
+            foo_dispatcher:
+                bus: fooBus
+            bar_dispatcher:
+                bus: barBus
 
-```
-
-#### Message dispatching mode
-
-The mode option is a way of dispatch messages. Available values:
-
-`event` (default)
-
-- Event is only dispatch to the handler that supports the event type
-- Doesn't dispatch headers
-
-`event_and_headers`
-
-- Event is dispatch to the handler that supports the event type
-- Receive of message headers in the second handler argument
-
-`message`
-
-- Message is dispatch to the any handler that supports the Message type. You have to manually check event type
-- Message object includes the event and headers
-
-Change the default **event** mode
-
-```yaml
-andreo_event_sauce:
-    message:
-        dispatcher:
-            messenger:
-                mode: event_and_headers # default is event
-            chain:
-                fooBus: barBus
-```
-
-#### Event Dispatcher
-
-Sometimes you may want to use dispatch messages in a
-context other than aggregate. You can do this with the
-[Event Dispatcher](https://eventsauce.io/docs/utilities/event-dispatcher/#main-article)
-
-To enable it use this configuration
-
-```yaml
-andreo_event_sauce:
-    message:
-        dispatcher:
-            event_dispatcher: true # default is false
-            chain:
-                - fooBus
-```
-
-Then you can inject the event dispatcher based on the alias and dedicated
-interface
-
-```php
-use EventSauce\EventSourcing\EventDispatcher;
-use Symfony\Component\DependencyInjection\Attribute\Target;
-
-final class SomeContext {
-
-   public function __construct(
-        #[Target('fooBus')] private EventDispatcher $fooBus
-    ){}
-}
 ```
 
 ### Aggregates
 
 [About Aggregates](https://eventsauce.io/docs/event-sourcing/create-an-aggregate-root/)
 
-An example configuration for two aggregates is as follows
+Example configuration
 
 ```yaml
 

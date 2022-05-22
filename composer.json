@@ -18,7 +18,7 @@
     "suggest": {
         "andreo/eventsauce-snapshotting": "Extended snapshot components.",
         "andreo/eventsauce-aggregate": "Extended aggregate components of the EventSauce.",
-        "andreo/eventsauce-migration-generator": "This component generates doctrine migrations per aggregate.",
+        "andreo/eventsauce-migration-generator": "Generates doctrine migrations per aggregate.",
         "andreo/eventsauce-messenger": "Integration symfony messenger.",
         "andreo/eventsauce-outbox": "Extended message outbox components.",
         "andreo/eventsauce-upcasting": "Extended upcasting components."

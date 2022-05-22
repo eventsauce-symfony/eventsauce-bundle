@@ -9,7 +9,7 @@ use EventSauce\MessageRepository\TableSchema\DefaultTableSchema;
 use EventSauce\MessageRepository\TableSchema\TableSchema;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
-final class EventStoreLoader
+final class MessageStorageLoader
 {
     public function __construct(private AndreoEventSauceExtension $extension, private ContainerBuilder $container)
     {
@@ -17,8 +17,8 @@ final class EventStoreLoader
 
     public function __invoke(array $config): void
     {
-        $messageConfig = $config['event_store'];
-        $messageRepositoryConfig = $messageConfig['repository'];
+        $messageStorageConfig = $config['message_storage'];
+        $messageRepositoryConfig = $messageStorageConfig['repository'];
         $memoryRepositoryEnabled = $this->extension->isConfigEnabled(
             $this->container,
             $messageRepositoryConfig['memory']

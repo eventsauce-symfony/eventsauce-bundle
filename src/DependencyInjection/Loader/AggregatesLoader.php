@@ -54,7 +54,7 @@ final class AggregatesLoader
 
     public function __invoke(array $config): void
     {
-        $messageConfig = $config['event_store'];
+        $messageStorageConfig = $config['message_storage'];
         $snapshotConfig = $config['snapshot'];
         $upcasterConfig = $config['upcaster'];
 
@@ -70,7 +70,7 @@ final class AggregatesLoader
             $this->loadAggregateMessageRepository(
                 $aggregateName,
                 $aggregateConfig,
-                $messageConfig,
+                $messageStorageConfig,
                 $upcasterConfig
             );
 
@@ -186,10 +186,10 @@ final class AggregatesLoader
     private function loadAggregateMessageRepository(
         string $aggregateName,
         array $aggregateConfig,
-        array $messageConfig,
+        array $messageStorageConfig,
         array $upcasterConfig
     ): void {
-        $messageRepositoryConfig = $messageConfig['repository'];
+        $messageRepositoryConfig = $messageStorageConfig['repository'];
         $messageRepositoryMemoryEnabled = $this->extension->isConfigEnabled(
             $this->container,
             $messageRepositoryConfig['memory']

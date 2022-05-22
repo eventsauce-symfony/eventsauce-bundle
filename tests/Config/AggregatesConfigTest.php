@@ -363,7 +363,7 @@ final class AggregatesConfigTest extends AbstractExtensionTestCase
     /**
      * @test
      */
-    public function should_register_snapshot_aggregate_repository_with_every_n_event_store_strategy(): void
+    public function should_register_snapshot_aggregate_repository_with_every_n_event_strategy(): void
     {
         $this->load([
             'snapshot' => [

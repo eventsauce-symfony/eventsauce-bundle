@@ -40,7 +40,7 @@ final class Configuration implements ConfigurationInterface
         $rootNode
             ->children()
                 ->append($this->getTimeSection())
-                ->append($this->getEventStoreSection())
+                ->append($this->getMessageStorageSection())
                 ->append($this->getSynchronousMessageDispatcherSection())
                 ->append($this->getMessengerMessageDispatcherSection())
                 ->append($this->getAclSection())
@@ -77,9 +77,9 @@ final class Configuration implements ConfigurationInterface
         return $node;
     }
 
-    private function getEventStoreSection(): NodeDefinition
+    private function getMessageStorageSection(): NodeDefinition
     {
-        $node = new ArrayNodeDefinition('event_store');
+        $node = new ArrayNodeDefinition('message_storage');
         $node
             ->addDefaultsIfNotSet()
             ->children()
@@ -115,7 +115,7 @@ final class Configuration implements ConfigurationInterface
                                 ->end()
                                 ?->scalarNode('table_name')
                                     ->cannotBeEmpty()
-                                    ->defaultValue('event_store')
+                                    ->defaultValue('message_storage')
                                 ->end()
                             ?->end()
                         ->end()

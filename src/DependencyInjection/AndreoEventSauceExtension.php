@@ -8,8 +8,8 @@ use Andreo\EventSauceBundle\DependencyInjection\Loader\AclLoader;
 use Andreo\EventSauceBundle\DependencyInjection\Loader\AggregatesLoader;
 use Andreo\EventSauceBundle\DependencyInjection\Loader\ClassNameInflectorLoader;
 use Andreo\EventSauceBundle\DependencyInjection\Loader\EventDispatcherLoader;
-use Andreo\EventSauceBundle\DependencyInjection\Loader\EventStoreLoader;
 use Andreo\EventSauceBundle\DependencyInjection\Loader\MessageDecoratorLoader;
+use Andreo\EventSauceBundle\DependencyInjection\Loader\MessageStorageLoader;
 use Andreo\EventSauceBundle\DependencyInjection\Loader\MessengerMessageDispatcherLoader;
 use Andreo\EventSauceBundle\DependencyInjection\Loader\MigrationGeneratorLoader;
 use Andreo\EventSauceBundle\DependencyInjection\Loader\OutboxLoader;
@@ -37,7 +37,7 @@ final class AndreoEventSauceExtension extends Extension
         $loader->load('eventsauce.yaml');
 
         (new TimeLoader($container))($config);
-        (new EventStoreLoader($this, $container))($config);
+        (new MessageStorageLoader($this, $container))($config);
         (new AclLoader($this, $container))($config);
         (new MessageDecoratorLoader($this, $container))($config);
         (new SynchronousMessageDispatcherLoader($this, $container))($config);
