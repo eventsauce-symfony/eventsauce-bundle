@@ -84,7 +84,7 @@ andreo_event_sauce:
 
 ### Synchronous message dispatcher
 
-Defaults EventSauce to dispatch events use [SynchronousMessageDispatcher](https://eventsauce.io/docs/reacting-to-events/setup-consumers/#synchronous-message-dispatcher).
+By default EventSauce dispatches events using [SynchronousMessageDispatcher](https://eventsauce.io/docs/reacting-to-events/setup-consumers/#synchronous-message-dispatcher).
 
 Configuration
 
