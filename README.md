@@ -45,6 +45,8 @@ return [
 
 You probably want to set your time zone.
 
+Configuration
+
 ```yaml
 andreo_event_sauce:
     time:
@@ -53,7 +55,7 @@ andreo_event_sauce:
 
 ### Message Storage
 
-About [message storage](https://eventsauce.io/docs/message-storage/)
+[About Message Storage](https://eventsauce.io/docs/message-storage/)
 
 #### Doctrine
 
@@ -70,6 +72,8 @@ or, if you will be using migration and orm
 composer require symfony/orm-pack
 ```
 
+Configuration
+
 ```yaml
 andreo_event_sauce:
     message_storage:
@@ -82,7 +86,7 @@ andreo_event_sauce:
 
 Defaults EventSauce to dispatch events use [SynchronousMessageDispatcher](https://eventsauce.io/docs/reacting-to-events/setup-consumers/#synchronous-message-dispatcher).
 
-Example configuration
+Configuration
 
 ```yaml
 andreo_event_sauce:
@@ -93,6 +97,7 @@ andreo_event_sauce:
 ```
 
 Message consumer example
+
 ```php
 use EventSauce\EventSourcing\MessageConsumer;
 use Andreo\EventSauceBundle\Attribute\AsSynchronousMessageConsumer;
@@ -121,7 +126,7 @@ If you don't have the messenger, try install
 composer require symfony/messenger
 ```
 
-Example configuration
+Configuration
 
 ```yaml
 andreo_event_sauce:
@@ -134,11 +139,17 @@ andreo_event_sauce:
 
 ```
 
+### Anti-Corruption Layer
+
+[About ACL](https://eventsauce.io/docs/advanced/anti-corruption-layer/)
+
+// to do
+
 ### Aggregates
 
 [About Aggregates](https://eventsauce.io/docs/event-sourcing/create-an-aggregate-root/)
 
-Example configuration
+Configuration
 
 ```yaml
 
@@ -166,34 +177,17 @@ final class SomeHandler {
 }
 ```
 
-#### Message dispatching
-
-By default, messages are dispatch by all dispatchers,
-but you can specify them per aggregate.
-
-```yaml
-andreo_event_sauce:
-    message:
-        dispatcher:
-            chain:
-                - fooBus
-                - barBus
-    aggregates:
-        foo:
-            class: App\Domain\Foo
-            dispatchers:
-                - barBus # dispatch only by barBas
-```
-
 ### Outbox
 
-[About the Outbox](https://eventsauce.io/docs/message-outbox/)
+[About Outbox](https://eventsauce.io/docs/message-outbox/)
 
-You need install the [package](https://github.com/andrew-pakula/eventsauce-outbox) (recommend reading doc).
+Install the [package](https://github.com/andrew-pakula/eventsauce-outbox). I recommend reading the documentation.
 
 ```bash
 composer require andreo/eventsauce-outbox
 ```
+
+Configuration
 
 ```yaml
 andreo_event_sauce:
@@ -204,47 +198,7 @@ andreo_event_sauce:
             outbox: true # register doctrine transactional repository and outbox relay per aggregate
 ```
 
-#### Outbox Back-off Strategy
-
-About the [Back-off Strategy](https://github.com/EventSaucePHP/BackOff)
-
-By default, this bundle uses [ExponentialBackOffStrategy](https://github.com/EventSaucePHP/BackOff#exponential-back-off).
-You can change it. An example configuration is as follows
-
-```yaml
-andreo_event_sauce:
-    outbox:
-        back_off:
-            fibonacci: # default is exponential. More data in config reference
-                initial_delay_ms: 100000
-                max_tries: 10
-```
-
-#### Outbox Commit Strategy
-
-By default, this bundle uses **MarkMessagesConsumedOnCommit** strategy
-You can change it. An example configuration is as follows
-
-```yaml
-andreo_event_sauce:
-    outbox:
-        relay_commit:
-            delete: true # default is mark_consumed
-```
-
-#### Outbox repository
-
-By default, outbox messages are stored in a database.
-If you want to store them in a memory, add the following configuration
-
-```yaml
-andreo_event_sauce:
-    outbox:
-        repository:
-            memory: true # default is doctrine
-```
-
-Outbox messages dispatching command
+Outbox process messages
 
 ```bash
 php bin/console andreo:event-sauce:outbox-process-messages
@@ -253,6 +207,8 @@ php bin/console andreo:event-sauce:outbox-process-messages
 ### Snapshotting
 
 [About Snapshotting](https://eventsauce.io/docs/snapshotting/)
+
+Configuration
 
 ```yaml
 andreo_event_sauce:
@@ -263,13 +219,13 @@ andreo_event_sauce:
             snapshot: true # register snapshot repository per aggregate
 ```
 
-Then you can inject the repository based on the alias and dedicated interface
+Inject repository
 
 ```php
 use Symfony\Component\DependencyInjection\Attribute\Target;
 use EventSauce\EventSourcing\Snapshotting\AggregateRootRepositoryWithSnapshotting;
 
-final class SomeHandler {
+final class BarHandler {
 
    public function __construct(
         #[Target('barRepository')] private AggregateRootRepositoryWithSnapshotting $barRepository
@@ -277,11 +233,10 @@ final class SomeHandler {
 }
 ```
 
-
 ### Snapshotting extended components
 
-You need install the [package](https://github.com/andrew-pakula/eventsauce-snapshotting)
-(recommend reading doc).
+Install the [package](https://github.com/andrew-pakula/eventsauce-snapshotting). I recommend reading the documentation.
+
 
 ```bash
 composer require andreo/eventsauce-snapshotting
@@ -289,15 +244,11 @@ composer require andreo/eventsauce-snapshotting
 
 #### Snapshot Doctrine repository
 
-By default, snapshots are stored in a memory.
-If you want to store them in a database with doctrine,
-add the following configuration
-
 ```yaml
 andreo_event_sauce:
     snapshot:
         repository:
-            doctrine: true # default is memory
+            doctrine: true
     aggregates:
         foo:
             class: App\Domain\Foo
@@ -344,14 +295,14 @@ andreo_event_sauce:
             upcast: true # register  upcaster chain per aggregate
 ```
 
-Defining the upcaster is as follows
+Upcaster example
 
 ```php
 use Andreo\EventSauceBundle\Attribute\AsUpcaster;
 use EventSauce\EventSourcing\Upcasting\Upcaster;
 
 #[AsUpcaster(aggregate: 'foo', version: 2)]
-final class SomeEventV2Upcaster implements Upcaster {
+final class FooEventV2Upcaster implements Upcaster {
 
     public function upcast(array $message): array
     {
@@ -360,22 +311,20 @@ final class SomeEventV2Upcaster implements Upcaster {
 }
 ```
 
-### Upcaster argument
+### Upcaster with message argument
 
-By default, this library uses the payload context according to the EventSauce implementation.
-If you want to upcasting on the message object context,
-you need install the [package](https://github.com/andrew-pakula/eventsauce-upcasting) (recommend reading doc).
+Install the [package](https://github.com/andrew-pakula/eventsauce-upcasting). I recommend reading the documentation.
 
 ```bash
 composer require andreo/eventsauce-upcasting
 ```
 
-and use the following configuration.
+Configuration
 
 ```yaml
 andreo_event_sauce:
     upcast:
-        argument: message # default is payload
+        argument: message
     aggregates:
         foo:
             class: App\Domain\Foo
@@ -404,7 +353,7 @@ final class SomeEventV2Upcaster implements MessageUpcaster {
 
 About [Message Decorator](https://eventsauce.io/docs/advanced/message-decoration/)
 
-Defining the message decorator is as follows
+Message decorator example
 
 ```php
 use Andreo\EventSauceBundle\Attribute\AsMessageDecorator;
@@ -421,37 +370,6 @@ final class SomeDecorator implements MessageDecorator
 }
 ```
 
-By default, message decoration is enabled. You can it disabled.
-
-```yaml
-andreo_event_sauce:
-    message:
-        decorator: false
-```
-
-#### Message decorating context
-
-In this bundle, messages can be decorated at the aggregate level,
-or at a completely different level of the event dispatcher.
-You can specify the context in which the decorator is to be used
-
-
-```php
-use Andreo\EventSauceBundle\Attribute\AsMessageDecorator;
-use EventSauce\EventSourcing\Message;
-use EventSauce\EventSourcing\MessageDecorator;
-use Andreo\EventSauceBundle\Attribute\MessageContext;
-
-#[AsMessageDecorator(context: MessageContext::EVENT_DISPATCHER)]
-final class SomeDecorator implements MessageDecorator
-{
-    public function decorate(Message $message): Message
-    {
-        // do something
-    }
-}
-```
-
 ### Database Structure
 
 [About Database Structure](https://eventsauce.io/docs/advanced/database-structure/)
@@ -459,44 +377,26 @@ final class SomeDecorator implements MessageDecorator
 This bundle uses the **all events in table per aggregate** approach.
 Event messages, outbox messages, and snapshots are stored in a separate table per aggregate type
 
-To simplify the creation of migrations,
-I have created a [package](https://github.com/andrew-pakula/eventsauce-generate-migration) that allows you to automatically
-generate migrations based on the name of the aggregate.
-More information in the documentation
+#### Generating migrations per aggregate
+
+Install [package](https://github.com/andrew-pakula/eventsauce-generate-migration). I recommend reading the documentation.
 
 ```bash
 composer require andreo/eventsauce-generate-migration
 ```
 
-For example, to generate migrations for the following configuration
-
 ```yaml
 andreo_event_sauce:
-    outbox: true
-    aggregates:
-        foo:
-            class: App\Domain\Foo
-            outbox: true
-```
-
-Execute the following command
-
-```bash
-php bin/console andreo:event-sauce:doctrine:migration:generate foo --schema=event --schema=outbox 
-```
-
-and default doctrine migration command
-
-```bash
-php bin/console d:m:m
+    migration_generator:
+        dependency_factory: doctrine.migrations.dependency_factory #default
 ```
 
 ### Serialization
 
-#### Message serializer for MySQL8
-
 ```yaml
 andreo_event_sauce:
-    message:
-        serializer: EventSauce\EventSourcing\Serialization\MySQL8DateFormatting # or your custom serializer
+    serializer:
+        message: EventSauce\EventSourcing\Serialization\MySQL8DateFormatting #custom for mysql8
+        payload: EventSauce\EventSourcing\Serialization\ConstructingPayloadSerializer #default
+        snapshot: Andreo\EventSauce\Snapshotting\SnapshotStateSerializer #default
 ```
