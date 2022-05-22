@@ -6,19 +6,18 @@
 
 # EventSauceBundle
 
-This bundle provides the basic and extended container configuration of
-symfony for the [EventSauce](https://eventsauce.io/) library.
-Before using it, I strongly recommend that you read the official [documentation](https://eventsauce.io/docs/).
+This bundle injects the [EventSauce](https://eventsauce.io/) components to the symfony container. \
+Before using it, I strongly recommend that you read the official eventsauce [documentation](https://eventsauce.io/docs/).
 
 ### Supports
 
-- Doctrine event message repository
-- All events in table per aggregate type
+- Doctrine message storage
 - Message Outbox
-- Symfony messenger
-- Snapshot doctrine repository, versioning, store strategies
+- Anti-Corruption Layer
+- Message dispatching with symfony messenger
+- Snapshot doctrine repository, versioning
+- All events in table per aggregate type
 - Generating migrations per aggregate
-- ACL
 
 and more...
 
@@ -43,14 +42,12 @@ return [
 
 ### Timezone
 
-You probably want to set your time zone.
-
-Configuration
+Perhaps, you want to set your time zone.
 
 ```yaml
 andreo_event_sauce:
     time:
-        timezone: UTC #default
+        timezone: UTC # default
 ```
 
 ### Message Storage
@@ -59,34 +56,36 @@ andreo_event_sauce:
 
 #### Doctrine
 
-Perhaps you want to set doctrine dbal connection. \
-If you don't have doctrine, try install
-
-```bash
-composer require doctrine/doctrine-bundle
-```
-
-or, if you will be using migration and orm
-
-```bash
-composer require symfony/orm-pack
-```
-
-Configuration
+Perhaps, you want to set doctrine dbal connection.
 
 ```yaml
 andreo_event_sauce:
     message_storage:
         repository:
             doctrine:
-                connection:  doctrine.dbal.default_connection #default
+                connection:  doctrine.dbal.default_connection # default
 ```
 
-### Synchronous message dispatcher
+If you don't have doctrine, try install
 
-By default EventSauce dispatches events using [SynchronousMessageDispatcher](https://eventsauce.io/docs/reacting-to-events/setup-consumers/#synchronous-message-dispatcher).
+```bash
+composer require doctrine/doctrine-bundle
+```
 
-Configuration
+or, if you will be using migration and orm.
+
+```bash
+composer require symfony/orm-pack
+```
+
+### Message dispatcher
+
+#### Synchronous
+
+By default EventSauce dispatches events using
+[SynchronousMessageDispatcher](https://eventsauce.io/docs/reacting-to-events/setup-consumers/#synchronous-message-dispatcher).
+
+Example configuration
 
 ```yaml
 andreo_event_sauce:
@@ -111,45 +110,177 @@ final class FooConsumer implements MessageConsumer {
 }
 ```
 
-### Messenger message dispatcher
+#### Symfony Messenger
 
-Install the [package](https://github.com/andrew-pakula/eventsauce-messenger). I recommend reading the documentation
-
+Install the [package](https://github.com/andrew-pakula/eventsauce-messenger). \
+I recommend reading the documentation
 
 ```bash
 composer require andreo/eventsauce-messenger
 ```
 
-If you don't have the messenger, try install
-
-```bash
-composer require symfony/messenger
-```
-
-Configuration
+Example configuration
 
 ```yaml
 andreo_event_sauce:
     messenger_message_dispatcher:
         chain:
             foo_dispatcher:
-                bus: fooBus
+                bus: fooBus # bus alias from messenger config
             bar_dispatcher:
                 bus: barBus
 
+```
+
+If you don't have the messenger, try install.
+
+```bash
+composer require symfony/messenger
 ```
 
 ### Anti-Corruption Layer
 
 [About ACL](https://eventsauce.io/docs/advanced/anti-corruption-layer/)
 
-// to do
+#### Outbound ACL
+
+```yaml
+andreo_event_sauce:
+    acl: 
+        outbound: true
+    messenger_message_dispatcher: # or synchronous_message_dispatcher
+        chain:
+            foo_dispatcher:
+                bus: fooBus
+                acl: true # enable acl for this dispatcher
+``` 
+
+#### Inbound ACL
+
+```yaml
+andreo_event_sauce:
+    acl:
+        inbound: true
+```
+
+Consumer example
+
+```php
+
+use Andreo\EventSauceBundle\Attribute\WithInboundAcl;
+use EventSauce\EventSourcing\MessageConsumer;
+use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+
+#[WithInboundAcl] // enable acl for this consumer
+final class FooConsumer implements MessageConsumer
+{
+    public function handle(Message $message): void
+    {
+        // do something
+    }
+}
+```
+
+#### Message translator
+
+```php
+use Andreo\EventSauceBundle\Attribute\AsMessageTranslator;
+use EventSauce\EventSourcing\AntiCorruptionLayer\MessageTranslator;
+use EventSauce\EventSourcing\Message;
+
+#[AsMessageTranslator] 
+final class FooMessageTranslator implements MessageTranslator
+{
+    public function translateMessage(Message $message): Message
+    {
+        // do something
+    }
+}
+```
+
+#### Message filter
+
+```php
+use Andreo\EventSauceBundle\Attribute\AsMessageFilter;
+use Andreo\EventSauceBundle\Enum\FilterPosition;
+use EventSauce\EventSourcing\AntiCorruptionLayer\MessageFilter;
+use EventSauce\EventSourcing\Message;
+
+#[AsMessageFilter(FilterPosition::BEFORE)] // filter position: before translate, or after translate
+final class FooMessageFilter implements MessageFilter
+{
+    public function allows(Message $message): bool
+    {
+        // do something
+    }
+}
+```
+
+_There are two strategies, that saying how filters will be resolved_
+
+* match_all - all filters must fulfill the condition (default)
+* match_any - any filter must fulfill the condition
+
+Example configuration to change strategy
+
+```yaml
+andreo_event_sauce:
+    acl:
+        outbound: # or inbound
+            filter_strategy:
+                before: match_any # for before translate filters
+                after: match_any # for after translate filters
+```
+
+There is a way to change strategy for one service using acl
+
+```php
+
+use Andreo\EventSauceBundle\Attribute\WithInboundAcl;
+use Andreo\EventSauceBundle\Enum\FilterStrategy;
+
+#[WithInboundAcl(beforeStrategy: FilterStrategy::MATCH_ANY)]
+final class FooConsumer implements MessageConsumer
+{
+    public function handle(Message $message): void
+    {
+        // do something
+    }
+}
+```
+
+#### Limiting the scope of work
+
+```php
+
+use Andreo\EventSauceBundle\Attribute\ForInboundAcl;
+use Andreo\EventSauceBundle\Attribute\ForOutboundAcl;
+
+#[ForInboundAcl] // this will apply the translator for inbound acl
+#[ForOutboundAcl] // this will apply the translator for outbound acl
+#[AsMessageTranslator] // if you not defined any above attribute translator will be for all acl types
+final class FooMessageTranslator implements MessageTranslator
+{
+    // ...
+}
+```
+
+Optionally, You can define target to which will been applied translator or filter
+
+```php
+#[AsMessageFilter]
+#[ForInboundAcl(target: FooConsumer::class)] // this will apply the filter only for FooConsumer::class
+final class FooMessageFilter implements MessageFilter
+{
+    // ...
+}
+```
 
 ### Aggregates
 
 [About Aggregates](https://eventsauce.io/docs/event-sourcing/create-an-aggregate-root/)
 
-Configuration
+Example configuration
 
 ```yaml
 
@@ -161,15 +292,13 @@ andreo_event_sauce:
             class: App\Domain\Bar
 ```
 
-Then you can inject the repository based on the alias and dedicated
-interface. By default, alias is created automatically
-by convention "${name}Repository"
+Inject repository by convention "${name}Repository"
 
 ```php
 use EventSauce\EventSourcing\AggregateRootRepository;
 use Symfony\Component\DependencyInjection\Attribute\Target;
 
-final class SomeHandler {
+final class FooHandler {
 
    public function __construct(
         #[Target('fooRepository')] private AggregateRootRepository $fooRepository
@@ -177,25 +306,26 @@ final class SomeHandler {
 }
 ```
 
-### Outbox
+### Message Outbox
 
 [About Outbox](https://eventsauce.io/docs/message-outbox/)
 
-Install the [package](https://github.com/andrew-pakula/eventsauce-outbox). I recommend reading the documentation.
+Install the [package](https://github.com/andrew-pakula/eventsauce-outbox). \
+I recommend reading the documentation.
 
 ```bash
 composer require andreo/eventsauce-outbox
 ```
 
-Configuration
+Example configuration
 
 ```yaml
 andreo_event_sauce:
-    outbox: true # enable outbox and register its services
+    outbox: true
     aggregates:
         foo:
             class: App\Domain\Foo
-            outbox: true # register doctrine transactional repository and outbox relay per aggregate
+            outbox: true
 ```
 
 Outbox process messages
@@ -208,18 +338,18 @@ php bin/console andreo:event-sauce:outbox-process-messages
 
 [About Snapshotting](https://eventsauce.io/docs/snapshotting/)
 
-Configuration
+Example configuration
 
 ```yaml
 andreo_event_sauce:
-    snapshot: true # enable snapshot and register its services
+    snapshot: true
     aggregates:
         bar:
             class: App\Domain\Bar
-            snapshot: true # register snapshot repository per aggregate
+            snapshot: true
 ```
 
-Inject repository
+Inject repository by convention "${name}Repository"
 
 ```php
 use Symfony\Component\DependencyInjection\Attribute\Target;
@@ -233,66 +363,43 @@ final class BarHandler {
 }
 ```
 
-### Snapshotting extended components
+#### Snapshotting extended components
 
-Install the [package](https://github.com/andrew-pakula/eventsauce-snapshotting). I recommend reading the documentation.
+Install the [package](https://github.com/andrew-pakula/eventsauce-snapshotting). \
+I recommend reading the documentation.
 
 
 ```bash
 composer require andreo/eventsauce-snapshotting
 ```
 
-#### Snapshot Doctrine repository
+Example configuration
 
 ```yaml
 andreo_event_sauce:
     snapshot:
         repository:
-            doctrine: true
-    aggregates:
-        foo:
-            class: App\Domain\Foo
-            snapshot: true
-```
-
-#### Snapshot versioning
-
-```yaml
-andreo_event_sauce:
-    snapshot:
-        versioned: true # default is false
-    aggregates:
-        foo:
-            class: App\Domain\Foo
-            snapshot: true
-```
-
-#### Snapshot store strategy
-
-```yaml
-andreo_event_sauce:
-    snapshot:
+            doctrine: true # enable the doctrine repository
+        versioned: true # enable versioning
         store_strategy:
-            every_n_event: # Store snapshot every n event
+            every_n_event: # store a snapshot every n event
                 number: 200
-            custom: # Or you can set your own strategy
-    aggregates:
-        foo:
-            class: App\Domain\Foo
-            snapshot: true
+            custom: # custom implementation Andreo\EventSauce\Snapshotting\CanStoreSnapshotStrategy
 ```
 
-### Upcasting
+### Upcaster
 
 [About Upcasting](https://eventsauce.io/docs/advanced/upcasting/#main-article)
 
+Example configuration
+
 ```yaml
 andreo_event_sauce:
-    upcast: true # enable upcast and register its services
+    upcaster: true
     aggregates:
         foo:
             class: App\Domain\Foo
-            upcast: true # register  upcaster chain per aggregate
+            upcaster: true
 ```
 
 Upcaster example
@@ -311,27 +418,24 @@ final class FooEventV2Upcaster implements Upcaster {
 }
 ```
 
-### Upcaster with message argument
+#### Upcast with message argument
 
-Install the [package](https://github.com/andrew-pakula/eventsauce-upcasting). I recommend reading the documentation.
+Install the [package](https://github.com/andrew-pakula/eventsauce-upcasting). \
+I recommend reading the documentation.
 
 ```bash
 composer require andreo/eventsauce-upcasting
 ```
 
-Configuration
+Example configuration
 
 ```yaml
 andreo_event_sauce:
-    upcast:
+    upcaster:
         argument: message
-    aggregates:
-        foo:
-            class: App\Domain\Foo
-            upcast: true
 ```
 
-Defining the upcaster is as follows
+Upcaster example
 
 ```php
 use Andreo\EventSauce\Upcasting\Event;
@@ -349,7 +453,7 @@ final class SomeEventV2Upcaster implements MessageUpcaster {
 }
 ```
 
-### Message decorating
+### Message decorator
 
 About [Message Decorator](https://eventsauce.io/docs/advanced/message-decoration/)
 
@@ -370,16 +474,63 @@ final class SomeDecorator implements MessageDecorator
 }
 ```
 
-### Database Structure
+### Event Dispatcher
+
+[About Event Dispatcher](https://eventsauce.io/docs/utilities/event-dispatcher/)
+
+```yaml
+andreo_event_sauce:
+    event_dispatcher: true
+```
+
+Example usage the Event Dispatcher
+
+```php
+use EventSauce\EventSourcing\EventDispatcher;
+
+final class FooHandler
+{
+    public function __construct(
+        private readonly EventDispatcher $eventDispatcher
+    ) {
+    }
+
+    public function __invoke(PublishBaz $command): void
+    {
+        $this->eventDispatcher->dispatch(
+            new FooEvent()
+        );
+    }
+}
+```
+
+#### Event dispatcher with message outbox
+
+Example configuration
+
+```yaml
+andreo_event_sauce:
+    outbox:
+        repository:
+            doctrine:
+                table_name: outbox # default
+    event_dispatcher:
+        outbox: true
+```
+
+Then, you must create a table named _**outbox**_ according to [outbox schema](https://eventsauce.io/docs/message-outbox/table-schema/) \
+If you want, you can use **migration generator** command
+
+```bash
+bin/console andreo:event-sauce:doctrine:migration:generate --schema=outbox
+```
+
+### Migration generator
 
 [About Database Structure](https://eventsauce.io/docs/advanced/database-structure/)
 
-This bundle uses the **all events in table per aggregate** approach.
-Event messages, outbox messages, and snapshots are stored in a separate table per aggregate type
-
-#### Generating migrations per aggregate
-
-Install [package](https://github.com/andrew-pakula/eventsauce-generate-migration). I recommend reading the documentation.
+This bundle uses the **all events in table per aggregate** approach. \
+If you want have automatically generating migration, install [package](https://github.com/andrew-pakula/eventsauce-generate-migration). I recommend reading the documentation.
 
 ```bash
 composer require andreo/eventsauce-generate-migration
@@ -388,15 +539,5 @@ composer require andreo/eventsauce-generate-migration
 ```yaml
 andreo_event_sauce:
     migration_generator:
-        dependency_factory: doctrine.migrations.dependency_factory #default
-```
-
-### Serialization
-
-```yaml
-andreo_event_sauce:
-    serializer:
-        message: EventSauce\EventSourcing\Serialization\MySQL8DateFormatting #custom for mysql8
-        payload: EventSauce\EventSourcing\Serialization\ConstructingPayloadSerializer #default
-        snapshot: Andreo\EventSauce\Snapshotting\SnapshotStateSerializer #default
+        dependency_factory: doctrine.migrations.dependency_factory # default if migration bundle has been installed
 ```

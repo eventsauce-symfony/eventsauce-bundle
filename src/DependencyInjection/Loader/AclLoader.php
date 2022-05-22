@@ -25,18 +25,18 @@ final class AclLoader
     public function __invoke(array $config): void
     {
         $aclConfig = $config['acl'];
-        $aclEnabled = $this->extension->isConfigEnabled($this->container, $aclConfig);
-        if (!$aclEnabled) {
-            return;
-        }
         $outboundConfig = $aclConfig['outbound'];
         $inboundConfig = $aclConfig['inbound'];
-        if ($outboundEnabled = $this->extension->isConfigEnabled($this->container, $outboundConfig)) {
-            $this->container->setParameter('andreo.eventsauce.acl_outbound_enabled', true);
+
+        $outboundEnabled = false;
+        $inboundEnabled = false;
+        if ($this->extension->isConfigEnabled($this->container, $aclConfig)) {
+            $outboundEnabled = $this->extension->isConfigEnabled($this->container, $outboundConfig);
+            $inboundEnabled = $this->extension->isConfigEnabled($this->container, $inboundConfig);
         }
-        if ($inboundEnabled = $this->extension->isConfigEnabled($this->container, $inboundConfig)) {
-            $this->container->setParameter('andreo.eventsauce.acl_inbound_enabled', true);
-        }
+
+        $this->container->setParameter('andreo.eventsauce.acl_outbound_enabled', $outboundEnabled);
+        $this->container->setParameter('andreo.eventsauce.acl_inbound_enabled', $inboundEnabled);
 
         if (!$outboundEnabled && !$inboundEnabled) {
             return;

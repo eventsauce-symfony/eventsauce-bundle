@@ -90,6 +90,49 @@ final class AclTest extends AbstractExtensionTestCase
     /**
      * @test
      */
+    public function should_not_load_inbound_acl_if_only_outbound_acl_is_enabled(): void
+    {
+        $this->load([
+            'acl' => [
+                'outbound' => true,
+            ],
+        ]);
+
+        $this->assertContainerBuilderHasParameter('andreo.eventsauce.acl_outbound_enabled', true);
+        $this->assertContainerBuilderHasParameter('andreo.eventsauce.acl_inbound_enabled', false);
+    }
+
+    /**
+     * @test
+     */
+    public function should_not_load_outbound_acl_if_only_inbound_acl_is_enabled(): void
+    {
+        $this->load([
+            'acl' => [
+                'inbound' => true,
+            ],
+        ]);
+
+        $this->assertContainerBuilderHasParameter('andreo.eventsauce.acl_inbound_enabled', true);
+        $this->assertContainerBuilderHasParameter('andreo.eventsauce.acl_outbound_enabled', false);
+    }
+
+    /**
+     * @test
+     */
+    public function should_not_load_acl_id_it_is_disabled(): void
+    {
+        $this->load([
+            'acl' => false,
+        ]);
+
+        $this->assertContainerBuilderHasParameter('andreo.eventsauce.acl_inbound_enabled', false);
+        $this->assertContainerBuilderHasParameter('andreo.eventsauce.acl_outbound_enabled', false);
+    }
+
+    /**
+     * @test
+     */
     public function should_load_inbound_message_filters(): void
     {
         $this->load([

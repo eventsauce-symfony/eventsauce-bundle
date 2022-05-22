@@ -1,28 +1,32 @@
 services:
-    Andreo\EventSauce\Doctrine\Migration\EventMessageSchemaBuilder: '@Andreo\EventSauce\Doctrine\Migration\DefaultEventMessageSchemaBuilder'
+    Andreo\EventSauce\Doctrine\Migration\EventSchemaBuilder: '@Andreo\EventSauce\Doctrine\Migration\DefaultEventSchemaBuilder'
     Andreo\EventSauce\Doctrine\Migration\OutboxMessageSchemaBuilder: '@Andreo\EventSauce\Doctrine\Migration\DefaultOutboxMessageSchemaBuilder'
     Andreo\EventSauce\Doctrine\Migration\SnapshotSchemaBuilder: '@Andreo\EventSauce\Doctrine\Migration\DefaultSnapshotSchemaBuilder'
 
-    Andreo\EventSauce\Doctrine\Migration\DefaultEventMessageSchemaBuilder:
+    Andreo\EventSauce\Doctrine\Migration\DefaultEventSchemaBuilder:
+        class: Andreo\EventSauce\Doctrine\Migration\DefaultEventSchemaBuilder
         arguments:
             $tableSchema: '@EventSauce\MessageRepository\TableSchema\TableSchema'
         public: false
         lazy: true
 
     Andreo\EventSauce\Doctrine\Migration\DefaultOutboxMessageSchemaBuilder:
+        class: Andreo\EventSauce\Doctrine\Migration\DefaultOutboxMessageSchemaBuilder
         public: false
         lazy: true
 
     Andreo\EventSauce\Doctrine\Migration\DefaultSnapshotSchemaBuilder:
+        class: Andreo\EventSauce\Doctrine\Migration\DefaultSnapshotSchemaBuilder
         public: false
         lazy: true
 
     Andreo\EventSauce\Doctrine\Migration\GenerateEventSauceDoctrineMigrationCommand:
+        class: Andreo\EventSauce\Doctrine\Migration\GenerateEventSauceDoctrineMigrationCommand
         public: false
         arguments:
             - '@andreo.eventsauce.migration_generator.dependency_factory'
             - '@Andreo\EventSauce\Doctrine\Migration\TableNameSuffix'
-            - '@Andreo\EventSauce\Doctrine\Migration\EventMessageSchemaBuilder'
+            - '@Andreo\EventSauce\Doctrine\Migration\EventSchemaBuilder'
             - '@Andreo\EventSauce\Doctrine\Migration\OutboxMessageSchemaBuilder'
             - '@Andreo\EventSauce\Doctrine\Migration\SnapshotSchemaBuilder'
         tags:

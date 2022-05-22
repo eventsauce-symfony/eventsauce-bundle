@@ -148,9 +148,28 @@ final class Configuration implements ConfigurationInterface
         $node
             ->canBeEnabled()
             ->addDefaultsIfNotSet()
+            ->validate()
+                ->ifArray()
+                ->then(static function (array $config) {
+                    $rootEnabled = $config['enabled'] ?? false;
+                    $outboundConfig = $config['outbound'] ?? false;
+                    $inboundConfig = $config['inbound'] ?? false;
+                    if (!$rootEnabled || !$outboundConfig || !$inboundConfig) {
+                        return $config;
+                    }
+
+                    $outboundEnabledOrigin = $outboundConfig['enabled'] ?? false;
+                    $inboundEnabledOrigin = $inboundConfig['enabled'] ?? false;
+
+                    $config['outbound']['enabled'] = $outboundEnabledOrigin || !$inboundEnabledOrigin;
+                    $config['inbound']['enabled'] = $inboundEnabledOrigin || !$outboundEnabledOrigin;
+
+                    return $config;
+                })
+            ->end()
             ->children()
                 ->arrayNode('outbound')
-                    ->canBeDisabled()
+                    ->canBeEnabled()
                     ->addDefaultsIfNotSet()
                     ->children()
                         ->arrayNode('filter_strategy')
@@ -171,7 +190,7 @@ final class Configuration implements ConfigurationInterface
                     ?->end()
                 ->end()
                 ?->arrayNode('inbound')
-                    ->canBeDisabled()
+                    ->canBeEnabled()
                     ->addDefaultsIfNotSet()
                     ->children()
                         ->arrayNode('filter_strategy')
