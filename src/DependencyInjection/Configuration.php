@@ -31,6 +31,15 @@ final class Configuration implements ConfigurationInterface
         JSON_THROW_ON_ERROR,
     ];
 
+    private const BACK_OF_STRATEGIES = [
+        'exponential',
+        'fibonacci',
+        'linear',
+        'no_waiting',
+        'immediately',
+        'custom',
+    ];
+
     public function getConfigTreeBuilder(): TreeBuilder
     {
         $treeBuilder = new TreeBuilder('andreo_event_sauce');
@@ -319,15 +328,6 @@ final class Configuration implements ConfigurationInterface
 
     private function getOutboxSection(): NodeDefinition
     {
-        $backOfStrategies = [
-            'exponential',
-            'fibonacci',
-            'linear',
-            'no_waiting',
-            'immediately',
-            'custom',
-        ];
-
         $node = new ArrayNodeDefinition('outbox');
         $node
             ->canBeEnabled()
@@ -349,8 +349,8 @@ final class Configuration implements ConfigurationInterface
                         })
                         ->thenInvalid(
                             sprintf(
-                                'Only one strategy of outbox back off can be set: %s.',
-                                $this->implode($backOfStrategies)
+                                'Only one of backoff strategies can be set: %s.',
+                                $this->implode(self::BACK_OF_STRATEGIES)
                             )
                         )
                     ->end()

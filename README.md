@@ -21,6 +21,10 @@ Before using it, I strongly recommend that you read the official eventsauce [doc
 
 and more...
 
+### Example application
+
+[eventsaucebundle-example](https://github.com/andrew-pakula/eventsaucebundle-example)
+
 ### Requirements
 
 - PHP ^8.1
@@ -218,8 +222,8 @@ final class FooMessageFilter implements MessageFilter
 
 _There are two strategies, that saying how filters will be resolved_
 
-* match_all - all filters must fulfill the condition (default)
-* match_any - any filter must fulfill the condition
+* match_all - all filters are met a condition (default)
+* match_any - any filter are met a condition
 
 Example configuration to change strategy
 
@@ -331,7 +335,7 @@ andreo_event_sauce:
 Outbox process messages
 
 ```bash
-php bin/console andreo:event-sauce:outbox-process-messages
+bin/console andreo:event-sauce:outbox-process-messages
 ```
 
 ### Snapshotting
@@ -540,4 +544,50 @@ composer require andreo/eventsauce-generate-migration
 andreo_event_sauce:
     migration_generator:
         dependency_factory: doctrine.migrations.dependency_factory # default if migration bundle has been installed
+```
+
+Example command usage 
+
+```bash
+bin/console andreo:event-sauce:doctrine:migration:generate foo 
+```
+
+It generate migrations for an aggregate named _**foo**_
+
+### Overwriting
+
+All the event sauce components have been provided with simple interfaces and it promotes an composition above an extending. \
+This package follows this way, so you can easily overwrite any component via its aliases interface.
+
+You can also decorate an original repositories.
+
+Example
+
+```php
+<?php
+use EventSauce\EventSourcing\AggregateRootId;
+use EventSauce\EventSourcing\AggregateRootRepository;
+use Symfony\Component\DependencyInjection\Attribute\AsDecorator;
+
+#[AsDecorator(decorates: 'fooRepository')] // decorates original repository
+final class FooRepository implements AggregateRootRepository
+{
+    public function __construct(private readonly AggregateRootRepository $fooOriginalRepository)
+    {
+    }
+
+    public function retrieve(AggregateRootId $aggregateRootId): object
+    {
+        // do something
+    }
+
+    public function persist(object $aggregateRoot): void
+    {
+        // do something
+    }
+    public function persistEvents(AggregateRootId $aggregateRootId, int $aggregateRootVersion, object ...$events): void
+    {
+        // do something
+    }
+}
 ```
