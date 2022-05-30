@@ -591,3 +591,115 @@ final class FooRepository implements AggregateRootRepository
     }
 }
 ```
+
+### Config reference
+
+```yaml
+andreo_event_sauce:
+    time:
+        timezone: UTC # your timezone
+        clock: EventSauce\Clock\Clock # or your custom implementation
+
+    message_storage:
+        repository:
+            memory: false
+            doctrine:
+                json_encode_options: # way to json format
+                    - !php/const JSON_PRETTY_PRINT
+                    - !php/const JSON_PRESERVE_ZERO_FRACTION
+                connection: doctrine.dbal.default_connection
+                table_schema: EventSauce\MessageRepository\TableSchema\TableSchema # or your custom implementation
+                table_name: message_storage
+
+    acl: # enable acl globally
+        outbound:
+            filter_strategy:
+                before: match_all
+                after: match_all
+        inbound:
+            filter_strategy:
+                before: match_all
+                after: match_all
+
+    # one of: synchronous_message_dispatcher, messenger_message_dispatcher
+    synchronous_message_dispatcher:
+        chain:
+            foo_dispatcher:
+                acl: false
+            bar_dispatcher:
+                acl: false
+    messenger_message_dispatcher:
+        chain:
+            foo_dispatcher:
+                bus: fooBus # bas alias from messenger config
+                acl: false
+
+    event_dispatcher:
+        outbox: false # enable outbox for event dispatcher
+        
+    upcaster:
+        argument: payload # or message
+
+    message_decorator: true
+
+    outbox:
+        back_off:
+            # one of:
+            exponential: # default
+                initial_delay_ms: 100000
+                max_tries: 10
+            fibonacci:
+                initial_delay_ms: 100000
+                max_tries: 10
+            linear:
+                initial_delay_ms: 100000
+                max_tries: 10
+            no_waiting:
+                max_tries: 10
+            immediately: true
+            custom: # or your custom back off strategy
+                id: App/Outbox/CustomBackOfStrategy
+        relay_commit:
+            # one of:
+            delete:
+                enabled: true
+            mark_consumed: # default
+                enabled: true
+        repository:
+            # one of:
+            memory: false
+            doctrine: # default
+                table_name: outbox
+        logger: outbox_logger # logger for outbox
+
+    snapshot:
+        versioned: true # snapshots with versioning
+        store_strategy:
+            every_n_event:
+                number: 500 # store snapshot every n event
+        repository:
+            # one of:
+            memory: true # default
+            doctrine:
+                table_name: snapshot
+
+    serializer:
+        payload: EventSauce\EventSourcing\Serialization\ConstructingPayloadSerializer # or your custom implementation
+        message: EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer # or your custom implementation
+        snapshot: Andreo\EventSauce\Snapshotting\SnapshotStateSerializer # or your custom implementation
+
+    migration_generator:
+        dependency_factory: doctrine.migrations.dependency_factory # default if migration bundle has been installed
+    uuid_encoder: EventSauce\UuidEncoding\UuidEncoder # or your custom implementation
+    class_name_inflector: EventSauce\EventSourcing\ClassNameInflector # or your custom implementation
+
+    aggregates:
+        foo:
+            class: App\Domain\Foo
+            repository_alias: fooRepository
+            outbox: false # enable outbox for this aggregate
+            dispatchers:
+                - foo_dispatcher # dispatchers used by this aggregate. Default send to all defined
+            upcaster: false # enable upcaster for this aggregate
+            snapshot: false # enable snapshot for this aggregate
+```
