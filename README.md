@@ -602,8 +602,9 @@ andreo_event_sauce:
 
     message_storage:
         repository:
+            # one of:
             memory: false
-            doctrine:
+            doctrine: # default
                 json_encode_options: # way to json format
                     - !php/const JSON_PRETTY_PRINT
                     - !php/const JSON_PRESERVE_ZERO_FRACTION
@@ -611,7 +612,7 @@ andreo_event_sauce:
                 table_schema: EventSauce\MessageRepository\TableSchema\TableSchema # or your custom implementation
                 table_name: message_storage
 
-    acl: # enable acl globally
+    acl:
         outbound:
             filter_strategy:
                 before: match_all
@@ -635,7 +636,7 @@ andreo_event_sauce:
                 acl: false
 
     event_dispatcher:
-        outbox: false # enable outbox for event dispatcher
+        outbox: false
         
     upcaster:
         argument: payload # or message
@@ -659,17 +660,20 @@ andreo_event_sauce:
             immediately: true
             custom: # or your custom back off strategy
                 id: App/Outbox/CustomBackOfStrategy
+                
         relay_commit:
             # one of:
             delete:
                 enabled: true
             mark_consumed: # default
                 enabled: true
+                
         repository:
             # one of:
             memory: false
             doctrine: # default
                 table_name: outbox
+                
         logger: outbox_logger # logger for outbox
 
     snapshot:
@@ -690,6 +694,7 @@ andreo_event_sauce:
 
     migration_generator:
         dependency_factory: doctrine.migrations.dependency_factory # default if migration bundle has been installed
+        
     uuid_encoder: EventSauce\UuidEncoding\UuidEncoder # or your custom implementation
     class_name_inflector: EventSauce\EventSourcing\ClassNameInflector # or your custom implementation
 
