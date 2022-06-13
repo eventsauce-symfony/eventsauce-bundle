@@ -32,4 +32,4 @@ services:
         tags:
             -
                 name: console.command
-                command: andreo:event-sauce:doctrine:migration:generate
+                command: andreo:eventsauce:doctrine-migrations:generate

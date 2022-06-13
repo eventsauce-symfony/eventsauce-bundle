@@ -11,6 +11,9 @@ fix-cs: ## Fix cs
 phpunit: ## Run phpunit tests
 	vendor/bin/phpunit --color
 
+install: ## Run composer
+	composer install
+
 phpstan: ## Run phpstan
 	vendor/bin/phpstan --memory-limit=1G
 

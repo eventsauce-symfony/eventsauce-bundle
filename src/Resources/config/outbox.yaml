@@ -62,4 +62,4 @@ services:
         tags:
             -
                 name: console.command
-                command: andreo:event-sauce:outbox-process-messages
+                command: andreo:eventsauce:message-outbox:consume

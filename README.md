@@ -332,10 +332,10 @@ andreo_event_sauce:
             outbox: true
 ```
 
-Outbox process messages
+Outbox messages consume
 
 ```bash
-bin/console andreo:event-sauce:outbox-process-messages
+bin/console andreo:eventsauce:message-outbox:consume
 ```
 
 ### Snapshotting
@@ -526,7 +526,7 @@ Then, you must create a table named _**outbox**_ according to [outbox schema](ht
 If you want, you can use **migration generator** command
 
 ```bash
-bin/console andreo:event-sauce:doctrine:migration:generate --schema=outbox
+bin/console andreo:eventsauce:doctrine-migrations:generate --schema=outbox
 ```
 
 ### Migration generator
@@ -549,7 +549,7 @@ andreo_event_sauce:
 Example command usage 
 
 ```bash
-bin/console andreo:event-sauce:doctrine:migration:generate foo 
+bin/console andreo:eventsauce:doctrine-migrations:generate foo 
 ```
 
 It generate migrations for an aggregate named _**foo**_
