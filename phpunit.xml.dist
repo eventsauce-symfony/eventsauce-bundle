@@ -1,13 +1,7 @@
 <phpunit bootstrap="vendor/autoload.php">
     <testsuites>
-        <testsuite name="config">
-            <directory>tests/Config</directory>
-        </testsuite>
-        <testsuite name="factory">
-            <directory>tests/Factory</directory>
-        </testsuite>
-        <testsuite name="compiler-pass">
-            <directory>tests/CompilerPass</directory>
+        <testsuite name="default">
+            <directory>Tests</directory>
         </testsuite>
     </testsuites>
 </phpunit>

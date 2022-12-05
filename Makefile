@@ -6,13 +6,16 @@ help:
 		}' $(MAKEFILE_LIST)
 
 fix-cs: ## Fix cs
-	tools/php-cs-fixer/vendor/bin/php-cs-fixer fix --allow-risky=yes
+	PHP_CS_FIXER_IGNORE_ENV=1 tools/php-cs-fixer/vendor/bin/php-cs-fixer fix --allow-risky=yes
 
 phpunit: ## Run phpunit tests
 	vendor/bin/phpunit --color
 
-install: ## Run composer
-	composer install
+install: ## Run composer install
+	composer install --ignore-platform-reqs
+
+update: ## Run composer update
+	composer update --ignore-platform-reqs
 
 phpstan: ## Run phpstan
 	vendor/bin/phpstan --memory-limit=1G

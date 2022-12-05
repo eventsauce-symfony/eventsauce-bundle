@@ -4,31 +4,30 @@
     </a>
 </p>
 
-# EventSauceBundle
+# EventSauceBundle 3.0
 
-This bundle injects the [EventSauce](https://eventsauce.io/) components to the symfony container. \
-Before using it, I strongly recommend that you read the official eventsauce [documentation](https://eventsauce.io/docs/).
+Official  [documentation](https://eventsauce.io/docs/) of eventsauce
 
 ### Supports
 
-- Doctrine message storage
-- Message Outbox
+- Doctrine3 event store
+- Symfony messenger message dispatcher
 - Anti-Corruption Layer
-- Message dispatching with symfony messenger
-- Snapshot doctrine repository, versioning
+- Event dispatcher
+- Message Outbox
+- Snapshot doctrine repository, versioning, conditional persist
 - All events in table per aggregate type
 - Generating migrations per aggregate
 
-and more...
 
-### Example application
+### Previous versions
 
-[eventsaucebundle-example](https://github.com/andrew-pakula/eventsaucebundle-example)
+- [2.0](https://github.com/eventsauce-symfony/eventsauce-bundle/tree/2.0.1)
 
 ### Requirements
 
-- PHP ^8.1
-- Symfony ^6.0
+- PHP >=8.2
+- Symfony ^6.2
 
 ### Installation
 
@@ -44,263 +43,587 @@ return [
 ];
 ```
 
-### Timezone
+### Introduction
 
-Perhaps, you want to set your time zone.
+Below configs presents default values and some example values. \
+Note that most of default config values do not need to configure.
 
-```yaml
-andreo_event_sauce:
-    time:
-        timezone: UTC # default
-```
-
-### Message Storage
-
-[About Message Storage](https://eventsauce.io/docs/message-storage/)
-
-#### Doctrine
-
-Perhaps, you want to set doctrine dbal connection.
+### [Clock](https://eventsauce.io/docs/utilities/clock/)
 
 ```yaml
 andreo_event_sauce:
-    message_storage:
-        repository:
-            doctrine:
-                connection:  doctrine.dbal.default_connection # default
+  clock:
+    timezone: UTC
 ```
 
-If you don't have doctrine, try install
-
-```bash
-composer require doctrine/doctrine-bundle
+***Useful aliases***
+```php
+EventSauce\Clock\Clock: EventSauce\Clock\SystemClock
 ```
 
-or, if you will be using migration and orm.
+### [Message Storage](https://eventsauce.io/docs/message-storage/)
 
-```bash
-composer require symfony/orm-pack
+### Doctrine 3
+
+```yaml
+andreo_event_sauce:
+  #...
+  message_storage:
+    repository:
+      doctrine_3:
+        enabled: true
+        json_encode_flags: []
+        connection: doctrine.dbal.default_connection
+        table_name: event_store
 ```
+
+Require
+
+- doctrine/dbal
 
 ### Message dispatcher
 
-#### Synchronous
-
-By default EventSauce dispatches events using
-[SynchronousMessageDispatcher](https://eventsauce.io/docs/reacting-to-events/setup-consumers/#synchronous-message-dispatcher).
-
-Example configuration
+[SynchronousMessageDispatcher](https://eventsauce.io/docs/reacting-to-events/setup-consumers/#synchronous-message-dispatcher)
 
 ```yaml
 andreo_event_sauce:
-    synchronous_message_dispatcher:
-        chain:
-            foo_dispatcher: ~
-            bar_dispatcher: ~
+  #...
+  message_dispatcher: # chain of message dispatchers
+    foo_dispatcher:
+      type:
+        sync: true
+    bar_dispatcher:
+      type:
+        sync: true
 ```
 
-Message consumer example
+[EventConsumer](https://eventsauce.io/docs/reacting-to-events/projections-and-read-models/)
 
 ```php
 use EventSauce\EventSourcing\MessageConsumer;
-use Andreo\EventSauceBundle\Attribute\AsSynchronousMessageConsumer;
+use Andreo\EventSauceBundle\Attribute\AsSyncMessageConsumer;
+use EventSauce\EventSourcing\EventConsumption\EventConsumer;
+use Andreo\EventSauce\Messenger\EventConsumer\InjectedHandleMethodInflector;
+use EventSauce\EventSourcing\Message;
 
-#[AsSynchronousMessageConsumer(dispatcher: 'foo_dispatcher')]
-final class FooConsumer implements MessageConsumer {
-
-    public function handle(Message $message): void {
-        // do something
+#[AsSyncMessageConsumer(dispatcher: 'foo_dispatcher')]
+final class FooBarEventConsumer extends EventConsumer 
+{
+    // copy-paste trait for inject HandleMethodInflector of EventSauce
+    use InjectedHandleMethodInflector;
+    
+    public function __construct(
+        private HandleMethodInflector $handleMethodInflector
+    ){}
+    
+    public function onFooCreated(FooCreated $fooCreated, Message $message): void {
+    }
+    
+    public function onBarCreated(BarCreated $barCreated, Message $message): void {
     }
 }
 ```
 
-#### Symfony Messenger
+Example of manually registration sync consumer \
+(without attribute and autoconfiguration)
 
-Install the [package](https://github.com/andrew-pakula/eventsauce-messenger). \
-I recommend reading the documentation
+```yaml
+services:
+  #...
+  App\Consumer\FooBarEventConsumer:
+    tags:
+      -
+        name: andreo.eventsauce.sync_message_consumer
+```
+
+[MessengerMessageDispatcher](https://github.com/andrew-pakula/eventsauce-messenger)
+
+Dispatching with [Symfony messenger](https://symfony.com/doc/current/messenger.html)
+
+Install [andreo/eventsauce-messenger](https://github.com/eventsauce-symfony/eventsauce-messenger)
 
 ```bash
 composer require andreo/eventsauce-messenger
 ```
 
-Example configuration
+```yaml
+andreo_event_sauce:
+ #...
+  message_dispatcher: # chain of message dispatchers
+    foo_dispatcher:
+      type:
+        messenger:
+          bus: event_bus # bus alias from messenger config
+```
+
+It registers alias of handle event sauce message middleware:
+
+```php
+$busAlias.handle_eventsauce_message: Andreo\EventSauce\Messenger\Middleware\HandleEventSauceMessageMiddleware
+```
+
+Update messenger config. According to above config
+
+```yaml
+framework:
+  messenger:
+    #...
+    buses:
+      event_bus:
+        default_middleware: false # disable default middleware order
+        middleware:
+          - 'add_bus_name_stamp_middleware': ['event_bus']
+          - 'dispatch_after_current_bus'
+          - 'failed_message_processing_middleware'
+          - 'send_message'
+          - 'event_bus.handle_eventsauce_message' # our middleware should be placed after send_message and before default handle massage middleware (if you use)
+          - 'handle_message'
+```
+
+[EventConsumer](https://eventsauce.io/docs/reacting-to-events/projections-and-read-models/)
+
+```php
+use Andreo\EventSauce\Messenger\EventConsumer\InjectedHandleMethodInflector;
+use EventSauce\EventSourcing\EventConsumption\EventConsumer;
+use EventSauce\EventSourcing\EventConsumption\HandleMethodInflector;
+use Andreo\EventSauce\Messenger\Attribute\AsEventSauceMessageHandler;
+use EventSauce\EventSourcing\Message;
+
+final class FooBarEventConsumer extends EventConsumer
+{
+    use InjectedHandleMethodInflector;
+
+    public function __construct(
+        private HandleMethodInflector $handleMethodInflector
+    )
+    {}
+
+    #[AsEventSauceMessageHandler(bus: 'fooBus')]
+    public function onFooCreated(FooCreated $fooCreated, Message $message): void
+    {
+    }
+
+    #[AsEventSauceMessageHandler(bus: 'barBus')]
+    public function onBarCreated(BarCreated $barCreated, Message $message): void
+    {
+    }
+}
+```
+
+***Useful aliases***
+```php
+EventSauce\EventSourcing\EventConsumption\HandleMethodInflector: EventSauce\EventSourcing\EventConsumption\InflectHandlerMethodsFromType
+```
+
+**Message dispatcher tag** (for manually registration of dispatchers, if you will want)
+```php
+andreo.eventsauce.message_dispatcher
+```
+
+### [Anti-Corruption Layer](https://eventsauce.io/docs/advanced/anti-corruption-layer/)
 
 ```yaml
 andreo_event_sauce:
-    messenger_message_dispatcher:
-        chain:
-            foo_dispatcher:
-                bus: fooBus # bus alias from messenger config
-            bar_dispatcher:
-                bus: barBus
-
-```
-
-If you don't have the messenger, try install.
-
-```bash
-composer require symfony/messenger
-```
-
-### Anti-Corruption Layer
-
-[About ACL](https://eventsauce.io/docs/advanced/anti-corruption-layer/)
-
-#### Outbound ACL
-
-```yaml
-andreo_event_sauce:
-    acl: 
-        outbound: true
-    messenger_message_dispatcher: # or synchronous_message_dispatcher
-        chain:
-            foo_dispatcher:
-                bus: fooBus
-                acl: true # enable acl for this dispatcher
+  #...
+  acl: true
 ``` 
 
-#### Inbound ACL
+Enable for **Message dispatcher** (by config)
 
 ```yaml
 andreo_event_sauce:
-    acl:
-        inbound: true
-```
+ #...
+  message_dispatcher:
+    fooDispatcher:
+      type:
+        messenger:
+          bus: fooBus
+      acl:
+        enabled: true
+        message_filter_strategy:
+          before_translate: match_all # or match_any
+          after_translate: match_all
 
-Consumer example
+``` 
+
+Enable for **Message consumer**
 
 ```php
 
-use Andreo\EventSauceBundle\Attribute\WithInboundAcl;
-use EventSauce\EventSourcing\MessageConsumer;
-use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Andreo\EventSauceBundle\Attribute\EnableAcl;
+use Andreo\EventSauceBundle\Enum\MessageFilterStrategy;
+use EventSauce\EventSourcing\EventConsumption\EventConsumer;
 
-#[WithInboundAcl] // enable acl for this consumer
-final class FooConsumer implements MessageConsumer
+#[EnableAcl]
+final class FooHandler extends EventConsumer
 {
-    public function handle(Message $message): void
+    #[AsEventSauceMessageHandler(
+        handles: FooEvent::class // If you will use translator, for messenger handles must be defined manually
+    )]
+    public function onFooCreated(BarEvent $barEvent): void
     {
-        // do something
+        // ...
     }
 }
+```
+
+Example of manually registration acl consumer (or dispatcher) \
+(without attribute and autoconfiguration)
+
+```yaml
+services:
+  #...
+  App\Consumer\FooConsumer:
+    tags:
+      -
+        name: andreo.eventsauce.acl
+        message_filter_strategy_before_translate: match_all # or match_any
+        message_filter_strategy_after_translate: match_all # or match_any
 ```
 
 #### Message translator
 
 ```php
-use Andreo\EventSauceBundle\Attribute\AsMessageTranslator;
+
 use EventSauce\EventSourcing\AntiCorruptionLayer\MessageTranslator;
+use Andreo\EventSauceBundle\Attribute\AsMessageTranslator;
 use EventSauce\EventSourcing\Message;
 
 #[AsMessageTranslator] 
-final class FooMessageTranslator implements MessageTranslator
+final readonly class FooMessageTranslator implements MessageTranslator
 {
     public function translateMessage(Message $message): Message
     {
-        // do something
+        assert($message->payload() instanceof FooEvent);
+        // ...
+           
+        return new Message(new BarEvent());
     }
 }
+```
+
+Example of manually registration message filter \
+(without attribute and autoconfiguration)
+
+```yaml
+services:
+  #...
+  App\Acl\FooMessageTranslator:
+    tags:
+      -
+        name: andreo.eventsauce.acl.message_translator
+        priority: 0
+        owners: []
 ```
 
 #### Message filter
 
-```php
-use Andreo\EventSauceBundle\Attribute\AsMessageFilter;
-use Andreo\EventSauceBundle\Enum\FilterPosition;
-use EventSauce\EventSourcing\AntiCorruptionLayer\MessageFilter;
-use EventSauce\EventSourcing\Message;
+Message filter strategies:
 
-#[AsMessageFilter(FilterPosition::BEFORE)] // filter position: before translate, or after translate
-final class FooMessageFilter implements MessageFilter
+`match_all` - all filters passed a condition \
+`match_any` - any filter passed a condition
+
+Message Filter
+
+```php
+use EventSauce\EventSourcing\AntiCorruptionLayer\MessageFilter;
+use Andreo\EventSauceBundle\Attribute\AsMessageFilter;
+use Andreo\EventSauceBundle\Enum\MessageFilterTrigger;
+
+#[AsMessageFilter(MessageFilterTrigger::BEFORE_TRANSLATE)] // or after AFTER_TRANSLATE
+final readonly class FooMessageFilter implements MessageFilter
 {
     public function allows(Message $message): bool
     {
-        // do something
     }
 }
 ```
 
-_There are two strategies, that saying how filters will be resolved_
-
-* match_all - all filters are met a condition (default)
-* match_any - any filter are met a condition
-
-Example configuration to change strategy
+Example of manually registration message filter \
+(without attribute and autoconfiguration)
 
 ```yaml
-andreo_event_sauce:
-    acl:
-        outbound: # or inbound
-            filter_strategy:
-                before: match_any # for before translate filters
-                after: match_any # for after translate filters
+services:
+  #...
+  App\Acl\FooMessageFilter:
+    tags:
+      -
+        name: andreo.eventsauce.acl.message_filter
+        trigger: before_translate # or after_translate
+        priority: 0
+        owners: []
 ```
 
-There is a way to change strategy for one service using acl
+#### Owners of message translator or filters
+
+For example, we use Translator, but Filter works the same
 
 ```php
+use EventSauce\EventSourcing\AntiCorruptionLayer\MessageTranslator;
+use Andreo\EventSauceBundle\Attribute\AsMessageTranslator;
+use EventSauce\EventSourcing\MessageConsumer;
+use EventSauce\EventSourcing\MessageDispatcher;
 
-use Andreo\EventSauceBundle\Attribute\WithInboundAcl;
-use Andreo\EventSauceBundle\Enum\FilterStrategy;
-
-#[WithInboundAcl(beforeStrategy: FilterStrategy::MATCH_ANY)]
-final class FooConsumer implements MessageConsumer
+// Translator will be applied for all dispatchers, and to the FooConsumer
+// By analogy we can use MessageConsumer::class for all consumers
+#[AsMessageTranslator(owners: [MessageDispatcher::class, FooConsumer::class])]
+final readonly class FooMessageTranslator implements MessageTranslator
 {
-    public function handle(Message $message): void
+    public function translateMessage(Message $message): Message
     {
-        // do something
     }
 }
 ```
 
-#### Limiting the scope of work
-
-```php
-
-use Andreo\EventSauceBundle\Attribute\ForInboundAcl;
-use Andreo\EventSauceBundle\Attribute\ForOutboundAcl;
-
-#[ForInboundAcl] // this will apply the translator for inbound acl
-#[ForOutboundAcl] // this will apply the translator for outbound acl
-#[AsMessageTranslator] // if you not defined any above attribute translator will be for all acl types
-final class FooMessageTranslator implements MessageTranslator
-{
-    // ...
-}
-```
-
-Optionally, You can define target to which will been applied translator or filter
-
-```php
-#[AsMessageFilter]
-#[ForInboundAcl(target: FooConsumer::class)] // this will apply the filter only for FooConsumer::class
-final class FooMessageFilter implements MessageFilter
-{
-    // ...
-}
-```
-
-### Aggregates
-
-[About Aggregates](https://eventsauce.io/docs/event-sourcing/create-an-aggregate-root/)
-
-Example configuration
+### [Event Dispatcher](https://eventsauce.io/docs/utilities/event-dispatcher/)
 
 ```yaml
-
 andreo_event_sauce:
-    aggregates:
-        foo:
-            class: App\Domain\Foo
-        bar:
-            class: App\Domain\Bar
+  # ...
+  event_dispatcher:
+    enabled: false
+    message_outbox:
+      enabled: false
+      table_name: event_message_outbox # value will be used if the main outbox config is set to doctrine in the repository
+      relay_id: event_dispatcher_relay # relay-id for run consume outbox messages command
 ```
 
-Inject repository by convention "${name}Repository"
+Example of Event Dispatcher
 
 ```php
-use EventSauce\EventSourcing\AggregateRootRepository;
+use EventSauce\EventSourcing\EventDispatcher;
+
+final readonly class FooHandler
+{
+    public function __construct(
+        private EventDispatcher $eventDispatcher
+    ) {
+    }
+
+    public function handle(): void
+    {
+        $this->eventDispatcher->dispatch(
+            new FooEvent()
+        );
+    }
+}
+```
+
+### [Upcaster](https://eventsauce.io/docs/advanced/upcasting/#main-article)
+
+```yaml
+andreo_event_sauce:
+    #...
+  upcaster:
+    enabled: false
+    trigger: before_unserialize # or after_unserialize (on payload or on object of message)
+```
+
+Before unserialize
+
+```php
+use Andreo\EventSauceBundle\Attribute\AsUpcaster;
+use EventSauce\EventSourcing\Upcasting\Upcaster;
+
+#[AsUpcaster(aggregateClass: FooAggregate::class, version: 2)]
+final class FooEventV2Upcaster implements Upcaster {
+
+    public function upcast(array $message): array
+    {
+    }
+}
+```
+
+[After unserialize](https://github.com/andrew-pakula/eventsauce-upcasting)
+
+Install [andreo/eventsauce-upcasting](https://github.com/eventsauce-symfony/eventsauce-upcasting)
+
+```bash
+composer require andreo/eventsauce-upcasting
+```
+
+```php
+use EventSauce\EventSourcing\Message;
+use Andreo\EventSauce\Upcasting\MessageUpcaster\MessageUpcaster;
+use Andreo\EventSauce\Upcasting\MessageUpcaster\Event;
+use Andreo\EventSauceBundle\Attribute\AsUpcaster;
+
+#[AsUpcaster(aggregateClass: FooAggregate::class, version: 2)]
+final class SomeEventV2Upcaster implements MessageUpcaster {
+
+    #[Event(event: FooEvent::class)]
+    public function upcast(Message $message): Message
+    {
+    }
+}
+```
+
+Example of manually registration upcaster (without attribute and autoconfiguration)
+
+```yaml
+services:
+  #...
+  App\Upcaster\FooUpcaster:
+    tags:
+      -
+        name: andreo.eventsauce.upcaster
+        class: App\Domain\FooAggregate
+        version: 2
+```
+
+### [Message decorator](https://eventsauce.io/docs/advanced/message-decoration/)
+
+
+```yaml
+andreo_event_sauce:
+    #...
+    message_decorator: true
+```
+
+```php
+use Andreo\EventSauceBundle\Attribute\AsMessageDecorator;
+use EventSauce\EventSourcing\Message;
+use EventSauce\EventSourcing\MessageDecorator;
+
+#[AsMessageDecorator]
+final class FooDecorator implements MessageDecorator
+{
+    public function decorate(Message $message): Message
+    {
+    }
+}
+```
+
+Example of manually registration decorator (without attribute and autoconfiguration)
+
+```yaml
+services:
+  #...
+  App\Decorator\FooDecorator:
+    tags:
+      -
+        name: andreo.eventsauce.message_decorator
+```
+
+### [Message Outbox](https://eventsauce.io/docs/message-outbox/)
+
+Install [andreo/eventsauce-outbox](https://github.com/eventsauce-symfony/eventsauce-outbox)
+
+```bash
+composer require andreo/eventsauce-outbox
+```
+
+Main configuration loading common services
+
+```yaml
+andreo_event_sauce:
+  #...
+  message_outbox:
+    enabled: false
+    repository:
+      doctrine:
+        enabled: true
+        table_name: message_outbox
+    logger: Psr\Log\LoggerInterface # default if monolog bundle has been installed
+```
+
+Consume outbox messages
+
+```bash
+bin/console andreo:eventsauce:message-outbox:consume relay_id
+```
+
+***Useful aliases***
+```php
+EventSauce\BackOff\BackOffStrategy: EventSauce\BackOff\ExponentialBackOffStrategy
+```
+```php
+EventSauce\MessageOutbox\RelayCommitStrategy: EventSauce\MessageOutbox\MarkMessagesConsumedOnCommit
+```
+
+### [Snapshotting](https://eventsauce.io/docs/snapshotting/)
+
+
+**To use:**
+
+- doctrine snapshot repository
+- versioned snapshots
+- conditional persist
+
+package [andreo/eventsauce-snapshotting](https://github.com/eventsauce-symfony/eventsauce-snapshotting) is required
+
+```yaml
+andreo_event_sauce:
+  #...
+  snapshot: 
+    enabled: false
+    repository:
+      enabled: false
+      doctrine:
+        enabled: true
+        table_name: snapshot_store
+    versioned: false # enable versioned repository for all aggregates with snapshots enabled
+    conditional: false
+```
+
+***Useful aliases***
+
+```php
+Andreo\EventSauce\Snapshotting\Repository\Versioned\SnapshotVersionInflector: Andreo\EventSauce\Snapshotting\Repository\Versioned\InflectVersionFromReturnedTypeOfSnapshotStateCreationMethod
+```
+```php
+Andreo\EventSauce\Snapshotting\Repository\Versioned\SnapshotVersionComparator: Andreo\EventSauce\Snapshotting\Repository\Versioned\EqSnapshotVersionComparator
+```
+
+### [Migration generator](https://github.com/eventsauce-symfony/eventsauce-migration-generator)
+
+Install [andreo/eventsauce-migration-generator](https://github.com/eventsauce-symfony/eventsauce-migration-generator)
+
+```yaml
+andreo_event_sauce:
+  #...
+  migration_generator:
+    dependency_factory: doctrine.migrations.dependency_factory # default if doctrine migrations bundle has been installed
+```
+
+Generate migration for foo prefix
+
+```bash
+bin/console andreo:eventsauce:doctrine-migrations:generate foo 
+```
+
+***Useful aliases***
+```php
+EventSauce\MessageRepository\TableSchema\TableSchema: EventSauce\MessageRepository\TableSchema\DefaultTableSchema
+```
+
+### [Aggregates](https://eventsauce.io/docs/event-sourcing/create-an-aggregate-root)
+
+```yaml
+andreo_event_sauce:
+  #...
+  aggregates:
+    foo: # aggregate name
+      class: ~ # aggregate FQCN
+      repository_alias: fooRepository # according to convention: $name . "Repository"
+      message_outbox:
+        enabled: false # enable message outbox for this aggregate
+        relay_id: foo_aggregate_relay # relay-id for run consume outbox messages command, according to convention: $name . "aggregate_relay"
+      dispatchers: [] # dispatcher service aliases (from config, or manually registered), if empty, messages will be sent to all dispatchers
+      upcaster: false # enable upcaster for this aggregate
+      snapshot:
+        conditional: # enable conditional snapshot repository for this aggregate.
+          enabled: false
+          every_n_event: # you can use this strategy, or make your own implementation
+            enabled: false
+            number: 100
+```
+
+Repository injection
+
+```php
 use Symfony\Component\DependencyInjection\Attribute\Target;
+use EventSauce\EventSourcing\AggregateRootRepository;
 
 final class FooHandler {
 
@@ -310,258 +633,41 @@ final class FooHandler {
 }
 ```
 
-### Message Outbox
-
-[About Outbox](https://eventsauce.io/docs/message-outbox/)
-
-Install the [package](https://github.com/andrew-pakula/eventsauce-outbox). \
-I recommend reading the documentation.
-
-```bash
-composer require andreo/eventsauce-outbox
-```
-
-Example configuration
-
-```yaml
-andreo_event_sauce:
-    outbox: true
-    aggregates:
-        foo:
-            class: App\Domain\Foo
-            outbox: true
-```
-
-Outbox messages consume
-
-```bash
-bin/console andreo:eventsauce:message-outbox:consume
-```
-
-### Snapshotting
-
-[About Snapshotting](https://eventsauce.io/docs/snapshotting/)
-
-Example configuration
-
-```yaml
-andreo_event_sauce:
-    snapshot: true
-    aggregates:
-        bar:
-            class: App\Domain\Bar
-            snapshot: true
-```
-
-Inject repository by convention "${name}Repository"
+Snapshotting repository injection (if aggregate snapshot is enabled)
 
 ```php
 use Symfony\Component\DependencyInjection\Attribute\Target;
 use EventSauce\EventSourcing\Snapshotting\AggregateRootRepositoryWithSnapshotting;
 
-final class BarHandler {
+final class FooHandler {
 
    public function __construct(
-        #[Target('barRepository')] private AggregateRootRepositoryWithSnapshotting $barRepository
+        #[Target('fooRepository')] private AggregateRootRepositoryWithSnapshotting $fooRepository
     ){}
 }
 ```
 
-#### Snapshotting extended components
-
-Install the [package](https://github.com/andrew-pakula/eventsauce-snapshotting). \
-I recommend reading the documentation.
-
-
-```bash
-composer require andreo/eventsauce-snapshotting
-```
-
-Example configuration
-
-```yaml
-andreo_event_sauce:
-    snapshot:
-        repository:
-            doctrine: true # enable the doctrine repository
-        versioned: true # enable versioning
-        store_strategy:
-            every_n_event: # store a snapshot every n event
-                number: 200
-            custom: # custom implementation Andreo\EventSauce\Snapshotting\CanStoreSnapshotStrategy
-```
-
-### Upcaster
-
-[About Upcasting](https://eventsauce.io/docs/advanced/upcasting/#main-article)
-
-Example configuration
-
-```yaml
-andreo_event_sauce:
-    upcaster: true
-    aggregates:
-        foo:
-            class: App\Domain\Foo
-            upcaster: true
-```
-
-Upcaster example
+***Useful aliases***
 
 ```php
-use Andreo\EventSauceBundle\Attribute\AsUpcaster;
-use EventSauce\EventSourcing\Upcasting\Upcaster;
-
-#[AsUpcaster(aggregate: 'foo', version: 2)]
-final class FooEventV2Upcaster implements Upcaster {
-
-    public function upcast(array $message): array
-    {
-        // do something
-    }
-}
+andreo.eventsauce.snapshot.conditional_strategy.$aggregateName: Andreo\EventSauce\Snapshotting\Repository\Conditional\ConditionalSnapshotStrategy
 ```
-
-#### Upcast with message argument
-
-Install the [package](https://github.com/andrew-pakula/eventsauce-upcasting). \
-I recommend reading the documentation.
-
-```bash
-composer require andreo/eventsauce-upcasting
-```
-
-Example configuration
-
-```yaml
-andreo_event_sauce:
-    upcaster:
-        argument: message
-```
-
-Upcaster example
-
 ```php
-use Andreo\EventSauce\Upcasting\Event;
-use Andreo\EventSauce\Upcasting\MessageUpcaster;
-use EventSauce\EventSourcing\Message;
-
-#[AsUpcaster(aggregate: 'foo', version: 2)]
-final class SomeEventV2Upcaster implements MessageUpcaster {
-
-    #[Event(event: SomeEvent::class)] // guess event
-    public function upcast(Message $message): Message
-    {
-        // do something
-    }
-}
+EventSauce\EventSourcing\Serialization\PayloadSerializer: EventSauce\EventSourcing\Serialization\ConstructingPayloadSerializer
 ```
-
-### Message decorator
-
-About [Message Decorator](https://eventsauce.io/docs/advanced/message-decoration/)
-
-Message decorator example
-
 ```php
-use Andreo\EventSauceBundle\Attribute\AsMessageDecorator;
-use EventSauce\EventSourcing\Message;
-use EventSauce\EventSourcing\MessageDecorator;
-
-#[AsMessageDecorator]
-final class SomeDecorator implements MessageDecorator
-{
-    public function decorate(Message $message): Message
-    {
-        // do something
-    }
-}
+EventSauce\EventSourcing\Serialization\MessageSerializer: EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer
 ```
-
-### Event Dispatcher
-
-[About Event Dispatcher](https://eventsauce.io/docs/utilities/event-dispatcher/)
-
-```yaml
-andreo_event_sauce:
-    event_dispatcher: true
-```
-
-Example usage the Event Dispatcher
-
 ```php
-use EventSauce\EventSourcing\EventDispatcher;
-
-final class FooHandler
-{
-    public function __construct(
-        private readonly EventDispatcher $eventDispatcher
-    ) {
-    }
-
-    public function __invoke(PublishBaz $command): void
-    {
-        $this->eventDispatcher->dispatch(
-            new FooEvent()
-        );
-    }
-}
+EventSauce\UuidEncoding\UuidEncoder: EventSauce\UuidEncoding\BinaryUuidEncoder
+```
+```php
+EventSauce\EventSourcing\ClassNameInflector: EventSauce\EventSourcing\DotSeparatedSnakeCaseInflector
 ```
 
-#### Event dispatcher with message outbox
+### Other tips
 
-Example configuration
-
-```yaml
-andreo_event_sauce:
-    outbox:
-        repository:
-            doctrine:
-                table_name: outbox # default
-    event_dispatcher:
-        outbox: true
-```
-
-Then, you must create a table named _**outbox**_ according to [outbox schema](https://eventsauce.io/docs/message-outbox/table-schema/) \
-If you want, you can use **migration generator** command
-
-```bash
-bin/console andreo:eventsauce:doctrine-migrations:generate --schema=outbox
-```
-
-### Migration generator
-
-[About Database Structure](https://eventsauce.io/docs/advanced/database-structure/)
-
-This bundle uses the **all events in table per aggregate** approach. \
-If you want have automatically generating migration, install [package](https://github.com/andrew-pakula/eventsauce-generate-migration). I recommend reading the documentation.
-
-```bash
-composer require andreo/eventsauce-generate-migration
-```
-
-```yaml
-andreo_event_sauce:
-    migration_generator:
-        dependency_factory: doctrine.migrations.dependency_factory # default if migration bundle has been installed
-```
-
-Example command usage 
-
-```bash
-bin/console andreo:eventsauce:doctrine-migrations:generate foo 
-```
-
-It generate migrations for an aggregate named _**foo**_
-
-### Overwriting
-
-All the event sauce components have been provided with simple interfaces and it promotes an composition above an extending. \
-This package follows this way, so you can easily overwrite any component via its aliases interface.
-
-You can also decorate an original repositories.
-
-Example
+#### Decorating aggregate root repository
 
 ```php
 <?php
@@ -569,142 +675,29 @@ use EventSauce\EventSourcing\AggregateRootId;
 use EventSauce\EventSourcing\AggregateRootRepository;
 use Symfony\Component\DependencyInjection\Attribute\AsDecorator;
 
-#[AsDecorator(decorates: 'fooRepository')] // decorates original repository
-final class FooRepository implements AggregateRootRepository
+#[AsDecorator(decorates: 'fooRepository')]
+final readonly class FooRepository implements AggregateRootRepository
 {
-    public function __construct(private readonly AggregateRootRepository $fooOriginalRepository)
+    public function __construct(private AggregateRootRepository $regularRepository)
     {
     }
 
     public function retrieve(AggregateRootId $aggregateRootId): object
     {
-        // do something
+        return $this->regularRepository->retrieve($aggregateRootId);
     }
 
     public function persist(object $aggregateRoot): void
     {
-        // do something
+        // ...
     }
     public function persistEvents(AggregateRootId $aggregateRootId, int $aggregateRootVersion, object ...$events): void
     {
-        // do something
+        // ...
     }
 }
 ```
 
-### Config reference
+Example api using this bundle
 
-```yaml
-andreo_event_sauce:
-    time:
-        timezone: UTC # your timezone
-        clock: EventSauce\Clock\Clock # or your custom implementation
-
-    message_storage:
-        repository:
-            # one of:
-            memory: false
-            doctrine: # default
-                json_encode_options: # way to json format
-                    - !php/const JSON_PRETTY_PRINT
-                    - !php/const JSON_PRESERVE_ZERO_FRACTION
-                connection: doctrine.dbal.default_connection
-                table_schema: EventSauce\MessageRepository\TableSchema\TableSchema # or your custom implementation
-                table_name: message_storage
-
-    acl:
-        outbound:
-            filter_strategy:
-                before: match_all
-                after: match_all
-        inbound:
-            filter_strategy:
-                before: match_all
-                after: match_all
-
-    # one of: synchronous_message_dispatcher, messenger_message_dispatcher
-    synchronous_message_dispatcher:
-        chain:
-            foo_dispatcher:
-                acl: false
-            bar_dispatcher:
-                acl: false
-    messenger_message_dispatcher:
-        chain:
-            foo_dispatcher:
-                bus: fooBus # bas alias from messenger config
-                acl: false
-
-    event_dispatcher:
-        outbox: false
-        
-    upcaster:
-        argument: payload # or message
-
-    message_decorator: true
-
-    outbox:
-        back_off:
-            # one of:
-            exponential: # default
-                initial_delay_ms: 100000
-                max_tries: 10
-            fibonacci:
-                initial_delay_ms: 100000
-                max_tries: 10
-            linear:
-                initial_delay_ms: 100000
-                max_tries: 10
-            no_waiting:
-                max_tries: 10
-            immediately: true
-            custom: # or your custom back off strategy
-                id: App/Outbox/CustomBackOfStrategy
-                
-        relay_commit:
-            # one of:
-            delete:
-                enabled: true
-            mark_consumed: # default
-                enabled: true
-                
-        repository:
-            # one of:
-            memory: false
-            doctrine: # default
-                table_name: outbox
-                
-        logger: outbox_logger # logger for outbox
-
-    snapshot:
-        versioned: true # snapshots with versioning
-        store_strategy:
-            every_n_event:
-                number: 500 # store snapshot every n event
-        repository:
-            # one of:
-            memory: true # default
-            doctrine:
-                table_name: snapshot
-
-    serializer:
-        payload: EventSauce\EventSourcing\Serialization\ConstructingPayloadSerializer # or your custom implementation
-        message: EventSauce\EventSourcing\Serialization\ConstructingMessageSerializer # or your custom implementation
-        snapshot: Andreo\EventSauce\Snapshotting\SnapshotStateSerializer # or your custom implementation
-
-    migration_generator:
-        dependency_factory: doctrine.migrations.dependency_factory # default if migration bundle has been installed
-        
-    uuid_encoder: EventSauce\UuidEncoding\UuidEncoder # or your custom implementation
-    class_name_inflector: EventSauce\EventSourcing\ClassNameInflector # or your custom implementation
-
-    aggregates:
-        foo:
-            class: App\Domain\Foo
-            repository_alias: fooRepository
-            outbox: false # enable outbox for this aggregate
-            dispatchers:
-                - foo_dispatcher # dispatchers used by this aggregate. Default send to all defined
-            upcaster: false # enable upcaster for this aggregate
-            snapshot: false # enable snapshot for this aggregate
-```
+### [Repository](https://github.com/eventsauce-symfony/eventsaucebundle-example)
