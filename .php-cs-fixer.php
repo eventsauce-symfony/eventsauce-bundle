@@ -5,10 +5,9 @@ use PhpCsFixer\Finder;
 
 $finder = Finder::create()
     ->in([
-        __DIR__.'/src/',
-        __DIR__.'/tests/'
+        __DIR__,
     ])
-    ->exclude(['docker'])
+    ->exclude(['vendor', 'tools'])
 ;
 
 return (new Config())
