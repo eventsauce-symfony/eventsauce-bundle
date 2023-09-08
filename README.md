@@ -242,7 +242,7 @@ andreo_event_sauce:
         enabled: true
         message_filter_strategy:
           before_translate: match_all # or match_any
-          after_translate: match_all
+          after_translate: match_all # or match_any
 
 ``` 
 
@@ -258,7 +258,7 @@ use EventSauce\EventSourcing\EventConsumption\EventConsumer;
 final class FooHandler extends EventConsumer
 {
     #[AsEventSauceMessageHandler(
-        handles: FooEvent::class // If you will use translator, for messenger handles must be defined manually
+        handles: FooEvent::class // If you use a translator, "handles" must be configured.
     )]
     public function onFooCreated(BarEvent $barEvent): void
     {
@@ -364,8 +364,8 @@ use Andreo\EventSauceBundle\Attribute\AsMessageTranslator;
 use EventSauce\EventSourcing\MessageConsumer;
 use EventSauce\EventSourcing\MessageDispatcher;
 
-// Translator will be applied for all dispatchers, and to the FooConsumer
-// By analogy we can use MessageConsumer::class for all consumers
+// Translator will be using through all dispatchers as MessageDispatcher::class (or consumers as MessageConsumer::class)
+// Single FooConsumer (or single FooDispatcher) uses translator also
 #[AsMessageTranslator(owners: [MessageDispatcher::class, FooConsumer::class])]
 final readonly class FooMessageTranslator implements MessageTranslator
 {
@@ -384,8 +384,8 @@ andreo_event_sauce:
     enabled: false
     message_outbox:
       enabled: false
-      table_name: event_message_outbox # value will be used if the main outbox config is set to doctrine in the repository
-      relay_id: event_dispatcher_relay # relay-id for run consume outbox messages command
+      table_name: event_message_outbox # it will be used if the outbox config has doctrine repository
+      relay_id: event_dispatcher_relay # it is used by consume outbox message command
 ```
 
 Example of Event Dispatcher
@@ -458,7 +458,7 @@ final class SomeEventV2Upcaster implements MessageUpcaster {
 }
 ```
 
-Example of manually registration upcaster (without attribute and autoconfiguration)
+Example of manually registration (without attribute and autoconfiguration)
 
 ```yaml
 services:
@@ -494,7 +494,7 @@ final class FooDecorator implements MessageDecorator
 }
 ```
 
-Example of manually registration decorator (without attribute and autoconfiguration)
+Example of manually registration (without attribute and autoconfiguration)
 
 ```yaml
 services:
@@ -513,7 +513,7 @@ Install [andreo/eventsauce-outbox](https://github.com/eventsauce-symfony/eventsa
 composer require andreo/eventsauce-outbox
 ```
 
-Main configuration loading common services
+Base configuration
 
 ```yaml
 andreo_event_sauce:
@@ -562,7 +562,7 @@ andreo_event_sauce:
       doctrine:
         enabled: true
         table_name: snapshot_store
-    versioned: false # enable versioned repository for all aggregates with snapshots enabled
+    versioned: false # it enables versioned repository for all aggregates with snapshots enabled
     conditional: false
 ```
 
